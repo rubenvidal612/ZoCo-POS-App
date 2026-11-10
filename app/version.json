@@ -1,7 +1,8 @@
 {
-    "version":  "2.3.1",
+    "version":  "2.4.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Dos accesos rápidos: 🧾 Gastos (del negocio) y 💵 Mis Finanzas (personales)"
+                  "Modo híbrido: respaldo y sincronización con Supabase (opcional)",
+                  "Configuración → Nube (Supabase): URL, key, probar y sincronizar"
               ]
 }

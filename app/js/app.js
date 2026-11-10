@@ -8,6 +8,7 @@ import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
+import { startSync } from './sync.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
 
@@ -320,7 +321,7 @@ hydrate().then(() => {
   paintShell();
   setTimeout(() => initInstallPrompt(), 1200);
   setTimeout(() => maybeDailyNotice(), 2500);
-  setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); }, 2000);
+  setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
   // Refresca la suscripción push si el usuario ya dio permiso
   if ('Notification' in window && Notification.permission === 'granted') {
     setTimeout(() => subscribePush(), 3000);

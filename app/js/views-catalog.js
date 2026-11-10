@@ -3,6 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompresse
 import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
+import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
@@ -477,6 +478,26 @@ export function settingsView(ctx) {
       </div>
 
       <div class="panel">
+        <div class="panel-head"><h2>Nube (Supabase)</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Opcional. Con esto tus datos se respaldan y se ven en otros dispositivos.
+            La app sigue funcionando sin internet y sincroniza cuando vuelve la red.
+          </div>
+          <div class="field"><label>URL del proyecto</label>
+            <input id="sb-url" placeholder="https://xxxx.supabase.co" value="${esc(sbConfig().url || '')}"></div>
+          <div class="field"><label>Anon key (pública)</label>
+            <input id="sb-key" placeholder="eyJhbGciOi..." value="${esc(sbConfig().key || '')}"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" id="sb-save">Guardar</button>
+            <button class="btn ghost sm" id="sb-test">Probar conexión</button>
+            <button class="btn ghost sm" id="sb-sync">Sincronizar ahora</button>
+          </div>
+          <div class="hint" id="sb-state" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="panel">
         <div class="panel-head"><h2>Inventario desde Excel</h2></div>
         <div style="padding:16px">
           <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
@@ -596,6 +617,30 @@ export function settingsView(ctx) {
     } catch (e) { toast(e.message || 'No se pudo abrir la cámara'); }
   });
 
+  // Supabase (nube)
+  const sbState = $('#sb-state', root);
+  const paintSb = () => {
+    if (!sbState) return;
+    sbState.textContent = !sbReady() ? 'Sin configurar (opcional)'
+      : isDirty() ? 'Configurado · cambios pendientes de subir'
+      : 'Configurado ✓';
+  };
+  paintSb();
+  $('#sb-save', root)?.addEventListener('click', () => {
+    setSbConfig($('#sb-url', root).value.trim(), $('#sb-key', root).value.trim());
+    paintSb(); toast('Guardado');
+  });
+  $('#sb-test', root)?.addEventListener('click', async () => {
+    setSbConfig($('#sb-url', root).value.trim(), $('#sb-key', root).value.trim());
+    const r = await testConnection();
+    toast(r.ok ? 'Conectado a Supabase ✓' : 'Error: ' + (r.error || 'revisa URL y key'));
+  });
+  $('#sb-sync', root)?.addEventListener('click', async () => {
+    toast('Sincronizando…');
+    const r = await syncNow();
+    paintSb();
+    toast(r.ok ? 'Sincronizado ✓' : 'Error: ' + (r.error || ''));
+  });
   // Notificaciones y checador
   const notifBtn = $('#notif-enable', root);
   const notifState = $('#notif-state', root);
