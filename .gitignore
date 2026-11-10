@@ -1,0 +1,32 @@
+# ===== Perfiles de navegador y sesiones (NUNCA subir) =====
+.chrome-kyte/
+.chrome-kyte2/
+.chrome-profile/
+.chrome-profile2/
+.cdp-profile/
+.auth-backup/
+.ck3/
+_legacy/
+kyte-static/
+
+# ===== Datos privados del negocio =====
+data/*.json
+data/vapid.json
+data/push-subs.json
+
+# ===== Artefactos de pruebas =====
+captures/
+tools/steps-*.json
+tools/serve.log
+tools/serve.err
+tools/test-inventario.csv
+preview/
+docs/
+
+*.txt
+*.log
+
+# ===== Sistema =====
+node_modules/
+.DS_Store
+Thumbs.db

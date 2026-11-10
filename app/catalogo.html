@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo — ZoCo</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,sans-serif;background:#F1F5F9;color:#0F172A}
+  header{background:linear-gradient(150deg,#243449,#0F172A);color:#fff;padding:26px 20px;text-align:center}
+  header h1{font-size:22px;letter-spacing:-.4px}
+  header p{font-size:13px;color:#94A3B8;margin-top:4px}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px}
+  .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px}
+  .cats button{border:1px solid #E2E8F0;background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;white-space:nowrap}
+  .cats button.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+  .card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+  .ph{aspect-ratio:1/1;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .ph img{width:100%;height:100%;object-fit:cover}
+  .b{padding:10px 12px}
+  .n{font-size:13px;font-weight:700;line-height:1.3;min-height:34px}
+  .pr{font-size:15px;font-weight:800;color:#EA580C;margin-top:4px}
+  .sizes{font-size:11px;color:#64748B;margin-top:3px}
+  .order{display:block;margin-top:10px;background:#F97316;color:#fff;text-align:center;border-radius:10px;padding:9px;font-size:13px;font-weight:700;text-decoration:none}
+  .order:hover{background:#EA580C}
+  .empty{text-align:center;color:#64748B;padding:60px 20px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="store">Tienda</h1>
+  <p id="sub">Catálogo en línea</p>
+</header>
+<div class="wrap">
+  <div class="cats" id="cats"></div>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n||0);
+let state = null;
+let cat = 'all';
+
+async function boot() {
+  try {
+    const r = await fetch('/api/state', { cache: 'no-store' });
+    if (r.ok) state = await r.json();
+  } catch {}
+  if (!state || !state.products) { document.getElementById('grid').innerHTML = '<div class="empty">Catálogo no disponible aún.</div>'; return; }
+  document.getElementById('store').textContent = state.company.name;
+  render();
+}
+
+function render() {
+  const catsEl = document.getElementById('cats');
+  const cats = [...new Set(state.products.filter(p => p.catalog).map(p => p.section))];
+  catsEl.innerHTML = '<button class="' + (cat === 'all' ? 'on' : '') + '" data-c="all">Todos</button>' +
+    cats.map(c => `<button class="${cat === c ? 'on' : ''}" data-c="${c}">${c}</button>`).join('');
+  catsEl.querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.c; render(); });
+
+  const items = state.products.filter(p => p.catalog && (cat === 'all' || p.section === cat));
+  const grid = document.getElementById('grid');
+  if (!items.length) { grid.innerHTML = '<div class="empty">No hay productos publicados.</div>'; return; }
+
+  grid.innerHTML = items.map(p => {
+    const total = Object.values(p.branchStock || {}).reduce((a,b) => a + Object.values(b).reduce((x,y)=>x+(y||0),0), 0);
+    const sizes = p.section ? Object.keys((Object.values(p.branchStock||{})[0]) || {}).filter(s => s !== 'Único').slice(0, 6).join(' · ') : '';
+    return `<div class="card">
+      <div class="ph" style="background:linear-gradient(150deg,${p.color},${p.color}bb)">
+        ${p.image ? `<img src="${p.image}">` : (p.name||'').slice(0,2).toUpperCase()}
+      </div>
+      <div class="b">
+        <div class="n">${p.name}</div>
+        <div class="pr">${money(p.price)}</div>
+        ${sizes ? `<div class="sizes">Tallas: ${sizes}</div>` : `<div class="sizes">${total} en stock</div>`}
+        <a class="order" href="https://wa.me/?text=Hola,%20me%20interesa%20${encodeURIComponent(p.name)}%20(${encodeURIComponent(money(p.price))})" target="_blank">Pedir por WhatsApp</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+boot();
+</script>
+</body>
+</html>

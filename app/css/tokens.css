@@ -1,0 +1,97 @@
+:root{
+  /* ===== Tema: ZoCo Classic (naranja + slate) ===== */
+  --brand:#F97316;
+  --brand-600:#EA580C;
+  --brand-700:#C2410C;
+  --brand-soft:rgba(249,115,22,.12);
+  --brand-softer:rgba(249,115,22,.07);
+  --accent:#FBBF24;
+
+  --sidebar:#0F172A;
+  --sidebar-2:#1E293B;
+  --sidebar-text:#CBD5E1;
+  --sidebar-active:#F97316;
+
+  --bg:#F1F5F9;
+  --surface:#FFFFFF;
+  --surface-2:#F8FAFC;
+  --line:#E2E8F0;
+  --line-2:#EEF2F6;
+
+  --text:#0F172A;
+  --text-2:#334155;
+  --muted:#64748B;
+  --muted-2:#94A3B8;
+
+  --ok:#10B981;
+  --ok-soft:rgba(16,185,129,.12);
+  --warn:#F59E0B;
+  --warn-soft:rgba(245,158,11,.14);
+  --danger:#EF4444;
+  --danger-soft:rgba(239,68,68,.12);
+  --info:#F97316;
+
+  --r-sm:10px;
+  --r-md:14px;
+  --r-lg:20px;
+  --r-xl:24px;
+  --shadow-1:0 1px 2px rgba(15,23,42,.06);
+  --shadow-2:0 10px 30px rgba(15,23,42,.10);
+  --shadow-3:0 24px 60px rgba(15,23,42,.22);
+
+  --sidebar-w:268px;
+  --cart-w:340px;
+  --font:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+}
+
+/* Variante Cobalto (azul) */
+[data-theme="cobalto"]{
+  --brand:#2F5BFF; --brand-600:#1D4FD8; --brand-700:#1740B4;
+  --brand-soft:rgba(47,91,255,.10); --brand-softer:rgba(47,91,255,.06);
+  --accent:#22D3EE; --bg:#F4F6FA; --info:#2F5BFF;
+  --sidebar-active:#243049;
+}
+
+/* ===== Tema claro/oscuro ===== */
+[data-mode="dark"]{
+  --bg:#0B1017;
+  --surface:#131A24;
+  --surface-2:#182130;
+  --line:#232E3E;
+  --line-2:#1D2735;
+  --text:#EDF1F7;
+  --text-2:#C4CDDA;
+  --muted:#8C99AB;
+  --muted-2:#6B7889;
+  --sidebar:#080C12;
+  --sidebar-2:#101822;
+  --sidebar-active:#1B2636;
+  --brand-soft:rgba(47,91,255,.18);
+}
+
+/* ===== Presets de paleta (cambiables en caliente) ===== */
+[data-theme="esmeralda"]{
+  --brand:#10B981; --brand-600:#0E9F6E; --brand-700:#047857;
+  --brand-soft:rgba(16,185,129,.12); --brand-softer:rgba(16,185,129,.07);
+  --accent:#F59E0B; --sidebar:#0B3B33; --sidebar-active:#12554A;
+}
+[data-theme="coral"]{
+  --brand:#FF6B4A; --brand-600:#E85535; --brand-700:#C74326;
+  --brand-soft:rgba(255,107,74,.12); --brand-softer:rgba(255,107,74,.07);
+  --accent:#FFD166; --sidebar:#1C1F26; --sidebar-active:#2A2F39;
+}
+[data-theme="vino"]{
+  --brand:#B4235A; --brand-600:#9F1239; --brand-700:#881337;
+  --brand-soft:rgba(180,35,90,.12); --brand-softer:rgba(180,35,90,.07);
+  --accent:#F4A261; --sidebar:#2A0F1B; --sidebar-active:#3B1526;
+}
+[data-theme="oceano"]{
+  --brand:#0EA5E9; --brand-600:#0284C7; --brand-700:#0369A1;
+  --brand-soft:rgba(14,165,233,.12); --brand-softer:rgba(14,165,233,.07);
+  --accent:#34D399; --sidebar:#0B2545; --sidebar-active:#123B63;
+}
+[data-theme="arena"]{
+  --brand:#C08A3E; --brand-600:#A9772F; --brand-700:#8A6D3B;
+  --brand-soft:rgba(192,138,62,.14); --brand-softer:rgba(192,138,62,.08);
+  --accent:#7C9A6D; --sidebar:#3A3226; --sidebar-active:#4B4132;
+}

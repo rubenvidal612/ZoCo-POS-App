@@ -1,0 +1,127 @@
+// Utilidades de UI compartidas
+export const $ = (sel, root = document) => root.querySelector(sel);
+export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+export const money = (n) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 }).format(Number(n) || 0);
+
+export const num = (n) => new Intl.NumberFormat('es-MX').format(Number(n) || 0);
+
+export const uid = (p = 'id') => p + '_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+
+export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+export function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+export function toast(msg, ms = 2200) {
+  const root = $('#toast-root');
+  const node = el(`<div class="toast">${esc(msg)}</div>`);
+  root.appendChild(node);
+  setTimeout(() => { node.style.opacity = '0'; node.style.transition = 'opacity .2s'; setTimeout(() => node.remove(), 220); }, ms);
+}
+
+/** Abre un modal. Devuelve {root, close}. */
+export function modal({ title = '', body = '', foot = '', wide = false, onClose }) {
+  const root = $('#modal-root');
+  const ov = el(`
+    <div class="overlay">
+      <div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true">
+        <div class="modal-head">
+          <h3>${esc(title)}</h3>
+          <button class="icon-btn" data-close aria-label="Cerrar">✕</button>
+        </div>
+        <div class="modal-body">${body}</div>
+        ${foot ? `<div class="modal-foot">${foot}</div>` : ''}
+      </div>
+    </div>`);
+  const close = () => { ov.remove(); onClose?.(); };
+  ov.addEventListener('click', (e) => {
+    if (e.target === ov || e.target.closest('[data-close]')) close();
+  });
+  ov.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  root.appendChild(ov);
+  setTimeout(() => ov.querySelector('input,select,textarea,button')?.focus?.(), 30);
+  return { root: ov, close, body: ov.querySelector('.modal-body'), footEl: ov.querySelector('.modal-foot') };
+}
+
+export function confirmDialog({ title, message, okText = 'Confirmar', danger = false, requireReason = false }) {
+  return new Promise((resolve) => {
+    const m = modal({
+      title,
+      body: `
+        <p style="margin:0 0 14px;color:var(--text-2);line-height:1.5">${esc(message)}</p>
+        ${requireReason ? `<div class="field"><label>Motivo</label>
+          <select id="cf-reason">
+            <option value="Error de captura">Error de captura</option>
+            <option value="Devolución del cliente">Devolución del cliente</option>
+            <option value="Producto dañado">Producto dañado</option>
+            <option value="Prueba">Prueba</option>
+            <option value="Otro">Otro</option>
+          </select></div>` : ''}`,
+      foot: `<button class="btn ghost sm" data-cf-no>Cancelar</button>
+             <button class="btn ${danger ? 'danger' : ''} sm" data-cf-yes>${esc(okText)}</button>`,
+    });
+    m.root.querySelector('[data-cf-no]').onclick = () => { m.close(); resolve(false); };
+    m.root.querySelector('[data-cf-yes]').onclick = () => {
+      const reason = m.root.querySelector('#cf-reason')?.value || null;
+      m.close(); resolve(reason ?? true);
+    };
+  });
+}
+
+/** Lee una imagen del usuario y la comprime (máx 1200px, WebP). Devuelve dataURL. */
+export function readImageCompressed(file, maxSize = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const w = img.width, h = img.height;
+      const scale = Math.min(1, maxSize / Math.max(w, h));
+      const cw = Math.round(w * scale), ch = Math.round(h * scale);
+      const cv = document.createElement('canvas');
+      cv.width = cw; cv.height = ch;
+      cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+      let out = cv.toDataURL('image/webp', quality);
+      if (out.indexOf('data:image/webp') !== 0) out = cv.toDataURL('image/jpeg', quality);
+      resolve({ dataUrl: out, width: cw, height: ch, bytes: Math.round(out.length * 0.75) });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la imagen')); };
+    img.src = url;
+  });
+}
+/** Comprime un dataURL de imagen a JPEG del tamaño indicado (para fotos ligeras). */
+export function compressDataUrl(dataUrl, maxSize = 320, quality = 0.6) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * scale);
+      cv.height = Math.round(img.height * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      resolve(cv.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+/** Toma un frame del video (cámara) y lo devuelve comprimido. */
+export function captureVideoFrame(video, maxSize = 320, quality = 0.6) {
+  try {
+    const w = video.videoWidth, h = video.videoHeight;
+    if (!w || !h) return null;
+    const scale = Math.min(1, maxSize / Math.max(w, h));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(w * scale);
+    cv.height = Math.round(h * scale);
+    cv.getContext('2d').drawImage(video, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', quality);
+  } catch { return null; }
+}
+export const pad = (n) => String(n).padStart(2, '0');

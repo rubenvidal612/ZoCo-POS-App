@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZoCo Finanzas</title>
+<link rel="manifest" href="/personal.webmanifest">
+<link rel="icon" href="/zoco-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Finanzas">
+<meta name="theme-color" content="#0F172A">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:"Segoe UI",system-ui,sans-serif;background:#0F172A;color:#fff;min-height:100vh;
+    display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+  header{padding:16px 18px 8px;display:flex;align-items:center;gap:10px}
+  header img{width:34px;height:34px;border-radius:9px}
+  header b{font-size:16px}
+  .balance{margin-left:auto;text-align:right}
+  .balance span{display:block;font-size:9.5px;letter-spacing:1.2px;color:#94A3B8;font-weight:800}
+  .balance i{font-style:normal;font-size:17px;font-weight:800}
+
+  .tabs{display:flex;gap:8px;padding:6px 16px 0}
+  .tabs button{flex:1;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);color:#CBD5E1;font-size:13.5px;font-weight:800;cursor:pointer}
+  .tabs button.on.gasto{background:#EF4444;border-color:#EF4444;color:#fff}
+  .tabs button.on.ingreso{background:#10B981;border-color:#10B981;color:#fff}
+
+  .amount{padding:22px 16px 6px;text-align:center}
+  .amount .val{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1}
+  .amount .val small{font-size:26px;opacity:.6;margin-right:4px}
+  .amount .hint{font-size:11.5px;color:#64748B;margin-top:6px}
+
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:12px 16px}
+  .key{height:58px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);
+    color:#fff;font-size:21px;font-weight:700;cursor:pointer}
+  .key:active{background:rgba(255,255,255,.18)}
+
+  .pay{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 16px 14px}
+  .pay button{height:64px;border:0;border-radius:16px;font-size:15px;font-weight:800;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .pay .cash{background:linear-gradient(180deg,#10B981,#059669)}
+  .pay .card{background:linear-gradient(180deg,#3B82F6,#2563EB)}
+  .pay button:disabled{opacity:.45}
+
+  .list{padding:0 16px 20px;overflow:auto}
+  .list h3{font-size:11px;letter-spacing:1.2px;color:#64748B;font-weight:800;margin:8px 0}
+  .mv{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .mv .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex:0 0 32px}
+  .mv.out .ic{background:rgba(239,68,68,.18);color:#F87171}
+  .mv.in .ic{background:rgba(16,185,129,.18);color:#34D399}
+  .mv .t{flex:1;min-width:0}
+  .mv .t b{display:block;font-size:13px}
+  .mv .t span{font-size:10.5px;color:#94A3B8}
+  .mv .a{font-weight:800;font-size:14px}
+  .mv.out .a{color:#F87171}
+  .mv.in .a{color:#34D399}
+  .tot{display:flex;gap:8px;margin:6px 0 12px}
+  .tot div{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:9px 11px}
+  .tot span{font-size:9.5px;letter-spacing:1px;color:#64748B;font-weight:800;display:block}
+  .tot b{font-size:15px}
+  .empty{color:#64748B;font-size:12.5px;text-align:center;padding:18px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#111A2B;border:1px solid rgba(16,185,129,.4);color:#34D399;padding:11px 18px;border-radius:12px;
+    font-size:13px;font-weight:800;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  @media (min-width:620px){
+    body{max-width:520px;margin:0 auto;min-height:100vh;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)}
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="/zoco-192.png" alt="ZoCo">
+  <b>Mis Finanzas</b>
+  <div class="balance">
+    <span>BALANCE</span>
+    <i id="bal">$0.00</i>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="gasto on" data-t="out">➖ Gasto personal</button>
+  <button class="ingreso" data-t="in">➕ Ingreso personal</button>
+</div>
+
+<div class="amount">
+  <div class="val"><small>$</small><span id="amt">0</span></div>
+  <div class="hint" id="hint">Toca Efectivo o Tarjeta para guardar</div>
+</div>
+
+<div class="keys">
+  <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+  <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+  <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+  <button class="key" data-k="C">C</button><button class="key" data-k="0">0</button><button class="key" data-k=".">.</button>
+</div>
+
+<div class="pay">
+  <button class="cash" id="pay-cash">💵 Efectivo</button>
+  <button class="card" id="pay-card">💳 Tarjeta</button>
+</div>
+
+<div class="list">
+  <div class="tot">
+    <div><span>EFECTIVO</span><b id="t-cash">$0.00</b></div>
+    <div><span>TARJETA</span><b id="t-card">$0.00</b></div>
+    <div><span>HOY</span><b id="t-day">$0.00</b></div>
+  </div>
+  <h3>MOVIMIENTOS DE HOY</h3>
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
+const pad = (n) => String(n).padStart(2, '0');
+let db = null;
+let type = 'out';
+let amount = '0';
+
+const $ = (s) => document.querySelector(s);
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/state?c=default', { cache: 'no-store' });
+    if (r.ok) db = await r.json();
+  } catch {}
+  if (!db) db = { personal: { movements: [] }, settings: {} };
+  if (!db.personal) db.personal = { movements: [] };
+  render();
+}
+
+async function save() {
+  try {
+    await fetch('/api/state?c=default', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personal: db.personal, savedAt: new Date().toISOString() }),
+    });
+  } catch {}
+}
+
+function todayMv() {
+  const today = new Date().toDateString();
+  return (db.personal.movements || []).filter((m) => new Date(m.date).toDateString() === today);
+}
+
+function render() {
+  const mv = todayMv();
+  const cash = mv.filter((m) => m.method === 'cash').reduce((a, m) => a + (m.type === 'in' ? m.amount : -m.amount), 0);
+  const card = mv.filter((m) => m.method === 'card').reduce((a, m) => a + (m.type === 'in' ? m.amount : -m.amount), 0);
+  const day = mv.reduce((a, m) => a + (m.type === 'in' ? m.amount : -m.amount), 0);
+
+  $('#t-cash').textContent = money(cash);
+  $('#t-card').textContent = money(card);
+  $('#t-day').textContent = money(day);
+  $('#bal').textContent = money(day);
+
+  const list = $('#list');
+  list.innerHTML = mv.length ? mv.slice().reverse().map((m) => `
+    <div class="mv ${m.type}">
+      <div class="ic">${m.type === 'in' ? '➕' : '➖'}</div>
+      <div class="t">
+        <b>${m.note || (m.type === 'in' ? 'Ingreso' : 'Gasto')}</b>
+        <span>${m.method === 'cash' ? 'Efectivo' : 'Tarjeta'} · ${new Date(m.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      <div class="a">${m.type === 'in' ? '+' : '−'}${money(m.amount)}</div>
+    </div>`).join('') : '<div class="empty">Aún no hay movimientos hoy.</div>';
+
+  $('#pay-cash').disabled = !(Number(amount) > 0);
+  $('#pay-card').disabled = !(Number(amount) > 0);
+}
+
+function addMovement(method) {
+  const value = Number(amount);
+  if (!(value > 0)) { toast('Escribe un monto'); return; }
+  db.personal.movements.push({
+    id: 'pm' + Date.now(), type, amount: value, method,
+    category: 'Otros', note: '', date: new Date().toISOString(),
+  });
+  amount = '0';
+  $('#amt').textContent = '0';
+  save();
+  render();
+  toast((type === 'in' ? 'Ingreso' : 'Gasto') + ' de ' + money(value) + ' guardado');
+}
+
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  type = b.dataset.t;
+  document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+});
+
+document.querySelectorAll('.key').forEach((b) => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === 'C') amount = '0';
+  else if (k === '.') { if (!amount.includes('.')) amount += '.'; }
+  else amount = amount === '0' ? k : amount + k;
+  $('#amt').textContent = amount;
+  render();
+});
+
+$('#pay-cash').onclick = () => addMovement('cash');
+$('#pay-card').onclick = () => addMovement('card');
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZoCo Gastos</title>
+<link rel="manifest" href="/gastos.webmanifest">
+<link rel="icon" href="/zoco-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="theme-color" content="#0F172A">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:"Segoe UI",system-ui,sans-serif;background:#0F172A;color:#fff;min-height:100vh;
+    display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+  header{padding:16px 18px 6px;display:flex;align-items:center;gap:10px}
+  header img{width:34px;height:34px;border-radius:9px}
+  header b{font-size:16px}
+  .hoy{margin-left:auto;text-align:right}
+  .hoy span{display:block;font-size:9.5px;letter-spacing:1.2px;color:#94A3B8;font-weight:800}
+  .hoy i{font-style:normal;font-size:17px;font-weight:800;color:#F87171}
+
+  .amount{padding:10px 16px 4px;text-align:center}
+  .amount .val{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1}
+  .amount .val small{font-size:26px;opacity:.6;margin-right:4px}
+
+  .cats{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 0}
+  .cats::-webkit-scrollbar{height:0}
+  .cat{white-space:nowrap;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+    color:#CBD5E1;font-size:12px;font-weight:700;border-radius:999px;padding:7px 12px;cursor:pointer}
+  .cat.on{background:#F97316;border-color:#F97316;color:#fff}
+
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:14px 16px}
+  .key{height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);
+    color:#fff;font-size:21px;font-weight:700;cursor:pointer}
+  .key:active{background:rgba(255,255,255,.18)}
+
+  .pay{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 12px}
+  .pay button{height:62px;border:0;border-radius:16px;font-size:15px;font-weight:800;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .pay .cash{background:linear-gradient(180deg,#10B981,#059669)}
+  .pay .card{background:linear-gradient(180deg,#3B82F6,#2563EB)}
+  .pay button:disabled{opacity:.45}
+
+  .lista{padding:0 16px 18px;overflow:auto}
+  .lista h3{font-size:10.5px;letter-spacing:1.2px;color:#64748B;font-weight:800;margin:10px 0 8px}
+  .g{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .g .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:14px;flex:0 0 30px;
+    background:rgba(239,68,68,.18);color:#F87171}
+  .g .t{flex:1;min-width:0}
+  .g .t b{display:block;font-size:13px}
+  .g .t span{font-size:10.5px;color:#94A3B8}
+  .g .a{font-weight:800;font-size:14px;color:#F87171}
+  .empty{color:#64748B;font-size:12.5px;text-align:center;padding:16px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#111A2B;border:1px solid rgba(16,185,129,.4);color:#34D399;padding:11px 18px;border-radius:12px;
+    font-size:13px;font-weight:800;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  @media (min-width:620px){ body{max-width:520px;margin:0 auto;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)} }
+</style>
+</head>
+<body>
+<header>
+  <img src="/zoco-192.png" alt="ZoCo">
+  <b>Gastos</b>
+  <div class="hoy"><span>HOY</span><i id="hoy">$0.00</i></div>
+</header>
+
+<div class="amount"><div class="val"><small>$</small><span id="amt">0</span></div></div>
+
+<div class="cats" id="cats">
+  <button class="cat on" data-c="General">General</button>
+  <button class="cat" data-c="Luz">Luz</button>
+  <button class="cat" data-c="Agua">Agua</button>
+  <button class="cat" data-c="Renta">Renta</button>
+  <button class="cat" data-c="Proveedor">Proveedor</button>
+  <button class="cat" data-c="Insumos">Insumos</button>
+  <button class="cat" data-c="Comida">Comida</button>
+  <button class="cat" data-c="Transporte">Transporte</button>
+  <button class="cat" data-c="Sueldos">Sueldos</button>
+  <button class="cat" data-c="Otro">Otro</button>
+</div>
+
+<div class="keys">
+  <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+  <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+  <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+  <button class="key" data-k="C">C</button><button class="key" data-k="0">0</button><button class="key" data-k=".">.</button>
+</div>
+
+<div class="pay">
+  <button class="cash" id="pay-cash">💵 Efectivo</button>
+  <button class="card" id="pay-card">💳 Tarjeta</button>
+</div>
+
+<div class="lista">
+  <h3>GASTOS DE HOY</h3>
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
+const pad = (n) => String(n).padStart(2, '0');
+let db = null;
+let amount = '0';
+let cat = 'General';
+
+const $ = (s) => document.querySelector(s);
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/state?c=default', { cache: 'no-store' });
+    if (r.ok) db = await r.json();
+  } catch {}
+  if (!db) db = { expenses: [] };
+  if (!Array.isArray(db.expenses)) db.expenses = [];
+  render();
+}
+
+async function save() {
+  try {
+    await fetch('/api/state?c=default', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expenses: db.expenses, savedAt: new Date().toISOString() }),
+    });
+  } catch {}
+}
+
+function hoyGastos() {
+  const today = new Date().toDateString();
+  return db.expenses.filter((e) => new Date(e.date).toDateString() === today);
+}
+
+function render() {
+  const hoy = hoyGastos();
+  $('#hoy').textContent = money(hoy.reduce((a, e) => a + Number(e.amount || 0), 0));
+  $('#list').innerHTML = hoy.length ? hoy.slice().reverse().map((e) => `
+    <div class="g">
+      <div class="ic">🧾</div>
+      <div class="t"><b>${e.name || 'Gasto'}</b>
+        <span>${e.method === 'card' ? 'Tarjeta' : 'Efectivo'} · ${new Date(e.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span></div>
+      <div class="a">−${money(e.amount)}</div>
+    </div>`).join('') : '<div class="empty">Aún no hay gastos hoy.</div>';
+
+  $('#pay-cash').disabled = !(Number(amount) > 0);
+  $('#pay-card').disabled = !(Number(amount) > 0);
+}
+
+function addExpense(method) {
+  const value = Number(amount);
+  if (!(value > 0)) { toast('Escribe un monto'); return; }
+  db.expenses.unshift({
+    id: 'exp' + Date.now(),
+    name: cat,
+    amount: value,
+    date: new Date().toISOString(),
+    paid: true,
+    recurring: false,
+    method,
+    source: 'app-gastos',
+  });
+  amount = '0';
+  $('#amt').textContent = '0';
+  save();
+  render();
+  toast('Gasto de ' + money(value) + ' guardado');
+}
+
+document.querySelectorAll('.cat').forEach((b) => b.onclick = () => {
+  cat = b.dataset.c;
+  document.querySelectorAll('.cat').forEach((x) => x.classList.toggle('on', x === b));
+});
+
+document.querySelectorAll('.key').forEach((b) => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === 'C') amount = '0';
+  else if (k === '.') { if (!amount.includes('.')) amount += '.'; }
+  else amount = amount === '0' ? k : amount + k;
+  $('#amt').textContent = amount;
+  render();
+});
+
+$('#pay-cash').onclick = () => addExpense('cash');
+$('#pay-card').onclick = () => addExpense('card');
+
+load();
+</script>
+</body>
+</html>

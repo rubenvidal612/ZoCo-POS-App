@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZoCo POS</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/zoco-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ZoCo">
+<meta name="theme-color" content="#0F172A">
+<script>
+  // Guarda el evento de instalación desde el primer instante (Chrome lo dispara una sola vez)
+  window.__bip = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    window.__bip = e;
+    window.dispatchEvent(new Event('zoco:installable'));
+  });
+</script>
+<link rel="stylesheet" href="./css/tokens.css?v=7">
+<link rel="stylesheet" href="./css/app.css?v=7">
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<script type="module" src="./js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>
