@@ -8,7 +8,9 @@ import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
-import { startSync } from './sync.js';
+import { startSync, sbReady } from './sync.js';
+import { cloudSignIn, amISuperadmin, cloudSession } from './auth.js';
+import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
 
@@ -45,6 +47,7 @@ const NAV_GROUPS = [
       { id: 'nomina', label: 'Nómina', icon: '💵', perm: 'finance.view' },
       { id: 'usuarios', label: 'Usuarios', icon: '👥', perm: 'users.manage' },
       { id: 'config', label: 'Configuración', icon: '⚙', mobile: true, perm: 'settings.edit' },
+      { id: 'admin', label: 'Panel maestro', icon: '🛡', super: true },
     ],
   },
 ];
@@ -88,12 +91,31 @@ function paintLogin() {
           <input id="lg-pass" type="password" placeholder="••••" autocomplete="current-password"></div>
         <div class="login-err" id="lg-err"></div>
         <button class="btn orange" type="submit">Entrar</button>
+        <button class="btn ghost" type="button" id="lg-cloud" style="margin-top:8px;width:100%">☁ Entrar con cuenta en la nube</button>
         <div class="login-hint">
           Demo: <b>ramberamericasefectivo@gmail.com</b> / <b>1234</b><br>
           Cajero: <b>cajero@zoco.app</b> / <b>1234</b>
         </div>
       </form>
     </div>`;
+
+  $('#lg-cloud').onclick = async () => {
+    const email = $('#lg-email').value.trim();
+    const pass = $('#lg-pass').value;
+    if (!email || !pass) { $('#lg-err').textContent = 'Escribe correo y contraseña'; return; }
+    $('#lg-err').textContent = 'Conectando…';
+    const r = await cloudSignIn(email, pass);
+    if (!r.ok) { $('#lg-err').textContent = r.error; return; }
+    // Mezcla: se cargan los datos y se entra con el perfil del dueño
+    const local = login(email, pass);
+    if (!local.ok) {
+      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
+      if (u) state.user = u;
+    }
+    state.superadmin = await amISuperadmin();
+    toast('Bienvenido' + (r.user?.email ? ', ' + r.user.email : ''));
+    route = 'inicio'; location.hash = '#/inicio'; paintShell();
+  };
 
   $('#login-form').onsubmit = (e) => {
     e.preventDefault();
@@ -132,7 +154,7 @@ function paintShell() {
         </div>
 
         ${NAV_GROUPS.map((g) => {
-          const items = g.items.filter((n) => !n.perm || can(n.perm));
+          const items = g.items.filter((n) => (!n.perm || can(n.perm)) && (!n.super || state.superadmin));
           if (!items.length) return '';
           return `<div class="nav-group">
             <div class="nav-group-label">${g.label}</div>
@@ -277,6 +299,7 @@ function mount() {
     reportes: guard('reports.view', () => reportsView(ctx)),
     config: guard('settings.edit', () => settingsView(ctx)),
     ia: guard('ai.use', () => aiView(ctx)),
+    admin: () => adminView(ctx),
     finanzas: guard('finance.view', () => financeView(ctx)),
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),

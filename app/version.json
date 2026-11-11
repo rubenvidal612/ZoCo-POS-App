@@ -1,8 +1,8 @@
 {
-    "version":  "2.4.0",
+    "version":  "2.5.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Modo híbrido: respaldo y sincronización con Supabase (opcional)",
-                  "Configuración → Nube (Supabase): URL, key, probar y sincronizar"
+                  "Login con cuenta en la nube (Supabase)",
+                  "Panel maestro para administrar empresas y planes"
               ]
 }
