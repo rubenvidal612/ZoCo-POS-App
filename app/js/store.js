@@ -193,13 +193,16 @@ function save() {
   if (!pushTimer) pushTimer = setTimeout(() => { pushTimer = null; pushToServer(); }, 600);
 }
 
+let serverOff = false;
 async function pushToServer() {
+  if (serverOff) return;            // en Vercel no hay servidor local: se usa Supabase
   try {
-    await fetch('/api/state?c=' + encodeURIComponent(state.currentCompany || 'default'), {
+    const r = await fetch('/api/state?c=' + encodeURIComponent(state.currentCompany || 'default'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...state, savedAt: new Date().toISOString() }),
     });
+    if (r.status === 404 || r.status === 405) serverOff = true;
   } catch { /* offline */ }
 }
 

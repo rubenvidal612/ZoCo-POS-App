@@ -1,8 +1,8 @@
 {
-    "version":  "2.5.0",
+    "version":  "2.5.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login con cuenta en la nube (Supabase)",
-                  "Panel maestro para administrar empresas y planes"
+                  "Listo para Vercel: sin guardado local cuando no hay servidor",
+                  "Verificación de tablas y login en la nube"
               ]
 }

@@ -1,12 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": null,
   "outputDirectory": "app",
   "cleanUrls": false,
-  "rewrites": [
-    { "source": "/api/ai", "destination": "/api/ai" }
-  ],
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/sw.js",
