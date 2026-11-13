@@ -119,3 +119,44 @@ export function cloudSignOut() {
   }
   clearCloudSession();
 }
+
+/* ================= Google (OAuth) ================= */
+export function signInWithGoogle() {
+  if (!sbReady()) return false;
+  const redirect = location.origin + location.pathname;
+  const url = `${sbConfig().url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
+  location.href = url;
+  return true;
+}
+
+/** Lee el #access_token que Supabase devuelve al volver de Google. */
+export async function handleOAuthReturn() {
+  const hash = location.hash || '';
+  if (!hash.includes('access_token=')) return { ok: false };
+  const params = new URLSearchParams(hash.replace(/^#/, ''));
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  const expires_in = Number(params.get('expires_in') || 3600);
+  if (!access_token) return { ok: false };
+  try {
+    const r = await fetch(`${sbConfig().url}/auth/v1/user`, {
+      headers: { apikey: sbConfig().key, Authorization: 'Bearer ' + access_token },
+    });
+    const user = await r.json();
+    saveCloudSession({ access_token, refresh_token, expires_in, user, token_type: 'bearer' });
+    history.replaceState(null, '', location.pathname + (location.search || ''));
+    return { ok: true, user };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/** Si el usuario de Google es nuevo, le crea su empresa. */
+export async function ensureCompany(name) {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false };
+  const companies = await myCompanies();
+  if (companies.length) return { ok: true, company: companies[0].company_id, existed: true };
+  const r = await bootstrapCompany(name || (s.user?.email || 'mi-negocio').split('@')[0]);
+  return { ok: !!r.ok, company: r.companyId, existed: false };
+}

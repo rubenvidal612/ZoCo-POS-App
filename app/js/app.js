@@ -8,8 +8,8 @@ import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
-import { startSync, sbReady } from './sync.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin } from './auth.js';
+import { startSync, sbReady, pullCloud } from './sync.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
@@ -94,6 +94,7 @@ function paintLogin() {
           <input id="lg-name" placeholder="Mi tienda"></div>
         <button class="btn orange" type="submit">Entrar</button>
         <button class="btn ghost" type="button" id="lg-cloud" style="margin-top:8px;width:100%">☁ Entrar con cuenta en la nube</button>
+        <button class="btn ghost" type="button" id="lg-google" style="margin-top:6px;width:100%">🟦 Continuar con Google</button>
         <button class="btn ghost" type="button" id="lg-register" style="margin-top:6px;width:100%">Crear cuenta nueva</button>
         <div class="login-hint">
           Demo: <b>ramberamericasefectivo@gmail.com</b> / <b>1234</b><br>
@@ -102,6 +103,10 @@ function paintLogin() {
       </form>
     </div>`;
 
+  $('#lg-google').onclick = () => {
+    if (!sbReady()) { $('#lg-err').textContent = 'Falta configurar Supabase'; return; }
+    signInWithGoogle();
+  };
   let mode = 'login';
   $('#lg-register').onclick = () => {
     mode = mode === 'login' ? 'register' : 'login';
@@ -364,15 +369,38 @@ installScanner((code) => {
 });
 
 applyTheme();
-hydrate().then(() => {
-  paintShell();
-  setTimeout(() => initInstallPrompt(), 1200);
-  setTimeout(() => maybeDailyNotice(), 2500);
-  setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
-  // Refresca la suscripción push si el usuario ya dio permiso
-  if ('Notification' in window && Notification.permission === 'granted') {
-    setTimeout(() => subscribePush(), 3000);
-  }
+
+/* Vuelta de Google (OAuth): guarda sesión, crea empresa si es nueva y entra */
+async function bootOAuth() {
+  try {
+    const r = await handleOAuthReturn();
+    if (!r.ok) return false;
+    const c = await ensureCompany(r.user?.user_metadata?.name || (r.user?.email || '').split('@')[0]);
+    const email = r.user?.email || state.users[0]?.email || 'owner@zoco.app';
+    const local = login(email, '');
+    if (!local.ok) {
+      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
+      if (u) state.user = u;
+    }
+    state.superadmin = await amISuperadmin();
+    toast(c.existed ? 'Bienvenido de nuevo' : 'Cuenta creada con Google. ¡Bienvenido!');
+    route = 'inicio'; location.hash = '#/inicio';
+    return true;
+  } catch { return false; }
+}
+
+bootOAuth().then((ok) => {
+  hydrate().then(async () => {
+    if (ok && sbReady()) { try { await pullCloud(true); } catch {} }
+    paintShell();
+    setTimeout(() => initInstallPrompt(), 1200);
+    setTimeout(() => maybeDailyNotice(), 2500);
+    setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
+    // Refresca la suscripción push si el usuario ya dio permiso
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setTimeout(() => subscribePush(), 3000);
+    }
+  });
 });
 
 /* Aviso diario de presupuesto personal (opcional) */

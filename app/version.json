@@ -1,8 +1,8 @@
 {
-    "version":  "2.6.0",
+    "version":  "2.7.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Configuracion de Supabase incluida: el cliente solo se registra",
-                  "Boton \"Crear cuenta nueva\" con nombre del negocio"
+                  "Login con Google (un toque)",
+                  "Creacion automatica de empresa para clientes nuevos"
               ]
 }
