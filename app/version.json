@@ -1,8 +1,7 @@
 {
-    "version":  "2.7.0",
+    "version":  "2.7.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login con Google (un toque)",
-                  "Creacion automatica de empresa para clientes nuevos"
+                  "Entrar con enlace magico por correo (sin contrasena)"
               ]
 }

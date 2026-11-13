@@ -9,7 +9,7 @@ import { initInstallPrompt, showInstallCard, mountInstallButtons } from './insta
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany, sendMagicLink } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
@@ -94,7 +94,8 @@ function paintLogin() {
           <input id="lg-name" placeholder="Mi tienda"></div>
         <button class="btn orange" type="submit">Entrar</button>
         <button class="btn ghost" type="button" id="lg-cloud" style="margin-top:8px;width:100%">☁ Entrar con cuenta en la nube</button>
-        <button class="btn ghost" type="button" id="lg-google" style="margin-top:6px;width:100%">🟦 Continuar con Google</button>
+        <button class="btn ghost" type="button" id="lg-magic" style="margin-top:6px;width:100%">✉️ Entrar con mi correo (sin contraseña)</button>
+        <button class="btn ghost" type="button" id="lg-google" style="margin-top:6px;width:100%;display:none">🟦 Continuar con Google</button>
         <button class="btn ghost" type="button" id="lg-register" style="margin-top:6px;width:100%">Crear cuenta nueva</button>
         <div class="login-hint">
           Demo: <b>ramberamericasefectivo@gmail.com</b> / <b>1234</b><br>

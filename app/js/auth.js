@@ -160,3 +160,20 @@ export async function ensureCompany(name) {
   const r = await bootstrapCompany(name || (s.user?.email || 'mi-negocio').split('@')[0]);
   return { ok: !!r.ok, company: r.companyId, existed: false };
 }
+/* ================= Enlace mágico por correo (sin contraseña) ================= */
+export async function sendMagicLink(email) {
+  if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
+  try {
+    const redirect = location.origin + location.pathname;
+    const r = await fetch(`${sbConfig().url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
+      body: JSON.stringify({ email, create_user: true }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      return { ok: false, error: t.slice(0, 160) || 'No se pudo enviar el correo' };
+    }
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
