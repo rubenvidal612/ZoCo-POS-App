@@ -1,8 +1,8 @@
 {
-    "version":  "2.13.0",
+    "version":  "2.13.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Productos: seleccion multiple para subir al catalogo o eliminar (con confirmacion)",
-                  "Catalogo: ficha de producto con tallas agotadas tachadas y pedido por WhatsApp"
+                  "Login ya no se queda en \"Conectando\": entra local al instante",
+                  "Tiempo limite en las llamadas a Supabase (9 s)"
               ]
 }

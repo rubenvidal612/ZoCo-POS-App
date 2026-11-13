@@ -22,6 +22,8 @@ export function sbReady() {
   return !!(c.url && c.key);
 }
 
+const T = (ms = 9000) => { try { return { signal: AbortSignal.timeout(ms) }; } catch { return {}; } };
+
 const headers = () => ({
   'Content-Type': 'application/json',
   apikey: sbConfig().key,
@@ -42,7 +44,7 @@ export async function pushCloud() {
     const rev = Array.isArray(rows) && rows[0] ? Number(rows[0].rev) + 1 : 1;
     const body = { company_id: c, data: state, rev, updated_at: new Date().toISOString() };
     const r = await fetch(`${sbConfig().url}/rest/v1/company_state`, {
-      method: 'POST',
+      method: 'POST', ...T(12000),
       headers: { ...headers(), Prefer: 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify(body),
     });

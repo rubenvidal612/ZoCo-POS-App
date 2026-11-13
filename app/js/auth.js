@@ -2,6 +2,12 @@
 import { sbConfig, sbReady } from './sync.js';
 
 const SESSION = 'zoco.cloud.session';
+const T = (ms = 9000) => {
+  try { return { signal: AbortSignal.timeout(ms) }; } catch { return {}; }
+};
+async function safeFetch(url, opts = {}, ms = 9000) {
+  return await fetch(url, { ...opts, ...T(ms) });
+}
 
 const headers = (token) => ({
   'Content-Type': 'application/json',
@@ -28,8 +34,8 @@ export function clearCloudSession() {
 export async function cloudSignIn(email, password) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
-    const r = await fetch(`${sbConfig().url}/auth/v1/token?grant_type=password`, {
-      method: 'POST', headers: headers(),
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/token?grant_type=password`, {
+      method: 'POST', headers: headers(), ...T(),
       body: JSON.stringify({ email, password }),
     });
     const j = await r.json();
@@ -42,8 +48,8 @@ export async function cloudSignIn(email, password) {
 export async function cloudSignUp(email, password, companyName) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
-    const r = await fetch(`${sbConfig().url}/auth/v1/signup`, {
-      method: 'POST', headers: headers(),
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/signup`, {
+      method: 'POST', headers: headers(), ...T(),
       body: JSON.stringify({ email, password }),
     });
     const j = await r.json();
@@ -63,7 +69,7 @@ export async function bootstrapCompany(name) {
   if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
   const id = 'co-' + (s.user?.id || Date.now()).slice(0, 8);
   try {
-    await fetch(`${sbConfig().url}/rest/v1/rpc/bootstrap_company`, {
+    await safeFetch(`${sbConfig().url}/rest/v1/rpc/bootstrap_company`, {
       method: 'POST', headers: headers(s.access_token),
       body: JSON.stringify({ company_name: name, company_id: id }),
     });
@@ -75,7 +81,7 @@ export async function myCompanies() {
   const s = cloudSession();
   if (!s?.access_token) return [];
   try {
-    const r = await fetch(`${sbConfig().url}/rest/v1/members?select=company_id,role,companies(name)&user_id=eq.${s.user.id}`, { headers: headers(s.access_token) });
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/members?select=company_id,role,companies(name)&user_id=eq.${s.user.id}`, { headers: headers(s.access_token) });
     const j = await r.json();
     return Array.isArray(j) ? j : [];
   } catch { return []; }
@@ -85,7 +91,7 @@ export async function amISuperadmin() {
   const s = cloudSession();
   if (!s?.access_token) return false;
   try {
-    const r = await fetch(`${sbConfig().url}/rest/v1/rpc/am_i_superadmin`, {
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/rpc/am_i_superadmin`, {
       method: 'POST', headers: headers(s.access_token), body: '{}',
     });
     if (!r.ok) return false;
@@ -96,7 +102,7 @@ export async function amISuperadmin() {
 export async function adminCompanies() {
   const s = cloudSession();
   if (!s?.access_token) return [];
-  const r = await fetch(`${sbConfig().url}/rest/v1/rpc/admin_companies`, {
+  const r = await safeFetch(`${sbConfig().url}/rest/v1/rpc/admin_companies`, {
     method: 'POST', headers: headers(s.access_token), body: '{}',
   });
   if (!r.ok) throw new Error((await r.text()).slice(0, 160));
@@ -106,7 +112,7 @@ export async function adminCompanies() {
 export async function adminSetPlan(companyId, plan) {
   const s = cloudSession();
   if (!s?.access_token) return;
-  await fetch(`${sbConfig().url}/rest/v1/rpc/admin_set_plan`, {
+  await safeFetch(`${sbConfig().url}/rest/v1/rpc/admin_set_plan`, {
     method: 'POST', headers: headers(s.access_token),
     body: JSON.stringify({ p_company: companyId, p_plan: plan }),
   });
@@ -140,7 +146,7 @@ export async function handleOAuthReturn() {
   const expires_in = Number(params.get('expires_in') || 3600);
   if (!access_token) return { ok: false };
   try {
-    const r = await fetch(`${sbConfig().url}/auth/v1/user`, {
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/user`, {
       headers: { apikey: sbConfig().key, Authorization: 'Bearer ' + access_token },
     });
     const user = await r.json();
@@ -166,7 +172,7 @@ export async function sendMagicLink(email) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
     const redirect = location.origin + location.pathname;
-    const r = await fetch(`${sbConfig().url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect)}`, {
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
       body: JSON.stringify({ email, create_user: true }),
@@ -183,7 +189,7 @@ export async function sendRecovery(email) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
     const redirect = location.origin + location.pathname;
-    const r = await fetch(`${sbConfig().url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
       body: JSON.stringify({ email }),
@@ -197,7 +203,7 @@ export async function updatePassword(newPass) {
   const s = cloudSession();
   if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
   try {
-    const r = await fetch(`${sbConfig().url}/auth/v1/user`, {
+    const r = await safeFetch(`${sbConfig().url}/auth/v1/user`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', apikey: sbConfig().key, Authorization: 'Bearer ' + s.access_token },
       body: JSON.stringify({ password: newPass }),

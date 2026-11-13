@@ -143,44 +143,51 @@ function paintLogin() {
     const email = $('#lg-email').value.trim();
     const pass = $('#lg-pass').value;
 
-    // Con Supabase configurado: primero la nube; si no, el usuario local (demo)
-    if (sbReady()) {
-      if (mode === 'register' && pass.length < 6) { $('#lg-err').textContent = 'La contraseña debe tener 6 caracteres o más'; return; }
-      $('#lg-err').textContent = 'Conectando…';
-      const r = mode === 'register'
-        ? await cloudSignUp(email, pass, $('#lg-name').value.trim() || email.split('@')[0])
-        : await cloudSignIn(email, pass);
-
-      if (r.ok && !r.needConfirm) {
-        const local = login(email, pass);
-        if (!local.ok) {
-          const u = state.users.find((x) => x.role === 'owner') || state.users[0];
-          if (u) state.user = u;
-        }
-        state.superadmin = await amISuperadmin();
-        toast(mode === 'register' ? 'Cuenta creada. ¡Bienvenido!' : 'Bienvenido');
-        if (mode === 'register') setTimeout(() => toast('Configuración → Datos de prueba: borra el catálogo de ejemplo'), 2000);
-        route = 'inicio'; location.hash = '#/inicio'; paintShell();
-        return;
-      }
+    // 1) Registro: siempre en la nube
+    if (mode === 'register') {
+      if (!sbReady()) { $('#lg-err').textContent = 'Falta configurar Supabase'; return; }
+      if (pass.length < 6) { $('#lg-err').textContent = 'La contraseña debe tener 6 caracteres o más'; return; }
+      $('#lg-err').textContent = 'Creando tu cuenta…';
+      const r = await cloudSignUp(email, pass, $('#lg-name').value.trim() || email.split('@')[0]);
+      if (!r.ok) { $('#lg-err').textContent = r.error; return; }
       if (r.needConfirm) { $('#lg-err').textContent = '📬 Revisa tu correo para confirmar la cuenta'; return; }
-      // Si la nube falla, intenta el login local (usuarios demo)
-      const local = login(email, pass);
-      if (local.ok) {
-        toast('Bienvenido, ' + local.user.name);
-        route = 'inicio'; location.hash = '#/inicio'; paintShell();
-        return;
-      }
-      $('#lg-err').textContent = r.error || 'Correo o contraseña incorrectos';
+      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
+      if (u) state.user = u;
+      state.superadmin = await amISuperadmin();
+      toast('Cuenta creada. ¡Bienvenido!');
+      setTimeout(() => toast('Configuración → Datos de prueba: borra el catálogo de ejemplo'), 2000);
+      route = 'inicio'; location.hash = '#/inicio'; paintShell();
       return;
     }
 
-    const r = login(email, pass);
-    if (!r.ok) { $('#lg-err').textContent = r.msg; return; }
-    toast('Bienvenido, ' + r.user.name);
-    route = 'inicio';
-    location.hash = '#/inicio';
-    paintShell();
+    // 2) Login local primero (instantáneo, sin esperar a la nube)
+    const local = login(email, pass);
+    if (local.ok) {
+      toast('Bienvenido, ' + local.user.name);
+      route = 'inicio'; location.hash = '#/inicio'; paintShell();
+      // en segundo plano se valida contra la nube
+      if (sbReady()) {
+        cloudSignIn(email, pass).then(async (r) => {
+          if (r.ok) { state.superadmin = await amISuperadmin(); paintShell(); }
+        }).catch(() => {});
+      }
+      return;
+    }
+
+    // 3) Si no es usuario local, se intenta en la nube
+    if (sbReady()) {
+      $('#lg-err').textContent = 'Conectando…';
+      const r = await cloudSignIn(email, pass);
+      if (!r.ok) { $('#lg-err').textContent = r.error || 'Correo o contraseña incorrectos'; return; }
+      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
+      if (u) state.user = u;
+      state.superadmin = await amISuperadmin();
+      toast('Bienvenido');
+      route = 'inicio'; location.hash = '#/inicio'; paintShell();
+      return;
+    }
+
+    $('#lg-err').textContent = local.msg || 'Correo o contraseña incorrectos';
   };
   setTimeout(() => $('#lg-pass')?.focus(), 80);
 }
