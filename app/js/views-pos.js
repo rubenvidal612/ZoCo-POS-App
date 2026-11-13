@@ -88,7 +88,17 @@ export function posView(ctx) {
     q.value = filter;
     q.addEventListener('input', () => { filter = q.value.trim().toLowerCase(); renderGrid(); });
     $('#btn-quick', box).onclick = openQuickSale;
-    $('#btn-scan', box).onclick = () => { q.focus(); toast('Escáner listo — dispara el código'); };
+    $('#btn-scan', box).onclick = async () => {
+      // En celular abre la cámara; en PC deja lista la pistola
+      if (window.innerWidth <= 900) {
+        const { scanWithCameraSoft } = await import('./scanner.js');
+        const code = await scanWithCameraSoft();
+        if (code) { ctx.posApi?.addByCode(code); toast('Código: ' + code); }
+        return;
+      }
+      q.focus();
+      toast('Escáner listo — dispara el código');
+    };
     $('#btn-new', box).onclick = () => ctx.go('productos', { create: true });
     $('#go-cart', box)?.addEventListener('click', () => { screen = 'cart'; render(); });
 

@@ -17,7 +17,7 @@ import {
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
 import { openImportModal, downloadTemplate } from './importer.js';
-import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus, connectWifiPrinter } from './printer.js';
+import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus, connectWifiPrinter, paperWidth, setPaperWidth, paperMm, ticketText } from './printer.js';
 
 /* ================= PRODUCTOS ================= */
 export function productsView(ctx) {
@@ -540,6 +540,14 @@ export function settingsView(ctx) {
             <button class="btn sm" id="pr-usb">Conectar USB</button>
             <button class="btn sm ghost" id="pr-bt">Conectar Bluetooth</button>
             <button class="btn sm ghost" id="pr-test">Probar ticket</button>
+            <button class="btn sm ghost" id="pr-view">👁 Ver ticket</button>
+          </div>
+          <div style="margin-top:12px">
+            <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Ancho de papel</div>
+            <select id="pr-paper" style="height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+              <option value="58">58 mm (32 caracteres) — POS58D</option>
+              <option value="80">80 mm (48 caracteres)</option>
+            </select>
           </div>
           <div style="margin-top:12px">
             <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Impresora WiFi (TCP 9100)</div>
@@ -750,6 +758,32 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // Ancho de papel y vista previa del ticket
+  const paperSel = $('#pr-paper', root);
+  if (paperSel) {
+    paperSel.value = String(paperMm());
+    paperSel.onchange = () => { setPaperWidth(paperSel.value); toast('Papel: ' + paperSel.value + ' mm'); };
+  }
+  $('#pr-view', root)?.addEventListener('click', () => {
+    const fake = {
+      code: 1024, date: new Date().toISOString(), branchName: state.branches[0]?.name || 'Centro',
+      user: state.user?.name || 'Ramber', customer: 'Cliente',
+      items: [
+        { name: 'Zapato Escolar Negro', size: '24', qty: 1, price: 450 },
+        { name: 'Sandalia Rosa', size: '23.5', qty: 2, price: 380 },
+      ],
+      subtotal: 1210, discount: 0, total: 1210, method: 'cash', received: 1500, change: 290,
+    };
+    modal({
+      title: 'Vista previa del ticket (' + paperMm() + ' mm)',
+      body: `<pre class="ticket-preview">${esc(ticketText(fake))}</pre>`,
+      foot: `<button class="btn ghost sm" data-close>Cerrar</button><button class="btn sm" id="pv-print">Imprimir</button>`,
+    });
+    setTimeout(() => {
+      const b = document.querySelector('#pv-print');
+      if (b) b.onclick = async () => { const r = await printTicket(fake); toast(r.message); };
+    }, 30);
+  });
   const st = printerStatus();
   const stEl = $('#pr-state', root);
   if (stEl) stEl.textContent = 'USB: ' + st.usb + ' · Bluetooth: ' + st.bt + ' · WiFi: ' + st.wifi;
@@ -781,11 +815,17 @@ export function settingsView(ctx) {
     }
   });
   $('#sc-cam', root)?.addEventListener('click', async () => {
-    try {
-      const { scanWithCamera } = await import('./scanner.js');
-      const code = await scanWithCamera();
-      toast('Código: ' + code);
-    } catch (e) { toast(e.message || 'No se pudo abrir la cámara'); }
+    const { scanWithCameraSoft, cameraScanSupported } = await import('./scanner.js');
+    if (!cameraScanSupported()) {
+      toast('Este navegador no lee códigos con cámara. Prueba en Chrome (Android) o usa la pistola.');
+      return;
+    }
+    const code = await scanWithCameraSoft();
+    if (code) {
+      const inp = $('#sc-test', root);
+      if (inp) inp.value = code;
+      toast('Leído ✓ ' + code);
+    }
   });
 
   // Supabase (nube)
