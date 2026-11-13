@@ -258,3 +258,107 @@ export function openTransferModal(onDone) {
     onDone?.();
   };
 }
+
+/* ================= Calculadora de mezclas (perfumería) ================= */
+export function openMixCalculator() {
+  const m = modal({
+    wide: true,
+    title: 'Calculadora de mezclas (perfumería)',
+    body: `
+      <div class="hint" style="margin-bottom:12px">
+        Calcula cuántos frascos salen de tu concentrado según la concentración y el tamaño de frasco.
+      </div>
+      <div class="row2">
+        <div class="field"><label>Concentrado disponible (ml)</label>
+          <input id="mx-conc" type="number" value="1000" min="1"></div>
+        <div class="field"><label>Tamaño del frasco (ml)</label>
+          <select id="mx-bottle">
+            <option value="30">30 ml</option>
+            <option value="50" selected>50 ml</option>
+            <option value="100">100 ml</option>
+            <option value="250">250 ml</option>
+            <option value="custom">Otro…</option>
+          </select></div>
+        <div class="field" id="mx-custom-wrap" style="display:none"><label>Frasco personalizado (ml)</label>
+          <input id="mx-custom" type="number" value="60" min="1"></div>
+        <div class="field"><label>Concentración (% de esencia)</label>
+          <select id="mx-pct">
+            <option value="15">15% (suave)</option>
+            <option value="20" selected>20% (estándar)</option>
+            <option value="25">25% (intenso)</option>
+            <option value="30">30% (extra)</option>
+            <option value="custom">Otro…</option>
+          </select></div>
+        <div class="field" id="mx-pct-wrap" style="display:none"><label>% personalizado</label>
+          <input id="mx-pct-custom" type="number" value="18" min="1" max="60"></div>
+        <div class="field"><label>Merma (%)</label>
+          <input id="mx-waste" type="number" value="3" min="0" max="30"></div>
+      </div>
+
+      <div class="mx-out" id="mx-out"></div>
+
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:var(--brand-700)">Costos y precio (opcional)</summary>
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Costo del concentrado (por ml)</label><input id="mx-cost-conc" type="number" step="0.01" value="0"></div>
+          <div class="field"><label>Costo del alcohol (por ml)</label><input id="mx-cost-alc" type="number" step="0.01" value="0"></div>
+          <div class="field"><label>Costo del frasco</label><input id="mx-cost-bottle" type="number" step="0.01" value="0"></div>
+          <div class="field"><label>Margen deseado (%)</label><input id="mx-margin" type="number" value="60"></div>
+        </div>
+      </details>`,
+    foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+  });
+
+  const root = m.root;
+  const $ = (s) => root.querySelector(s);
+
+  const calc = () => {
+    const conc = Math.max(0, Number($('#mx-conc').value) || 0);
+    const bottleSel = $('#mx-bottle').value;
+    const bottle = bottleSel === 'custom' ? Math.max(1, Number($('#mx-custom').value) || 0) : Number(bottleSel);
+    const pctSel = $('#mx-pct').value;
+    const pct = pctSel === 'custom' ? Math.max(1, Number($('#mx-pct-custom').value) || 0) : Number(pctSel);
+    const waste = Math.max(0, Number($('#mx-waste').value) || 0);
+
+    const concPerBottle = bottle * (pct / 100);
+    const alcPerBottle = bottle - concPerBottle;
+    const concPerBottleW = concPerBottle * (1 + waste / 100);
+    const alcPerBottleW = alcPerBottle * (1 + waste / 100);
+    const bottles = concPerBottleW > 0 ? Math.floor(conc / concPerBottleW) : 0;
+    const alcTotal = alcPerBottleW * bottles;
+
+    const cConc = Number($('#mx-cost-conc').value) || 0;
+    const cAlc = Number($('#mx-cost-alc').value) || 0;
+    const cBot = Number($('#mx-cost-bottle').value) || 0;
+    const margin = Number($('#mx-margin').value) || 0;
+    const cost = (concPerBottleW * cConc) + (alcPerBottleW * cAlc) + cBot;
+    const price = cost * (1 + margin / 100);
+
+    const n = (v) => (Math.round(v * 10) / 10).toLocaleString('es-MX');
+    const money2 = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    $('#mx-out').innerHTML = `
+      <div class="mx-big"><b>${bottles}</b> frascos de ${n(bottle)} ml al ${n(pct)}%</div>
+      <div class="mx-grid">
+        <div><span>Concentrado por frasco</span><b>${n(concPerBottleW)} ml</b></div>
+        <div><span>Alcohol por frasco</span><b>${n(alcPerBottleW)} ml</b></div>
+        <div><span>Alcohol total</span><b>${n(alcTotal / 1000)} L</b></div>
+        <div><span>Concentrado usado</span><b>${n((concPerBottleW * bottles) / 1000)} L</b></div>
+      </div>
+      ${cost > 0 || price > 0 ? `<div class="mx-cost">
+        <div><span>Costo por frasco</span><b>${money2(cost)}</b></div>
+        <div><span>Precio sugerido (${n(margin)}% margen)</span><b>${money2(price)}</b></div>
+        <div><span>Ganancia por frasco</span><b>${money2(price - cost)}</b></div>
+      </div>` : ''}`;
+  };
+
+  root.querySelectorAll('input,select').forEach((i) => {
+    i.oninput = () => {
+      $('#mx-custom-wrap').style.display = $('#mx-bottle').value === 'custom' ? 'block' : 'none';
+      $('#mx-pct-wrap').style.display = $('#mx-pct').value === 'custom' ? 'block' : 'none';
+      calc();
+    };
+    i.onchange = i.oninput;
+  });
+  calc();
+}

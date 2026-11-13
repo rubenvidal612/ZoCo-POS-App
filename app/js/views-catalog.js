@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
-import { openReturnModal, openAdjustmentModal, openTransferModal } from './views-inventory.js';
+import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
@@ -12,7 +12,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -34,6 +34,7 @@ export function productsView(ctx) {
           <button class="btn ghost sm" id="imp">⬆ Importar</button>
           <button class="btn ghost sm" id="undo-imp">↩ Deshacer importación</button>
           <button class="btn ghost sm" id="adj">↺ Merma</button>
+          <button class="btn ghost sm" id="mix">⚗ Mezcla</button>
           <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
           <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
@@ -254,6 +255,7 @@ export function productsView(ctx) {
   });
   root.querySelector('#adj')?.addEventListener('click', () => openAdjustmentModal(render));
   root.querySelector('#trf')?.addEventListener('click', () => openTransferModal(render));
+  root.querySelector('#mix')?.addEventListener('click', () => openMixCalculator());
 
   // Deshacer la última importación (como en ZoCo 2.13)
   const undoBtn = root.querySelector('#undo-imp');
@@ -544,6 +546,20 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Secciones y tallas">
+        <div class="panel-head"><h2>Secciones y tallas</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Ajusta las secciones de tu giro y el rango de tallas de cada una.
+            Ejemplo: Damas de 20 a 28, o Ropa XS–XXL.
+          </div>
+          <div id="sec-list" class="sec-list"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn sm" id="sec-save">Guardar cambios</button>
+            <button class="btn ghost sm" id="sec-add">+ Nueva sección</button>
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Campos de producto">
         <div class="panel-head"><h2>Campos de producto</h2></div>
         <div style="padding:16px">
@@ -824,6 +840,83 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Secciones y tallas editables =====
+  const secList = $('#sec-list', root);
+  const paintSecs = () => {
+    if (!secList) return;
+    const secs = sectionsForModeNow();
+    secList.innerHTML = secs.map(([id, s]) => {
+      const numeric = s.scale !== 'none' && s.scale !== 'alpha';
+      return `<div class="sec-row" data-sid="${esc(id)}">
+        <div class="sec-top">
+          <input class="sec-label" value="${esc(s.label)}" placeholder="Nombre">
+          <button class="sec-del" data-sec-del="${esc(id)}" title="Eliminar sección">✕</button>
+        </div>
+        ${s.scale === 'alpha'
+          ? `<div class="sec-range"><label>Valores</label>
+               <input class="sec-values" value="${esc((s.values || []).join(', '))}" placeholder="XS, S, M, L, XL"></div>`
+          : numeric
+            ? `<div class="sec-range">
+                 <label>Desde</label><input class="sec-from" type="number" step="0.5" value="${s.from}">
+                 <label>Hasta</label><input class="sec-to" type="number" step="0.5" value="${s.to}">
+                 <label>Paso</label><input class="sec-step" type="number" step="0.5" value="${s.step}">
+               </div>`
+            : `<div class="sec-range sec-none">Sin tallas (pieza única)</div>`}
+      </div>`;
+    }).join('') || '<div class="hint">Sin secciones.</div>';
+
+    secList.querySelectorAll('[data-sec-del]').forEach((b) => b.onclick = () => {
+      const id = b.dataset.secDel;
+      if (!confirm('¿Quitar la sección "' + id + '"? Los productos que la usan no se borran.')) return;
+      if (state.settings?.customSections) delete state.settings.customSections[id];
+      // marca la sección como oculta del giro actual
+      state.settings = state.settings || {};
+      state.settings.hiddenSections = state.settings.hiddenSections || [];
+      if (!state.settings.hiddenSections.includes(id)) state.settings.hiddenSections.push(id);
+      const mode = state.company.mode;
+      MODES[mode] = { ...MODES[mode], sections: (MODES[mode].sections || []).filter((x) => x !== id) };
+      emit();
+      paintSecs();
+      toast('Sección quitada');
+    });
+  };
+  paintSecs();
+
+  $('#sec-save', root)?.addEventListener('click', () => {
+    let n = 0;
+    secList.querySelectorAll('.sec-row').forEach((row) => {
+      const id = row.dataset.sid;
+      const base = SECTIONS[id] || {};
+      const def = { label: row.querySelector('.sec-label').value.trim() || base.label || id };
+      const vals = row.querySelector('.sec-values');
+      if (vals) {
+        def.scale = 'alpha';
+        def.values = vals.value.split(',').map((v) => v.trim()).filter(Boolean);
+      }
+      const from = row.querySelector('.sec-from');
+      if (from) {
+        def.from = Number(from.value);
+        def.to = Number(row.querySelector('.sec-to').value);
+        def.step = Number(row.querySelector('.sec-step').value) || 0.5;
+        def.scale = base.scale === 'ring' ? 'ring' : 'shoe';
+      }
+      if (base.scale === 'none' && !vals && !from) def.scale = 'none';
+      saveSectionDef(id, def);
+      n++;
+    });
+    toast(n + ' secciones guardadas ✓');
+  });
+
+  $('#sec-add', root)?.addEventListener('click', () => {
+    const label = prompt('Nombre de la nueva sección (ej. Niñas, Accesorios):');
+    if (!label) return;
+    const id = 'x' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 18) + Math.floor(Math.random() * 90 + 10);
+    saveSectionDef(id, { label: label.trim(), scale: 'none' });
+    const mode = state.company.mode;
+    MODES[mode] = { ...MODES[mode], sections: [...(MODES[mode].sections || []), id] };
+    toast('Sección agregada');
+    paintSecs();
+  });
   // ===== Campos personalizados de producto =====
   const cfList = $('#cf-list', root);
   const SUGGEST = {

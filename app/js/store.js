@@ -111,6 +111,13 @@ export const SECTIONS = {
   aceites:     { label: 'Aceites',     scale: 'none', mode: 'refaccionaria' },
   llantas:     { label: 'Llantas',     scale: 'none', mode: 'refaccionaria' },
 
+  // Perfumería / fragancias por concentrado
+  perf_concentrado: { label: 'Concentrados', scale: 'none', mode: 'perfumeria' },
+  perf_alcohol:     { label: 'Alcohol / fijador', scale: 'none', mode: 'perfumeria' },
+  perf_frascos:     { label: 'Frascos', scale: 'alpha', values: ['30 ml', '50 ml', '100 ml', '250 ml'], mode: 'perfumeria' },
+  perf_kits:        { label: 'Kits y regalos', scale: 'none', mode: 'perfumeria' },
+  perf_accesorios:  { label: 'Accesorios', scale: 'none', mode: 'perfumeria' },
+
   // General
   general:    { label: 'General',     scale: 'none', mode: 'general' },
   electronica:{ label: 'Electrónica', scale: 'none', mode: 'general' },
@@ -139,9 +146,48 @@ export const MODES = {
   restaurante: { label: 'Restaurante / cafetería',    sections: ['platillos', 'bebidas_r', 'postres'] },
   merceria:    { label: 'Mercería',                   sections: ['botones', 'listones', 'telas'] },
   refaccionaria: { label: 'Refaccionaria',            sections: ['refacciones', 'aceites', 'llantas'] },
+  perfumeria:  { label: 'Perfumería / fragancias',      sections: ['perf_concentrado', 'perf_alcohol', 'perf_frascos', 'perf_kits', 'perf_accesorios'] },
   general:     { label: 'Productos generales',        sections: ['general', 'electronica'] },
 };
 
+
+/* ================= Secciones y tallas editables ================= */
+/** Aplica overrides guardados en settings.customSections sobre SECTIONS. */
+export function applyCustomSections() {
+  const cs = state?.settings?.customSections;
+  if (!cs) return;
+  const modeNow = state.company?.mode || 'general';
+  for (const [id, def] of Object.entries(cs)) {
+    const base = SECTIONS[id] || {};
+    SECTIONS[id] = {
+      ...base, ...def,
+      label: def.label || base.label || id,
+      // las secciones nuevas pertenecen al giro actual
+      mode: base.mode || modeNow,
+    };
+  }
+}
+
+/** Guarda la definición de una sección (crea o actualiza). */
+export function saveSectionDef(id, def) {
+  state.settings = state.settings || {};
+  if (!state.settings.customSections) state.settings.customSections = {};
+  state.settings.customSections[id] = { ...(state.settings.customSections[id] || {}), ...def };
+  applyCustomSections();
+  emit();
+}
+
+/** Quita los cambios de una sección (vuelve al valor de fábrica). */
+export function resetSectionDef(id) {
+  if (state.settings?.customSections) delete state.settings.customSections[id];
+  emit();
+  location.reload();
+}
+
+export function sectionsForModeNow() {
+  const modeNow = state.company?.mode || 'general';
+  return Object.entries(SECTIONS).filter(([, s]) => (s.mode || 'general') === modeNow);
+}
 export function sizesFor(sectionId) {
   const s = SECTIONS[sectionId];
   if (!s) return ['Único'];
@@ -339,6 +385,7 @@ function load() {
 }
 
 export const state = load();
+applyCustomSections.call(null);
 
 let listeners = [];
 export function subscribe(fn) { listeners.push(fn); return () => (listeners = listeners.filter((f) => f !== fn)); }
