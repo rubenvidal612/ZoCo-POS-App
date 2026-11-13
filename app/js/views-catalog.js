@@ -12,7 +12,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -769,6 +769,7 @@ export function settingsView(ctx) {
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn sm" id="blank">🧹 Empezar de cero</button>
+            <button class="btn ghost sm" id="demo-mode">🧪 Cargar ejemplos de mi giro</button>
             <button class="btn ghost sm" id="backup">⬇ Descargar respaldo</button>
             <button class="btn ghost sm" id="reset" style="color:var(--danger)">Restablecer demo</button>
           </div>
@@ -857,12 +858,41 @@ export function settingsView(ctx) {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
     state.company.legalId = $('#c-rfc', root).value.trim();
     const mode = $('#c-mode', root).value;
-    if (mode !== state.company.mode) {
-      state.company.mode = mode;
-      const valid = sectionsForMode().map(([k]) => k);
-      state.products.forEach((p) => { if (!valid.includes(p.section)) p.section = valid[0]; });
-    }
-    toast('Datos guardados'); ctx.persist(); ctx.refreshShell?.();
+    const cambioGiro = mode !== state.company.mode;
+    if (cambioGiro) state.company.mode = mode;
+    toast('Datos guardados');
+    ctx.persist(); ctx.refreshShell?.();
+
+    // Al cambiar de giro: ofrece cargar ejemplos de ese giro
+    if (cambioGiro) setTimeout(() => {
+      const m = modal({
+        title: 'Cambiaste a ' + (MODES[mode]?.label || mode),
+        body: `<div style="font-size:13px;line-height:1.5">
+          ¿Quieres cargar <b>productos de ejemplo</b> de este giro?
+          <div class="hint" style="margin-top:8px">
+            Los ejemplos son pocos (3–4) y sirven para ver cómo queda. Puedes borrarlos después con "Empezar de cero".
+          </div>
+          <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) actualmente.</div>
+        </div>`,
+        foot: `<button class="btn ghost sm" data-close>Mantener mi catálogo</button>
+               <button class="btn ghost sm" id="demo-blank">Empezar en blanco</button>
+               <button class="btn sm" id="demo-load">Cargar ejemplos</button>`,
+      });
+      m.root.querySelector('#demo-load').onclick = () => {
+        const n = loadDemoForMode(mode, { replace: true });
+        m.close();
+        toast(n + ' productos de ejemplo cargados');
+        ctx.refreshShell?.();
+        location.hash = '#/productos';
+      };
+      m.root.querySelector('#demo-blank').onclick = () => {
+        state.products = [];
+        emit();
+        m.close();
+        toast('Catálogo vacío, listo para tu inventario');
+        location.hash = '#/productos';
+      };
+    }, 350);
   };
 
   $('#save-ai', root).onclick = () => {
@@ -1180,6 +1210,13 @@ export function settingsView(ctx) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
     toast('Respaldo descargado');
+  });
+
+  $('#demo-mode', root)?.addEventListener('click', () => {
+    const n = loadDemoForMode(state.company.mode, { replace: true });
+    toast(n + ' ejemplos de ' + (MODES[state.company.mode]?.label || 'tu giro') + ' cargados');
+    ctx.refreshShell?.();
+    location.hash = '#/productos';
   });
 
   $('#blank', root)?.addEventListener('click', async () => {

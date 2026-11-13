@@ -152,6 +152,188 @@ export const MODES = {
 
 
 
+
+/* ================= Catálogos de ejemplo por giro ================= */
+const DEMOS = {
+  shoe: [
+    ['Tenis Casual Blanco', 'dama', 690, 380],
+    ['Botín Piel Café', 'caballero', 980, 520],
+    ['Sandalia Playa', 'dama', 640, 330],
+    ['Zapato Escolar Negro', 'escolar', 450, 260],
+  ],
+  boutique: [
+    ['Blusa Manga Corta', 'ropa', 320, 160],
+    ['Vestido Verano', 'ropa', 590, 300],
+    ['Jeans Recto', 'ropa', 480, 250],
+    ['Bolsa de Mano', 'accesorios', 420, 210],
+  ],
+  abarrotes: [
+    ['Refresco 600 ml', 'bebidas', 18, 12],
+    ['Arroz 1 kg', 'abarrotes', 26, 19],
+    ['Detergente 1 kg', 'limpieza', 38, 28],
+    ['Frijol a granel (kg)', 'granel', 32, 24],
+  ],
+  farmacia: [
+    ['Paracetamol 500 mg c/10', 'medicamento', 35, 22],
+    ['Alcohol 250 ml', 'medicamento', 28, 17],
+    ['Shampoo 400 ml', 'cuidado', 89, 58],
+    ['Pañales etapa 2', 'bebe', 145, 105],
+  ],
+  papeleria: [
+    ['Cuaderno profesional 100 h', 'cuadernos', 42, 28],
+    ['Bolígrafo negro', 'escritura', 8, 4],
+    ['Papel bond carta 500 h', 'papel', 95, 70],
+    ['Block de dibujo', 'arte', 38, 24],
+  ],
+  ferreteria: [
+    ['Martillo 16 oz', 'herramienta', 165, 110],
+    ['Pija 1" (100 pzas)', 'tornilleria', 45, 28],
+    ['Pintura blanca 4 L', 'pintura', 420, 310],
+    ['Foco LED 9 W', 'electrico', 45, 28],
+  ],
+  joyeria: [
+    ['Anillo plata .925', 'anillos', 850, 420],
+    ['Cadena 45 cm', 'cadenas', 1200, 650],
+    ['Pulsera de acero', 'pulseras', 480, 240],
+    ['Aretes zirconia', 'aretes', 390, 180],
+  ],
+  optica: [
+    ['Armazón metálico', 'armazones', 890, 480],
+    ['Lentes de sol polarizados', 'lentes', 1250, 700],
+    ['Estuche rígido', 'acc_optical', 120, 60],
+  ],
+  carniceria: [
+    ['Bistec de res (kg)', 'carne', 210, 165],
+    ['Milanesa de pollo (kg)', 'carne', 165, 120],
+    ['Jamón de pavo (kg)', 'embutidos', 190, 150],
+  ],
+  fruteria: [
+    ['Manzana (kg)', 'fruta', 42, 32],
+    ['Plátano (kg)', 'fruta', 22, 16],
+    ['Jitomate (kg)', 'verdura', 28, 20],
+  ],
+  panaderia: [
+    ['Concha', 'pan', 12, 6],
+    ['Bolillo', 'pan', 5, 2],
+    ['Pastel de chocolate 1 kg', 'pastel', 320, 190],
+  ],
+  dulceria: [
+    ['Paleta de caramelo', 'dulces', 10, 5],
+    ['Papas fritas', 'botanas', 18, 12],
+    ['Juguete sorpresa', 'juguetes_d', 45, 25],
+  ],
+  cosmeticos: [
+    ['Labial mate', 'maquillaje', 145, 70],
+    ['Perfume 50 ml', 'perfume', 490, 260],
+    ['Crema facial 50 ml', 'skincare', 210, 110],
+  ],
+  electronica: [
+    ['Celular 128 GB', 'celulares', 4200, 3500],
+    ['Funda protectora', 'accesorios_e', 120, 60],
+    ['Audífonos Bluetooth', 'audio', 390, 220],
+  ],
+  mascotas: [
+    ['Alimento perro 4 kg', 'alimento_m', 380, 290],
+    ['Collar ajustable', 'accesorios_m', 95, 45],
+    ['Shampoo antipulgas', 'higiene_m', 145, 90],
+  ],
+  muebleria: [
+    ['Sala 3 piezas', 'muebles', 8900, 6200],
+    ['Colchón matrimonial', 'colchones', 6500, 4500],
+    ['Lámpara de mesa', 'deco', 480, 260],
+  ],
+  floreria: [
+    ['Ramo de rosas 12', 'arreglos', 450, 260],
+    ['Girasoles (manojo)', 'flores', 180, 110],
+    ['Maceta cerámica', 'macetas', 140, 70],
+  ],
+  barberia: [
+    ['Corte de cabello', 'servicios', 120, 0],
+    ['Afeitado con navaja', 'servicios', 90, 0],
+    ['Cera para cabello', 'producto_b', 160, 90],
+  ],
+  restaurante: [
+    ['Hamburguesa clásica', 'platillos', 110, 55],
+    ['Café americano', 'bebidas_r', 35, 12],
+    ['Rebanada de pastel', 'postres', 55, 25],
+  ],
+  merceria: [
+    ['Botón 4 huecos (10 pzas)', 'botones', 15, 8],
+    ['Listón 1 m', 'listones', 6, 3],
+    ['Tela algodón (m)', 'telas', 85, 55],
+  ],
+  refaccionaria: [
+    ['Filtro de aceite', 'refacciones', 180, 110],
+    ['Aceite 5W-30 1 L', 'aceites', 220, 160],
+    ['Llanta 185/65 R15', 'llantas', 1850, 1350],
+  ],
+  perfumeria: [
+    ['Esencia Acqua 1 L', 'perf_concentrado', 2500, 1200],
+    ['Alcohol 96° 5 L', 'perf_alcohol', 900, 650],
+    ['Frasco 50 ml', 'perf_frascos', 25, 12],
+    ['Perfume 50 ml 20%', 'perf_kits', 450, 250],
+  ],
+  general: [
+    ['Producto general A', 'general', 100, 55],
+    ['Producto general B', 'general', 150, 80],
+    ['Accesorio', 'electronica', 250, 130],
+  ],
+};
+
+/** Productos de ejemplo del giro (sin tocar el estado). */
+export function demoForMode(mode) {
+  const list = DEMOS[mode] || DEMOS.general;
+  const branchId = state.currentBranch || (state.branches[0] || {}).id;
+  return list.map((row, i) => {
+    const [name, section, price, cost] = row;
+    const sizes = sizesFor(section);
+    const stock = {};
+    // las primeras 3 tallas con existencia, el resto en 0
+    sizes.forEach((s, idx) => { stock[fmtSize(s)] = idx < 3 ? (3 + idx) : 0; });
+    const p = {
+      id: uid('demo'),
+      name, section, price, cost,
+      code: name.replace(/[^\w]/g, '').slice(0, 3).toUpperCase() + (10 + i),
+      color: COLORS[i % COLORS.length],
+      catalog: true, active: true, createdAt: new Date().toISOString(),
+      branchStock: {},
+    };
+    state.branches.forEach((b) => {
+      p.branchStock[b.id] = b.id === branchId ? { ...stock } : Object.fromEntries(sizes.map((s) => [fmtSize(s), 0]));
+    });
+    if (section === 'perf_concentrado' || section === 'perf_alcohol') {
+      p.porMl = true;
+      p.branchStock[branchId] = { 'Único': section === 'perf_concentrado' ? 1000 : 5000 };
+    }
+    if (section === 'perf_kits') {
+      p.branchStock[branchId] = { 'Único': 0 };
+      p.recipe = { concId: null, alcoholId: null, bottleId: null, bottleMl: 50, pct: 20, waste: 3 };
+      p.prepararAlVender = true;
+    }
+    if (section === 'perf_frascos') p.branchStock[branchId] = { 'Único': 200 };
+    return p;
+  });
+}
+
+/** Carga los ejemplos del giro. mode: reemplaza el catálogo actual. */
+export function loadDemoForMode(mode, { replace = true } = {}) {
+  const demo = demoForMode(mode);
+  if (replace) state.products = demo;
+  else state.products = [...state.products, ...demo];
+  // en perfumería, enlaza la receta del kit con el concentrado/alcohol/frasco
+  if (mode === 'perfumeria') {
+    const conc = state.products.find((p) => p.section === 'perf_concentrado' && p.porMl);
+    const alc = state.products.find((p) => p.section === 'perf_alcohol' && p.porMl);
+    const bot = state.products.find((p) => p.section === 'perf_frascos');
+    state.products.filter((p) => p.recipe).forEach((p) => {
+      p.recipe.concId = conc?.id || null;
+      p.recipe.alcoholId = alc?.id || null;
+      p.recipe.bottleId = bot?.id || null;
+    });
+  }
+  emit();
+  return demo.length;
+}
 /* ================= Perfumería: recetas y producción ================= */
 /** ¿El producto se mide en ml? */
 export const isLiquid = (p) => !!(p && p.porMl);
