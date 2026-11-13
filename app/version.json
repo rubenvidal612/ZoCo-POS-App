@@ -1,9 +1,8 @@
 {
-    "version":  "2.11.0",
+    "version":  "2.12.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Catalogo online rediseñado (estilo beige elegante)",
-                  "Buscador por modelo, color y talla",
-                  "Favoritos y boton flotante de WhatsApp"
+                  "Catalogo: 6 temas de color (Claro, Cafe, Rosa, Naranja, Menta, Noche)",
+                  "Tema Claro por defecto; el cliente puede cambiarlo"
               ]
 }
