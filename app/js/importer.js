@@ -1,5 +1,5 @@
 // Importador inteligente de inventario (Excel/CSV pegado o archivo)
-import { state, emit, fmtSize, sizesFor } from './store.js';
+import { state, emit, fmtSize, sizesFor, recordImport } from './store.js';
 import { $, el, money, esc, toast, modal } from './ui.js';
 import { downloadExcel } from './exports.js';
 
@@ -126,6 +126,7 @@ export function buildProducts(table, mapping, opts = {}) {
 
     products.push({
       id: 'imp' + Date.now() + idx,
+      createdAt: new Date().toISOString(),
       name,
       price,
       cost,
@@ -297,7 +298,15 @@ export function openImportModal(onDone, seedText) {
 
   goBtn.onclick = () => {
     const { products, errors } = buildProducts(table, mapping, opts);
+    const batchId = 'imp' + Date.now();
+    products.forEach((p) => { p.importBatch = batchId; });
     state.products.push(...products);
+    recordImport({
+      id: batchId,
+      fileName: (m.root.querySelector('#imp-file')?.files?.[0]?.name) || 'archivo pegado',
+      ids: products.map((p) => p.id),
+      source: 'excel',
+    });
     emit();
     m.close();
     toast(products.length + ' productos importados' + (errors.length ? ' · ' + errors.length + ' omitidos' : ''));

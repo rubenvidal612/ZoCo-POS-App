@@ -731,3 +731,42 @@ export function setUserCredential(userId, cred) {
   u.webauthn = cred;
   emit();
 }
+/* ================= Lotes de importación (deshacer) ================= */
+export function recordImport({ id, fileName, ids, source }) {
+  if (!Array.isArray(state.imports)) state.imports = [];
+  const batch = {
+    id: id || ('imp' + Date.now()),
+    date: new Date().toISOString(),
+    fileName: fileName || 'archivo',
+    source: source || 'excel',
+    ids: ids.slice(),
+    count: ids.length,
+  };
+  state.imports.unshift(batch);
+  if (state.imports.length > 20) state.imports = state.imports.slice(0, 20);
+  emit();
+  return batch;
+}
+
+export function undoImport(batchId) {
+  const b = (state.imports || []).find((x) => x.id === batchId);
+  if (!b) return 0;
+  const before = state.products.length;
+  state.products = state.products.filter((p) => p.importBatch !== batchId);
+  state.imports = state.imports.filter((x) => x.id !== batchId);
+  emit();
+  return before - state.products.length;
+}
+
+/** Respaldo: si no hay lote registrado, borra los productos creados en los últimos N minutos. */
+export function undoRecentProducts(minutes = 30) {
+  const limit = Date.now() - minutes * 60000;
+  const ids = state.products
+    .filter((p) => p.createdAt && new Date(p.createdAt).getTime() >= limit)
+    .map((p) => p.id);
+  if (!ids.length) return 0;
+  const set = new Set(ids);
+  state.products = state.products.filter((p) => !set.has(p.id));
+  emit();
+  return ids.length;
+}

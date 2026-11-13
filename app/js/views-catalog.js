@@ -8,7 +8,7 @@ import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
   layawayPayment, cancelLayaway, upsertCoupon, registerSummary, upsertExpense, payExpense,
-  personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal,
+  personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
 } from './store.js';
@@ -30,6 +30,7 @@ export function productsView(ctx) {
           <div class="search" style="max-width:300px"><span>🔍</span>
             <input id="pq" placeholder="Artículo o código…"><span class="k">F3</span></div>
           <button class="btn ghost sm" id="imp">⬆ Importar</button>
+          <button class="btn ghost sm" id="undo-imp">↩ Deshacer importación</button>
           <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
         </div>
@@ -173,6 +174,32 @@ export function productsView(ctx) {
     } catch {}
     setTimeout(() => location.reload(), 400);
   });
+  // Deshacer la última importación (como en ZoCo 2.13)
+  const undoBtn = root.querySelector('#undo-imp');
+  if (undoBtn) undoBtn.onclick = async () => {
+    const batches = state.imports || [];
+    if (!batches.length) {
+      const n = (state.products || []).filter((p) => p.createdAt && new Date(p.createdAt).getTime() >= Date.now() - 30 * 60000).length;
+      if (!n) { toast('No hay importaciones recientes para deshacer'); return; }
+      const ok = await confirmDialog({
+        title: 'Deshacer productos recientes',
+        message: `No hay registro del lote, pero puedo borrar los ${n} productos creados en los últimos 30 minutos.`,
+        okText: 'Borrar ' + n, danger: true,
+      });
+      if (ok) { const del = undoRecentProducts(30); toast(del + ' productos eliminados'); emit(); render(); }
+      return;
+    }
+    const b = batches[0];
+    const ok = await confirmDialog({
+      title: 'Deshacer importación',
+      message: `Se eliminarán los ${b.count} productos de "${b.fileName}" (${new Date(b.date).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}). El inventario vuelve a como estaba antes de subir el archivo.`,
+      okText: 'Sí, deshacer', danger: true,
+    });
+    if (!ok) return;
+    const del = undoImport(b.id);
+    emit(); render();
+    toast(del + ' productos eliminados · inventario restaurado');
+  };
   const expBtn = root.querySelector('#exp');
   if (expBtn) expBtn.onclick = () => { const n = exportProducts(); toast(n + ' productos exportados a Excel'); };
   const impBtn = root.querySelector('#imp');
