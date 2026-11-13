@@ -530,6 +530,38 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Ticket">
+        <div class="panel-head"><h2>Ticket</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Así sale impreso tu ticket. Cambia el nombre, agrega datos y personaliza el pie.
+          </div>
+          <div class="field"><label>Nombre en el ticket</label>
+            <input id="tk-name" value="${esc(state.settings?.ticket?.name || state.company.name || '')}" placeholder="Mi zapatería"></div>
+          <div class="field"><label>Línea extra (dirección o slogan)</label>
+            <input id="tk-line1" value="${esc(state.settings?.ticket?.line1 || '')}" placeholder="Av. Juárez 123, Centro"></div>
+          <div class="row2">
+            <div class="field"><label>Teléfono</label>
+              <input id="tk-phone" value="${esc(state.settings?.ticket?.phone || '')}" placeholder="993 123 4567"></div>
+            <div class="field"><label>RFC (opcional)</label>
+              <input id="tk-tax" value="${esc(state.settings?.ticket?.taxId || '')}" placeholder="XAXX010101000"></div>
+          </div>
+          <div class="field"><label>Pie de página</label>
+            <input id="tk-footer" value="${esc(state.settings?.ticket?.footer || '¡Gracias por su compra!')}" placeholder="¡Gracias por su compra!"></div>
+          <div class="field"><label>Texto al final (cambios, garantía, redes…)</label>
+            <textarea id="tk-end" rows="2" placeholder="Cambios dentro de 15 días con ticket. WhatsApp 993 123 4567">${esc(state.settings?.ticket?.footerEnd || '')}</textarea></div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;margin:6px 0 14px">
+            <input type="checkbox" id="tk-brand" ${state.settings?.ticket?.showBrand !== false ? 'checked' : ''}>
+            Mostrar "ZoCo POS" al final del ticket
+          </label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" id="tk-save">Guardar ticket</button>
+            <button class="btn ghost sm" id="tk-preview">👁 Ver cómo queda</button>
+            <button class="btn ghost sm" id="tk-paper">Papel: ${(() => { try { return (localStorage.getItem('zoco.printer.paper') === '80' ? '80' : '58') + ' mm'; } catch { return '58 mm'; } })()}</button>
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head"><h2>Impresora y escáner</h2></div>
         <div style="padding:16px">
@@ -758,6 +790,59 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Ticket editable =====
+  const tkSave = $('#tk-save', root);
+  if (tkSave) {
+    tkSave.onclick = () => {
+      state.settings = state.settings || {};
+      state.settings.ticket = {
+        name: $('#tk-name', root).value.trim() || state.company.name,
+        line1: $('#tk-line1', root).value.trim(),
+        phone: $('#tk-phone', root).value.trim(),
+        taxId: $('#tk-tax', root).value.trim(),
+        footer: $('#tk-footer', root).value.trim(),
+        footerEnd: $('#tk-end', root).value.trim(),
+        showBrand: $('#tk-brand', root).checked,
+      };
+      emit();
+      toast('Ticket guardado ✓');
+    };
+    $('#tk-preview', root).onclick = async () => {
+      const { ticketText } = await import('./printer.js');
+      const fake = {
+        code: 1024, date: new Date().toISOString(),
+        branchName: state.branches[0]?.name || 'Centro',
+        user: state.user?.name || 'Ramber', customer: 'Cliente',
+        items: [{ name: 'Zapato Escolar Negro', size: '24', qty: 1, price: 450 }],
+        subtotal: 450, discount: 0, total: 450, method: 'cash', received: 500, change: 50,
+      };
+      // usa lo que está en pantalla, sin guardar
+      const prev = state.settings.ticket;
+      state.settings.ticket = {
+        name: $('#tk-name', root).value.trim() || state.company.name,
+        line1: $('#tk-line1', root).value.trim(),
+        phone: $('#tk-phone', root).value.trim(),
+        taxId: $('#tk-tax', root).value.trim(),
+        footer: $('#tk-footer', root).value.trim(),
+        footerEnd: $('#tk-end', root).value.trim(),
+        showBrand: $('#tk-brand', root).checked,
+      };
+      const txt = ticketText(fake);
+      state.settings.ticket = prev;
+      modal({
+        title: 'Vista previa del ticket',
+        body: `<pre class="ticket-preview">${esc(txt)}</pre>`,
+        foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+      });
+    };
+    $('#tk-paper', root).onclick = () => {
+      const cur = localStorage.getItem('zoco.printer.paper') === '80' ? '80' : '58';
+      const next = cur === '80' ? '58' : '80';
+      localStorage.setItem('zoco.printer.paper', next);
+      $('#tk-paper', root).textContent = 'Papel: ' + next + ' mm';
+      toast('Papel: ' + next + ' mm');
+    };
+  }
   // Ancho de papel y vista previa del ticket
   const paperSel = $('#pr-paper', root);
   if (paperSel) {

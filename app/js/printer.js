@@ -39,6 +39,20 @@ const fit = (s, n) => {
 const padR = (s, n) => { const t = plain(s); return t.length >= n ? t.slice(0, n) : t + ' '.repeat(n - t.length); };
 const padL = (s, n) => { const t = plain(s); return t.length >= n ? t.slice(-n) : ' '.repeat(n - t.length) + t; };
 
+
+/** Datos editables del ticket (Configuración → Ticket) */
+function T() {
+  const t = state.settings?.ticket || {};
+  return {
+    name: (t.name || state.company?.name || 'MI TIENDA').toString(),
+    line1: (t.line1 || '').toString(),
+    phone: (t.phone || '').toString(),
+    taxId: (t.taxId || '').toString(),
+    footer: (t.footer || '').toString(),
+    footerEnd: (t.footerEnd || '').toString(),
+    showBrand: t.showBrand !== false,
+  };
+}
 /* ---------- Texto del ticket (vista previa y respaldo navegador) ---------- */
 export function ticketText(sale) {
   const W = paperWidth();
@@ -57,10 +71,12 @@ export function ticketText(sale) {
   };
   const rule = () => L.push('-'.repeat(W));
 
-  center(state.company.name.toUpperCase());
-  if (state.company.legalId) center('RFC ' + state.company.legalId);
+  const tk = T();
+  center(tk.name.toUpperCase());
+  if (tk.line1) center(tk.line1);
+  if (tk.taxId) center('RFC ' + tk.taxId);
   center(sale.branchName || '');
-  if (state.company.phone) center('Tel ' + state.company.phone);
+  if (tk.phone) center('Tel ' + tk.phone);
   line();
   pair('Ticket #' + sale.code, d.toLocaleDateString('es-MX'));
   pair(d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), 'Vend: ' + (sale.user || ''));
@@ -95,9 +111,9 @@ export function ticketText(sale) {
   }
   if (sale.refunded) pair('Devuelto', '-' + money(sale.refunded));
   line();
-  if (state.company.ticketMessage) center(state.company.ticketMessage);
-  center('¡Gracias por su compra!');
-  center('ZoCo POS');
+  if (tk.footer) center(tk.footer);
+  if (tk.footerEnd) center(tk.footerEnd);
+  if (tk.showBrand) center('ZoCo POS');
   return L.join('\n');
 }
 
@@ -113,17 +129,19 @@ export function buildEscPos(sale) {
   cmd(0x1b, 0x61, 0x01);                 // center
   cmd(0x1b, 0x45, 0x01);                 // bold on
   cmd(0x1d, 0x21, 0x11);                 // doble alto + ancho (título)
-  text(state.company.name.toUpperCase());
+  const tk = T();
+  text(tk.name.toUpperCase());
   cmd(0x1d, 0x21, 0x00);
   cmd(0x1b, 0x45, 0x00);                 // bold off
-  if (state.company.legalId) text('RFC ' + state.company.legalId);
+  if (tk.line1) text(tk.line1);
+  if (tk.taxId) text('RFC ' + tk.taxId);
   text(sale.branchName || '');
-  if (state.company.phone) text('Tel ' + state.company.phone);
+  if (tk.phone) text('Tel ' + tk.phone);
   cmd(0x1b, 0x61, 0x00);                 // left
 
   const body = ticketText(sale).split('\n');
   // quita las líneas del encabezado que ya se imprimieron arriba
-  const skip = 2 + (state.company.legalId ? 1 : 0) + (state.company.phone ? 1 : 0);
+  const skip = 2 + (tk.line1 ? 1 : 0) + (tk.taxId ? 1 : 0) + (tk.phone ? 1 : 0);
   body.slice(skip).forEach((l) => text(l));
 
   cmd(0x1b, 0x64, 0x03);                 // feed 3 líneas

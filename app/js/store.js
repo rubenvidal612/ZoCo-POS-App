@@ -155,6 +155,16 @@ function migrate(s) {
     if (!u.jobTitle) u.jobTitle = u.role === 'OWNER' ? 'Propietario' : 'Vendedor';
   });
   if (!s.settings) s.settings = { aiKey: '', aiProvider: 'gemini' };
+  // Datos que salen impresos en el ticket (editables)
+  if (!s.settings.ticket) s.settings.ticket = {};
+  const tk = s.settings.ticket;
+  if (tk.name == null) tk.name = s.company?.name || '';
+  if (tk.line1 == null) tk.line1 = '';
+  if (tk.phone == null) tk.phone = s.company?.phone || '';
+  if (tk.taxId == null) tk.taxId = s.company?.legalId || '';
+  if (tk.footer == null) tk.footer = '¡Gracias por su compra!';
+  if (tk.footerEnd == null) tk.footerEnd = '';
+  if (tk.showBrand == null) tk.showBrand = true;
 
   // Repara usuarios perdidos o incompletos (sin correo o contraseña)
   if (!Array.isArray(s.users)) s.users = [];

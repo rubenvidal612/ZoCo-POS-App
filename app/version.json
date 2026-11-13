@@ -1,9 +1,8 @@
 {
-    "version":  "2.18.0",
+    "version":  "2.19.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Ticket para POS58D: 32 caracteres, acentos corregidos y vista previa",
-                  "Selector de papel 58/80 mm",
-                  "Escaner de codigos con camara del celular (recuadro y vibracion)"
+                  "Nuevo: seccion Ticket para editar nombre, direccion, telefono, RFC, pie y texto final",
+                  "Vista previa del ticket con tus datos"
               ]
 }
