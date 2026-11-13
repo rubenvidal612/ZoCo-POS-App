@@ -1,8 +1,8 @@
 {
-    "version":  "2.13.2",
+    "version":  "2.13.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Corregido: el dueno perdia correo y contrasena al usar \"Empezar de cero\"",
-                  "La app repara sola los usuarios y deja entrar con ramberamericasefectivo@gmail.com / 1234"
+                  "Corregido: las pestanas desaparecian si el rol del usuario estaba en minusculas",
+                  "Roles se normalizan solos (owner -\u003e OWNER)"
               ]
 }

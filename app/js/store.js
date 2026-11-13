@@ -145,6 +145,7 @@ function migrate(s) {
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
   (s.users || []).forEach((u, i) => {
+    u.role = String(u.role || 'CASHIER').toUpperCase();
     if (u.pin == null) u.pin = String(1234 + i * 111);
     if (!u.payType) u.payType = 'HOURLY';
     if (u.payRate == null) u.payRate = 60;
@@ -161,13 +162,14 @@ function migrate(s) {
       name: s.company?.name || 'Dueño',
       email: 'ramberamericasefectivo@gmail.com',
       pass: '1234',
-      role: 'owner',
+      role: 'OWNER',
       pin: '1234',
       active: true,
       commission: 0,
       balance: 0,
     }];
   }
+  if (s.user) s.user.role = String(s.user.role || '').toUpperCase();
   if (s.user && (!s.user.email || !s.user.pass)) {
     s.user = s.users.find((u) => u.id === s.user.id)
       || s.users.find((u) => u.role === 'owner')
@@ -282,7 +284,7 @@ export function logout() { localStorage.removeItem(SKEY); }
 export function can(perm) {
   const u = currentUser();
   if (!u) return false;
-  const perms = ROLES[u.role]?.perms || [];
+  const perms = ROLES[String(u.role || '').toUpperCase()]?.perms || [];
   if (perms.includes('*')) return true;
   return perms.includes(perm);
 }
@@ -816,7 +818,7 @@ export function resetToBlank() {
   if (owner) {
     state.users = [{
       ...owner,
-      role: 'owner',
+      role: 'OWNER',
       active: true,
       balance: 0,
     }];
