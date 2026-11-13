@@ -6,25 +6,140 @@ const SKEY = 'zoco.session';
 
 /* ================= Rampas de tallas ================= */
 export const SECTIONS = {
+  // Zapatería
   dama:      { label: 'Damas',     scale: 'shoe', from: 22, to: 27,   step: 0.5, mode: 'shoe' },
   infantil:  { label: 'Infantil',  scale: 'shoe', from: 12, to: 21.5, step: 0.5, mode: 'shoe' },
   caballero: { label: 'Caballero', scale: 'shoe', from: 22, to: 30,   step: 0.5, mode: 'shoe' },
   escolar:   { label: 'Escolar',   scale: 'us',   from: 1,  to: 6.5,  step: 0.5, mode: 'shoe' },
   bolsas:    { label: 'Bolsas',    scale: 'none', mode: 'shoe' },
   carteras:  { label: 'Carteras',  scale: 'none', mode: 'shoe' },
-  ropa:      { label: 'Ropa',       scale: 'alpha', values: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], mode: 'boutique' },
-  calzado:   { label: 'Calzado',    scale: 'shoe', from: 22, to: 30, step: 0.5, mode: 'boutique' },
-  accesorios:{ label: 'Accesorios', scale: 'none', mode: 'boutique' },
-  general:   { label: 'General',    scale: 'none', mode: 'general' },
-  abarrotes: { label: 'Abarrotes',  scale: 'none', mode: 'general' },
+
+  // Boutique / ropa
+  ropa:       { label: 'Ropa',      scale: 'alpha', values: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], mode: 'boutique' },
+  ropa_nino:  { label: 'Ropa niño', scale: 'alpha', values: ['2', '4', '6', '8', '10', '12', '14', '16'], mode: 'boutique' },
+  calzado:    { label: 'Calzado',   scale: 'shoe', from: 22, to: 30, step: 0.5, mode: 'boutique' },
+  accesorios: { label: 'Accesorios', scale: 'none', mode: 'boutique' },
+
+  // Abarrotes / tienda
+  abarrotes:  { label: 'Abarrotes',  scale: 'none', mode: 'abarrotes' },
+  granel:     { label: 'Granel (kg)', scale: 'none', mode: 'abarrotes' },
+  bebidas:    { label: 'Bebidas',    scale: 'none', mode: 'abarrotes' },
+  limpieza:   { label: 'Limpieza',   scale: 'none', mode: 'abarrotes' },
+
+  // Farmacia
+  medicamento: { label: 'Medicamento', scale: 'none', mode: 'farmacia' },
+  cuidado:     { label: 'Cuidado personal', scale: 'none', mode: 'farmacia' },
+  bebe:        { label: 'Bebé', scale: 'none', mode: 'farmacia' },
+
+  // Papelería
+  cuadernos:  { label: 'Cuadernos',  scale: 'none', mode: 'papeleria' },
+  escritura:  { label: 'Escritura',  scale: 'none', mode: 'papeleria' },
+  papel:      { label: 'Papel',      scale: 'none', mode: 'papeleria' },
+  arte:       { label: 'Arte / manualidades', scale: 'none', mode: 'papeleria' },
+
+  // Ferretería
+  herramienta: { label: 'Herramienta', scale: 'none', mode: 'ferreteria' },
+  tornilleria: { label: 'Tornillería', scale: 'none', mode: 'ferreteria' },
+  pintura:     { label: 'Pintura',     scale: 'none', mode: 'ferreteria' },
+  electrico:   { label: 'Eléctrico',   scale: 'none', mode: 'ferreteria' },
+
+  // Joyería
+  anillos:   { label: 'Anillos',   scale: 'ring', from: 4, to: 12, step: 0.5, mode: 'joyeria' },
+  cadenas:   { label: 'Cadenas',   scale: 'none', mode: 'joyeria' },
+  pulseras:  { label: 'Pulseras',  scale: 'none', mode: 'joyeria' },
+  aretes:    { label: 'Aretes',    scale: 'none', mode: 'joyeria' },
+
+  // Óptica
+  armazones: { label: 'Armazones', scale: 'none', mode: 'optica' },
+  lentes:    { label: 'Lentes de sol', scale: 'none', mode: 'optica' },
+  acc_optical: { label: 'Accesorios', scale: 'none', mode: 'optica' },
+
+  // Carnicería / frutería / panadería
+  carne:     { label: 'Carne (kg)',   scale: 'none', mode: 'carniceria' },
+  embutidos: { label: 'Embutidos',    scale: 'none', mode: 'carniceria' },
+  fruta:     { label: 'Fruta (kg)',   scale: 'none', mode: 'fruteria' },
+  verdura:   { label: 'Verdura (kg)', scale: 'none', mode: 'fruteria' },
+  pan:       { label: 'Pan',          scale: 'none', mode: 'panaderia' },
+  pastel:    { label: 'Pastel',       scale: 'none', mode: 'panaderia' },
+
+  // Dulcería
+  dulces:    { label: 'Dulces',   scale: 'none', mode: 'dulceria' },
+  botanas:   { label: 'Botanas',  scale: 'none', mode: 'dulceria' },
+  juguetes_d: { label: 'Juguetes', scale: 'none', mode: 'dulceria' },
+
+  // Cosméticos
+  maquillaje: { label: 'Maquillaje', scale: 'none', mode: 'cosmeticos' },
+  perfume:    { label: 'Perfume',    scale: 'none', mode: 'cosmeticos' },
+  skincare:   { label: 'Cuidado de piel', scale: 'none', mode: 'cosmeticos' },
+
+  // Electrónica / celulares
+  celulares: { label: 'Celulares',  scale: 'none', mode: 'electronica' },
+  accesorios_e: { label: 'Accesorios', scale: 'none', mode: 'electronica' },
+  audio:     { label: 'Audio',      scale: 'none', mode: 'electronica' },
+
+  // Mascotas
+  alimento_m: { label: 'Alimento (kg)', scale: 'none', mode: 'mascotas' },
+  accesorios_m: { label: 'Accesorios', scale: 'none', mode: 'mascotas' },
+  higiene_m: { label: 'Higiene', scale: 'none', mode: 'mascotas' },
+
+  // Mueblería
+  muebles:   { label: 'Muebles', scale: 'none', mode: 'muebleria' },
+  colchones: { label: 'Colchones', scale: 'none', mode: 'muebleria' },
+  deco:      { label: 'Decoración', scale: 'none', mode: 'muebleria' },
+
+  // Florería
+  arreglos:  { label: 'Arreglos', scale: 'none', mode: 'floreria' },
+  flores:    { label: 'Flores',   scale: 'none', mode: 'floreria' },
+  macetas:   { label: 'Macetas',  scale: 'none', mode: 'floreria' },
+
+  // Barbería / estética
+  servicios: { label: 'Servicios', scale: 'none', mode: 'barberia' },
+  producto_b: { label: 'Producto', scale: 'none', mode: 'barberia' },
+
+  // Restaurante / cafetería
+  platillos: { label: 'Platillos', scale: 'none', mode: 'restaurante' },
+  bebidas_r: { label: 'Bebidas',   scale: 'none', mode: 'restaurante' },
+  postres:   { label: 'Postres',   scale: 'none', mode: 'restaurante' },
+
+  // Mercería
+  botones:   { label: 'Botones',  scale: 'none', mode: 'merceria' },
+  listones:  { label: 'Listones', scale: 'none', mode: 'merceria' },
+  telas:     { label: 'Telas',    scale: 'none', mode: 'merceria' },
+
+  // Refaccionaria
+  refacciones: { label: 'Refacciones', scale: 'none', mode: 'refaccionaria' },
+  aceites:     { label: 'Aceites',     scale: 'none', mode: 'refaccionaria' },
+  llantas:     { label: 'Llantas',     scale: 'none', mode: 'refaccionaria' },
+
+  // General
+  general:    { label: 'General',     scale: 'none', mode: 'general' },
   electronica:{ label: 'Electrónica', scale: 'none', mode: 'general' },
 };
 
 /** Giros de negocio: cada uno habilita sus secciones. Se pueden agregar más aquí. */
 export const MODES = {
-  shoe:     { label: 'Zapatería',            sections: ['dama', 'infantil', 'caballero', 'escolar', 'bolsas', 'carteras'] },
-  boutique: { label: 'Boutique (ropa/accesorios)', sections: ['ropa', 'calzado', 'accesorios'] },
-  general:  { label: 'Productos generales',  sections: ['general', 'abarrotes', 'electronica'] },
+  shoe:        { label: 'Zapatería',                 sections: ['dama', 'infantil', 'caballero', 'escolar', 'bolsas', 'carteras'] },
+  boutique:    { label: 'Boutique (ropa/accesorios)', sections: ['ropa', 'ropa_nino', 'calzado', 'accesorios'] },
+  abarrotes:   { label: 'Abarrotes / tienda',         sections: ['abarrotes', 'granel', 'bebidas', 'limpieza'] },
+  farmacia:    { label: 'Farmacia',                   sections: ['medicamento', 'cuidado', 'bebe'] },
+  papeleria:   { label: 'Papelería',                  sections: ['cuadernos', 'escritura', 'papel', 'arte'] },
+  ferreteria:  { label: 'Ferretería',                 sections: ['herramienta', 'tornilleria', 'pintura', 'electrico'] },
+  joyeria:     { label: 'Joyería',                    sections: ['anillos', 'cadenas', 'pulseras', 'aretes'] },
+  optica:      { label: 'Óptica',                     sections: ['armazones', 'lentes', 'acc_optical'] },
+  carniceria:  { label: 'Carnicería',                 sections: ['carne', 'embutidos'] },
+  fruteria:    { label: 'Frutería / verdulería',      sections: ['fruta', 'verdura'] },
+  panaderia:   { label: 'Panadería',                  sections: ['pan', 'pastel'] },
+  dulceria:    { label: 'Dulcería',                   sections: ['dulces', 'botanas', 'juguetes_d'] },
+  cosmeticos:  { label: 'Cosméticos / perfumería',    sections: ['maquillaje', 'perfume', 'skincare'] },
+  electronica: { label: 'Celulares / electrónica',    sections: ['celulares', 'accesorios_e', 'audio'] },
+  mascotas:    { label: 'Mascotas / veterinaria',     sections: ['alimento_m', 'accesorios_m', 'higiene_m'] },
+  muebleria:   { label: 'Mueblería',                  sections: ['muebles', 'colchones', 'deco'] },
+  floreria:    { label: 'Florería',                   sections: ['arreglos', 'flores', 'macetas'] },
+  barberia:    { label: 'Barbería / estética',        sections: ['servicios', 'producto_b'] },
+  restaurante: { label: 'Restaurante / cafetería',    sections: ['platillos', 'bebidas_r', 'postres'] },
+  merceria:    { label: 'Mercería',                   sections: ['botones', 'listones', 'telas'] },
+  refaccionaria: { label: 'Refaccionaria',            sections: ['refacciones', 'aceites', 'llantas'] },
+  general:     { label: 'Productos generales',        sections: ['general', 'electronica'] },
 };
 
 export function sizesFor(sectionId) {
@@ -32,6 +147,11 @@ export function sizesFor(sectionId) {
   if (!s) return ['Único'];
   if (s.scale === 'none') return ['Único'];
   if (s.scale === 'alpha') return s.values;
+  if (s.scale === 'ring') {
+    const out = [];
+    for (let v = s.from; v <= s.to + 0.0001; v += (s.step || 0.5)) out.push(Number(v.toFixed(1)));
+    return out.map((v) => (Number.isInteger(v) ? String(v) : v.toFixed(1)));
+  }
   const out = [];
   for (let v = s.from; v <= s.to + 0.0001; v += s.step) out.push(Number(v.toFixed(1)));
   return out;

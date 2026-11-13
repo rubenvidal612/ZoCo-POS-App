@@ -1,8 +1,8 @@
 {
-    "version":  "2.19.0",
+    "version":  "2.20.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo: seccion Ticket para editar nombre, direccion, telefono, RFC, pie y texto final",
-                  "Vista previa del ticket con tus datos"
+                  "22 giros de negocio: abarrotes, farmacia, papeleria, ferreteria, joyeria, optica, carniceria, fruteria, panaderia, dulceria, cosmeticos, celulares, mascotas, muebleria, floreria, barberia, restaurante, merceria, refaccionaria",
+                  "Cada giro trae sus secciones y rampas de tallas"
               ]
 }
