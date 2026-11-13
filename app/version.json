@@ -1,8 +1,9 @@
 {
-    "version":  "2.20.0",
+    "version":  "2.21.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "22 giros de negocio: abarrotes, farmacia, papeleria, ferreteria, joyeria, optica, carniceria, fruteria, panaderia, dulceria, cosmeticos, celulares, mascotas, muebleria, floreria, barberia, restaurante, merceria, refaccionaria",
-                  "Cada giro trae sus secciones y rampas de tallas"
+                  "Nuevo: campos personalizados de producto (marca, material, proveedor...)",
+                  "Sugerencias de campos segun el giro del negocio",
+                  "Los campos se ven en la ficha del catalogo"
               ]
 }

@@ -169,6 +169,18 @@ export function productsView(ctx) {
           <div class="field"><label>Visible en catálogo</label>
             <select id="f-cat"><option value="1" ${p?.catalog !== false ? 'selected' : ''}>Sí</option><option value="0" ${p?.catalog === false ? 'selected' : ''}>No</option></select></div>
         </div>
+        ${(state.settings?.customFields || []).length ? `
+        <div class="custom-fields">
+          <div class="cfl-title">Campos personalizados</div>
+          <div class="row2">
+            ${(state.settings.customFields).map((f) => `
+              <div class="field"><label>${esc(f.label)}</label>
+                <input data-cf="${esc(f.id)}" type="${f.type === 'number' ? 'number' : 'text'}"
+                  value="${esc((p?.extra || {})[f.id] || '')}"
+                  placeholder="${esc(f.placeholder || '')}">
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
         <div class="field"><label>Foto del producto</label>
           <input id="f-img" type="file" accept="image/*">
           <div id="f-img-prev" style="margin-top:8px">${p?.image ? `<img src="${p.image}" style="width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">` : ''}</div>
@@ -214,8 +226,10 @@ export function productsView(ctx) {
       m.root.querySelectorAll('.sz-in').forEach((i) => { stock[i.dataset.size] = Math.max(0, Number(i.value) || 0); });
       const branchStock = { ...(p?.branchStock || {}) };
       branchStock[state.currentBranch] = stock;
+      const extra = {};
+      m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
-        id: p?.id, name, price, image: pendingImage,
+        id: p?.id, name, price, image: pendingImage, extra,
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,
         section: m.root.querySelector('#f-sec').value,
@@ -530,6 +544,26 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Campos de producto">
+        <div class="panel-head"><h2>Campos de producto</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Agrega los datos que tú uses: marca, material, proveedor, modelo, medidas…
+            Aparecen al crear o editar cada producto.
+          </div>
+          <div id="cf-list" class="cf-list"></div>
+          <div class="row2" style="margin-top:10px">
+            <div class="field"><label>Nombre del campo</label>
+              <input id="cf-label" placeholder="Ej. Marca, Material, Proveedor"></div>
+            <div class="field"><label>Tipo</label>
+              <select id="cf-type"><option value="text">Texto</option><option value="number">Número</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn sm" id="cf-add">+ Agregar campo</button>
+            <button class="btn ghost sm" id="cf-sug">Sugerir según mi giro</button>
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Ticket">
         <div class="panel-head"><h2>Ticket</h2></div>
         <div style="padding:16px">
@@ -790,6 +824,72 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Campos personalizados de producto =====
+  const cfList = $('#cf-list', root);
+  const SUGGEST = {
+    shoe: ['Marca', 'Material', 'Proveedor', 'Modelo'],
+    boutique: ['Marca', 'Material', 'Talla de referencia', 'Proveedor'],
+    joyeria: ['Material (oro/plata)', 'Kilates', 'Piedra', 'Proveedor'],
+    optica: ['Marca', 'Material del armazón', 'Graduación', 'Proveedor'],
+    ferreteria: ['Marca', 'Medida', 'Material', 'Proveedor'],
+    papeleria: ['Marca', 'Presentación', 'Color', 'Proveedor'],
+    farmacia: ['Laboratorio', 'Presentación', 'Caducidad', 'Lote'],
+    abarrotes: ['Marca', 'Presentación', 'Contenido neto', 'Proveedor'],
+    carniceria: ['Corte', 'Origen', 'Proveedor', ''],
+    fruteria: ['Origen', 'Temporada', 'Proveedor', ''],
+    panaderia: ['Tipo', 'Contenido', 'Proveedor', ''],
+    dulceria: ['Marca', 'Sabor', 'Proveedor', ''],
+    cosmeticos: ['Marca', 'Tono', 'Contenido (ml)', 'Proveedor'],
+    electronica: ['Marca', 'Modelo', 'Capacidad / RAM', 'Garantía'],
+    mascotas: ['Marca', 'Peso (kg)', 'Etapa', 'Proveedor'],
+    muebleria: ['Material', 'Medidas', 'Color', 'Proveedor'],
+    floreria: ['Tipo de flor', 'Color', 'Medida', ''],
+    barberia: ['Duración', 'Producto usado', '', ''],
+    restaurante: ['Ingredientes', 'Tamaño', 'Alergias', ''],
+    merceria: ['Material', 'Ancho', 'Color', 'Proveedor'],
+    refaccionaria: ['Marca', 'Modelo del auto', 'Año', 'Número de parte'],
+    general: ['Marca', 'Material', 'Proveedor', ''],
+  };
+  const cfState = () => {
+    state.settings = state.settings || {};
+    if (!Array.isArray(state.settings.customFields)) state.settings.customFields = [];
+    return state.settings.customFields;
+  };
+  const paintCF = () => {
+    if (!cfList) return;
+    const list = cfState();
+    cfList.innerHTML = list.length
+      ? list.map((f) => `<div class="cf-row">
+          <span class="cf-name">${esc(f.label)}</span>
+          <span class="cf-type">${f.type === 'number' ? 'número' : 'texto'}</span>
+          <button type="button" class="cf-del" data-cf-del="${esc(f.id)}" title="Quitar">✕</button>
+        </div>`).join('')
+      : '<div class="hint">Aún no tienes campos extra.</div>';
+    cfList.querySelectorAll('[data-cf-del]').forEach((b) => b.onclick = () => {
+      state.settings.customFields = cfState().filter((f) => f.id !== b.dataset.cfDel);
+      emit(); paintCF(); toast('Campo eliminado');
+    });
+  };
+  paintCF();
+  $('#cf-add', root)?.addEventListener('click', () => {
+    const label = ($('#cf-label', root).value || '').trim();
+    if (!label) { toast('Escribe el nombre del campo'); return; }
+    if (cfState().some((f) => f.label.toLowerCase() === label.toLowerCase())) { toast('Ese campo ya existe'); return; }
+    cfState().push({ id: 'cf' + Date.now(), label, type: $('#cf-type', root).value });
+    $('#cf-label', root).value = '';
+    emit(); paintCF(); toast('Campo agregado ✓');
+  });
+  $('#cf-sug', root)?.addEventListener('click', () => {
+    const sug = SUGGEST[state.company.mode] || SUGGEST.general;
+    let added = 0;
+    sug.filter(Boolean).forEach((label) => {
+      if (cfState().some((f) => f.label.toLowerCase() === label.toLowerCase())) return;
+      cfState().push({ id: 'cf' + Date.now() + added, label, type: 'text' });
+      added++;
+    });
+    emit(); paintCF();
+    toast(added ? added + ' campos sugeridos agregados' : 'Ya tienes esos campos');
+  });
   // ===== Ticket editable =====
   const tkSave = $('#tk-save', root);
   if (tkSave) {

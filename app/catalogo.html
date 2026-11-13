@@ -184,6 +184,11 @@
     .sheet-body h2{font-size:23px}
     .sheet-price{font-size:25px}
   }
+
+  .sheet-extra{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:5px}
+  .sheet-extra div{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+  .sheet-extra span{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em}
+  .sheet-extra b{font-weight:700}
 </style>
 </head>
 <body>
@@ -414,6 +419,11 @@ function openDetail(id) {
     <div class="sheet-cat">${esc(cap(p.section || 'General'))}${colorOf(p) ? ' · ' + esc(colorOf(p)) : ''}${p.code ? ' · ' + esc(p.code) : ''}</div>
     <div class="sheet-price">${money(p.price)}</div>
     ${p.desc ? `<div class="sheet-desc">${esc(p.desc)}</div>` : ''}
+    ${(() => {
+      const cf = (state.settings?.customFields || []).filter((f) => (p.extra || {})[f.id]);
+      if (!cf.length) return '';
+      return `<div class="sheet-extra">${cf.map((f) => `<div><span>${esc(f.label)}</span><b>${esc(p.extra[f.id])}</b></div>`).join('')}</div>`;
+    })()}
     ${sizes.length ? `
       <div class="lbl">Elige tu talla</div>
       <div class="picks" id="picks">
