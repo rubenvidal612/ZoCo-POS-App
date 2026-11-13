@@ -1,8 +1,10 @@
 {
-    "version":  "2.16.1",
+    "version":  "2.17.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Configuracion movil: dentro de cada seccion los campos se ven como filas compactas",
-                  "Etiqueta a la izquierda y valor a la derecha, con la ayuda debajo"
+                  "Nuevo: devolucion parcial de ventas con reposicion de stock",
+                  "Nuevo: mermas y ajustes de inventario con motivo",
+                  "Nuevo: traspaso de stock entre sucursales",
+                  "Tallas detectadas del inventario real y secciones tolerantes a plurales"
               ]
 }

@@ -4,6 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
+import { openReturnModal, openAdjustmentModal, openTransferModal } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
@@ -11,6 +12,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
+  returnSale, registerAdjustment, transferStock, productById,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -31,6 +33,8 @@ export function productsView(ctx) {
             <input id="pq" placeholder="Artículo o código…"><span class="k">F3</span></div>
           <button class="btn ghost sm" id="imp">⬆ Importar</button>
           <button class="btn ghost sm" id="undo-imp">↩ Deshacer importación</button>
+          <button class="btn ghost sm" id="adj">↺ Merma</button>
+          <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
           <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
         </div>
@@ -234,6 +238,9 @@ export function productsView(ctx) {
     } catch {}
     setTimeout(() => location.reload(), 400);
   });
+  root.querySelector('#adj')?.addEventListener('click', () => openAdjustmentModal(render));
+  root.querySelector('#trf')?.addEventListener('click', () => openTransferModal(render));
+
   // Deshacer la última importación (como en ZoCo 2.13)
   const undoBtn = root.querySelector('#undo-imp');
   if (undoBtn) undoBtn.onclick = async () => {
@@ -307,9 +314,14 @@ export function salesView() {
           : '<span class="badge grey">🏢 Interno</span>'}</td>
         <td>${s.status === 'cancelled'
           ? `<span class="badge danger">Cancelada</span>`
-          : `<span class="badge ok">Concluido</span>`}</td>
+          : s.status === 'returned'
+            ? `<span class="badge warn">Devuelta</span>`
+            : (s.refunded > 0
+              ? `<span class="badge warn">Dev. parcial</span>`
+              : `<span class="badge ok">Concluido</span>`)}</td>
         <td style="text-align:right;white-space:nowrap">
           <button class="btn ghost sm" data-see="${s.id}" style="height:30px">Ver</button>
+          ${s.status === 'done' || s.status === 'returned' ? `<button class="btn ghost sm" data-ret="${s.id}" style="height:30px">Devolver</button>` : ''}
           ${s.status === 'done' ? `<button class="btn ghost sm" data-fac="${s.id}" style="height:30px">Factura</button>` : ''}
           ${s.status !== 'cancelled' ? `<button class="btn ghost sm" data-can="${s.id}" style="height:30px;color:var(--danger)">Cancelar</button>` : ''}
         </td>
@@ -343,6 +355,10 @@ export function salesView() {
         </div>`,
         foot: `<button class="btn ghost sm" data-close>Cerrar</button><button class="btn sm" onclick="window.print()">Imprimir</button>`,
       });
+    });
+
+    rows.querySelectorAll('[data-ret]').forEach((b) => b.onclick = () => {
+      openReturnModal(b.dataset.ret, render);
     });
 
     rows.querySelectorAll('[data-can]').forEach((b) => b.onclick = async () => {

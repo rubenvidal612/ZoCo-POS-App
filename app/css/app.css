@@ -1138,3 +1138,22 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
   .settings-grid > .panel.open .field > select{appearance:auto;text-align-last:auto;padding-right:2px}
   .settings-grid > .panel.open .field > textarea{flex:1 1 100%;order:5;text-align:left;min-height:64px}
 }
+/* ===== Devolución: filas de artículos ===== */
+.ret-list{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow:auto}
+.ret-row{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface-2,#F8FAFC)}
+.ret-row.off{opacity:.55}
+.ret-info{flex:1;min-width:0}
+.ret-info b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ret-info span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ret-qty{display:flex;align-items:center;gap:6px}
+.rt-b{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:16px;
+  font-weight:800;cursor:pointer;color:var(--text);display:grid;place-items:center}
+.rt-b:hover{border-color:var(--brand);color:var(--brand)}
+.rt-max{font-size:11px;color:var(--muted);font-weight:700}
+.ret-total{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;
+  border-radius:14px;background:var(--brand-50,#FFF7ED);border:1px solid #FED7AA;font-size:13.5px;font-weight:700}
+.ret-total b{font-size:18px}
+@media (max-width:600px){
+  .ret-row{flex-wrap:wrap}
+  .ret-qty{width:100%;justify-content:flex-end}
+}

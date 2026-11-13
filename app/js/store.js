@@ -141,6 +141,9 @@ function migrate(s) {
   if (!Array.isArray(s.coupons)) s.coupons = [];
   if (!Array.isArray(s.layaways)) s.layaways = [];
   if (!Array.isArray(s.expenses)) s.expenses = [];
+  if (!Array.isArray(s.returns)) s.returns = [];
+  if (!Array.isArray(s.adjustments)) s.adjustments = [];
+  if (!Array.isArray(s.transfers)) s.transfers = [];
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -291,7 +294,15 @@ export function can(perm) {
 
 /* ================= Consultas ================= */
 export const branch = () => state.branches.find((b) => b.id === state.currentBranch) || state.branches[0];
-export const sectionOf = (p) => SECTIONS[p.section] || { label: '—' };
+export const sectionOf = (p) => {
+  const raw = String(p?.section || '').trim().toLowerCase();
+  if (SECTIONS[raw]) return SECTIONS[raw];
+  // tolera plurales y variantes: damas→dama, caballeros→caballero, niños→infantil
+  const map = { damas: 'dama', caballeros: 'caballero', ninos: 'infantil', niños: 'infantil', nino: 'infantil', niña: 'infantil', nina: 'infantil', escolar: 'escolar', bolsos: 'bolsas', bolsa: 'bolsas', cartera: 'carteras' };
+  const alt = map[raw] || raw.replace(/s$/, '');
+  if (SECTIONS[alt]) return SECTIONS[alt];
+  return { label: '—' };
+};
 export const sectionsForMode = () => Object.entries(SECTIONS).filter(([, s]) => s.mode === state.company.mode);
 export const productById = (id) => state.products.find((p) => p.id === id);
 
@@ -306,6 +317,113 @@ export function stockAnywhere(p, size) {
   return state.branches
     .map((b) => ({ branch: b.name, qty: stockOf(p, size, b.id) }))
     .filter((x) => x.qty > 0);
+}
+
+/* ================= Devoluciones parciales ================= */
+/** lines: [{ productId, size, qty, price, name }] */
+export function returnSale(saleId, lines, reason, refundMethod) {
+  const sale = state.sales.find((s) => s.id === saleId);
+  if (!sale || sale.status === 'cancelled') return { ok: false, msg: 'Venta no válida' };
+  if (!Array.isArray(lines) || !lines.length) return { ok: false, msg: 'No hay artículos a devolver' };
+  if (!Array.isArray(state.returns)) state.returns = [];
+
+  let total = 0;
+  const out = [];
+  for (const l of lines) {
+    const qty = Number(l.qty) || 0;
+    if (qty <= 0) continue;
+    const item = (sale.items || []).find((i) => i.productId === l.productId && String(i.size) === String(l.size));
+    if (!item) continue;
+    const already = (sale.returns || []).flatMap((r) => r.items)
+      .filter((i) => i.productId === l.productId && String(i.size) === String(l.size))
+      .reduce((a, i) => a + Number(i.qty || 0), 0);
+    const maxQty = Number(item.qty) - already;
+    const q = Math.min(qty, maxQty);
+    if (q <= 0) continue;
+
+    const p = productById(l.productId);
+    const b = p?.branchStock?.[sale.branchId];
+    if (b) b[fmtSize(item.size)] = Number(b[fmtSize(item.size)] || 0) + q;
+
+    const price = Number(item.price) || 0;
+    total += price * q;
+    out.push({ productId: l.productId, name: item.name, size: item.size, qty: q, price, subtotal: price * q });
+  }
+  if (!out.length) return { ok: false, msg: 'Esas piezas ya fueron devueltas' };
+
+  const ret = {
+    id: uid('ret'),
+    date: new Date().toISOString(),
+    saleId: sale.id,
+    saleCode: sale.code,
+    branchId: sale.branchId,
+    customer: sale.customer,
+    items: out,
+    total: Math.round(total * 100) / 100,
+    method: refundMethod || sale.method,
+    reason: reason || 'Sin motivo',
+    user: state.user?.name || '-',
+  };
+  state.returns.unshift(ret);
+  if (!Array.isArray(sale.returns)) sale.returns = [];
+  sale.returns.push({ id: ret.id, date: ret.date, total: ret.total, items: out });
+  sale.refunded = Math.round(((sale.refunded || 0) + ret.total) * 100) / 100;
+  if (sale.refunded >= (sale.total || 0) - 0.01) sale.status = 'returned';
+  emit();
+  return { ok: true, ret };
+}
+
+/* ================= Mermas / ajustes ================= */
+/** type: 'merma' | 'ajuste_positivo' | 'ajuste_negativo' */
+export function registerAdjustment({ productId, size, qty, type, reason, note, branchId }) {
+  const p = productById(productId);
+  if (!p) return { ok: false, msg: 'Producto no encontrado' };
+  const b = branchId || state.currentBranch;
+  const sz = fmtSize(size);
+  const q = Math.abs(Number(qty) || 0);
+  if (!q) return { ok: false, msg: 'Cantidad inválida' };
+  const actual = Number(p.branchStock?.[b]?.[sz] || 0);
+  const delta = type === 'ajuste_positivo' ? q : -q;
+  if (actual + delta < 0) return { ok: false, msg: 'No hay suficiente stock (' + actual + ')' };
+  p.branchStock[b][sz] = actual + delta;
+
+  if (!Array.isArray(state.adjustments)) state.adjustments = [];
+  const rec = {
+    id: uid('adj'), date: new Date().toISOString(), type, branchId: b,
+    productId, name: p.name, size: sz, qty: delta, before: actual, after: actual + delta,
+    cost: Number(p.cost || 0) * Math.abs(delta),
+    reason: reason || (type === 'merma' ? 'Merma' : 'Ajuste'),
+    note: note || '', user: state.user?.name || '-',
+  };
+  state.adjustments.unshift(rec);
+  emit();
+  return { ok: true, rec };
+}
+
+/* ================= Traspasos entre sucursales ================= */
+export function transferStock(productId, size, fromId, toId, qty, note) {
+  const p = productById(productId);
+  if (!p) return { ok: false, msg: 'Producto no encontrado' };
+  if (!fromId || !toId || fromId === toId) return { ok: false, msg: 'Elige sucursales distintas' };
+  const sz = fmtSize(size);
+  const from = p.branchStock?.[fromId], to = p.branchStock?.[toId];
+  if (!from || !to) return { ok: false, msg: 'Sucursal inválida' };
+  const q = Math.abs(Number(qty) || 0);
+  if (!q) return { ok: false, msg: 'Cantidad inválida' };
+  const have = Number(from[sz] || 0);
+  if (have < q) return { ok: false, msg: 'Solo hay ' + have + ' en origen' };
+
+  from[sz] = have - q;
+  to[sz] = Number(to[sz] || 0) + q;
+
+  if (!Array.isArray(state.transfers)) state.transfers = [];
+  const rec = {
+    id: uid('trf'), date: new Date().toISOString(), productId, name: p.name, size: sz, qty: q,
+    from: fromId, to: toId, note: note || '', user: state.user?.name || '-',
+  };
+  state.transfers.unshift(rec);
+  emit();
+  return { ok: true, rec };
 }
 
 /* ================= Carrito ================= */
@@ -425,18 +543,6 @@ export function setBranch(id) {
   if (!state.branches.some((b) => b.id === id)) return;
   state.currentBranch = id;
   emit();
-}
-export function transferStock(productId, size, fromId, toId, qty) {
-  const p = productById(productId);
-  if (!p) return { ok: false, msg: 'Producto no encontrado' };
-  const from = p.branchStock[fromId], to = p.branchStock[toId];
-  if (!from || !to) return { ok: false, msg: 'Sucursal inválida' };
-  const have = Number(from[size] || 0);
-  if (have < qty) return { ok: false, msg: 'Solo hay ' + have + ' en origen' };
-  from[size] = have - qty;
-  to[size] = Number(to[size] || 0) + qty;
-  emit();
-  return { ok: true };
 }
 
 /* ================= Cupones ================= */
