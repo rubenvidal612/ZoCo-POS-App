@@ -25,10 +25,16 @@
   .order{display:block;margin-top:10px;background:#F97316;color:#fff;text-align:center;border-radius:10px;padding:9px;font-size:13px;font-weight:700;text-decoration:none}
   .order:hover{background:#EA580C}
   .empty{text-align:center;color:#64748B;padding:60px 20px}
+  .back{position:absolute;left:16px;top:16px;color:#CBD5E1;text-decoration:none;font-size:12.5px;font-weight:700;
+    border:1px solid rgba(255,255,255,.18);padding:7px 12px;border-radius:10px;transition:.15s}
+  .back:hover{background:rgba(255,255,255,.1);color:#fff}
+  header{position:relative}
+  @media(max-width:600px){ .back{position:static;display:inline-block;margin-bottom:10px} }
 </style>
 </head>
 <body>
 <header>
+  <a href="/" class="back" title="Volver a ZoCo POS">← Volver a ZoCo</a>
   <h1 id="store">Tienda</h1>
   <p id="sub">Catálogo en línea</p>
 </header>

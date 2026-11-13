@@ -1,8 +1,7 @@
 {
-    "version":  "2.8.0",
+    "version":  "2.8.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login simplificado: correo y contrasena como principal",
-                  "Recuperar contrasena por correo"
+                  "Catalogo online: boton para volver a ZoCo"
               ]
 }
