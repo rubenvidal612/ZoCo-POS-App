@@ -1,7 +1,7 @@
 // Modales de inventario: devolución parcial, merma/ajuste y traspaso entre sucursales
 import { el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
-  state, emit, sizesFor, stockOf, fmtSize, productById,
+  state, emit, sizesFor, stockOf, fmtSize, productById, totalStock,
   returnSale, registerAdjustment, transferStock, recipeNeeds, produceBatch,
 } from './store.js';
 
@@ -410,5 +410,135 @@ export function openProduceModal(onDone) {
     m.close();
     toast(`Lote listo: ${r.qty} frascos agregados al inventario`);
     onDone?.();
+  };
+}
+/* ================= Kardex por producto ================= */
+export function openKardex(productId) {
+  const p = productById(productId);
+  if (!p) return;
+
+  const keyOf = (b) => Object.keys((p.branchStock || {})[b] || {})[0] || 'Único';
+  const bName = (id) => (state.branches.find((b) => b.id === id) || {}).name || id;
+  const mv = [];
+
+  // ventas
+  (state.sales || []).forEach((s) => {
+    if (s.status === 'cancelled') return;
+    (s.items || []).filter((i) => i.productId === productId).forEach((i) => {
+      mv.push({ date: s.date, type: 'Venta', branch: s.branchId, out: i.qty, detail: `Ticket #${s.code} · talla ${fmtSize(i.size)}`, ref: s.id });
+    });
+  });
+
+  // devoluciones
+  (state.returns || []).forEach((r) => {
+    (r.items || []).filter((i) => i.productId === productId).forEach((i) => {
+      mv.push({ date: r.date, type: 'Devolución', branch: r.branchId, in: i.qty, detail: `Ticket #${r.saleCode} · ${r.reason || ''}`, ref: r.id });
+    });
+  });
+
+  // mermas y ajustes
+  (state.adjustments || []).forEach((a) => {
+    if (a.productId !== productId) return;
+    const q = Number(a.qty) || 0;
+    mv.push({
+      date: a.date, type: a.type === 'merma' ? 'Merma' : (q > 0 ? 'Ajuste +' : 'Ajuste −'),
+      branch: a.branchId, in: q > 0 ? q : 0, out: q < 0 ? -q : 0,
+      detail: `${a.reason || ''}${a.note ? ' · ' + a.note : ''}`, ref: a.id,
+    });
+  });
+
+  // traspasos
+  (state.transfers || []).forEach((t) => {
+    if (t.productId !== productId) return;
+    mv.push({ date: t.date, type: 'Traspaso', branch: t.from, out: t.qty, detail: `Sale a ${bName(t.to)} · talla ${fmtSize(t.size)}`, ref: t.id });
+    mv.push({ date: t.date, type: 'Traspaso', branch: t.to, in: t.qty, detail: `Entra de ${bName(t.from)} · talla ${fmtSize(t.size)}`, ref: t.id });
+  });
+
+  // producción (producto terminado)
+  (state.productions || []).forEach((pr) => {
+    if (pr.productId !== productId) return;
+    mv.push({ date: pr.date, type: 'Producción', branch: pr.branchId, in: pr.qty, detail: `Lote preparado${pr.need ? ` · ${pr.need.ml} ml al ${pr.need.pct}%` : ''}`, ref: pr.id });
+  });
+
+  // consumo de ingredientes (perfumería)
+  (state.consumptions || []).forEach((c) => {
+    if (c.concId === productId && c.concMl) {
+      mv.push({ date: c.date, type: 'Consumo (esencia)', branch: c.branchId, out: c.concMl, detail: `Para ${c.qty} de ${c.name}`, ref: c.id });
+    }
+    if (c.alcoholId === productId && c.alcMl) {
+      mv.push({ date: c.date, type: 'Consumo (alcohol)', branch: c.branchId, out: c.alcMl, detail: `Para ${c.qty} de ${c.name}`, ref: c.id });
+    }
+    if (c.bottleId === productId && c.bottles) {
+      mv.push({ date: c.date, type: 'Consumo (frasco)', branch: c.branchId, out: c.bottles, detail: `Para ${c.qty} de ${c.name}`, ref: c.id });
+    }
+  });
+
+  // alta del producto
+  if (p.createdAt) {
+    mv.push({ date: p.createdAt, type: 'Alta de producto', branch: state.currentBranch, in: 0, detail: 'Registro inicial', ref: p.id });
+  }
+
+  mv.sort((x, y) => new Date(x.date) - new Date(y.date));
+
+  const current = totalStock(p);
+  const net = mv.reduce((a, m) => a + (Number(m.in) || 0) - (Number(m.out) || 0), 0);
+  const initial = Math.round((current - net) * 10) / 10;
+  let run = initial;
+  const rows = mv.map((m) => {
+    run += (Number(m.in) || 0) - (Number(m.out) || 0);
+    return { ...m, saldo: Math.round(run * 10) / 10 };
+  }).reverse();
+
+  const unit = p.porMl ? 'ml' : 'pza';
+  const n = (v) => (Number(v) || 0).toLocaleString('es-MX', { maximumFractionDigits: 1 });
+  const fmtDate = (d) => new Date(d).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+
+  const m = modal({
+    wide: true,
+    title: 'Kardex · ' + p.name,
+    body: `
+      <div class="kdx-top">
+        <div><span>Existencia actual</span><b>${n(current)} ${unit}</b></div>
+        <div><span>Saldo inicial</span><b>${n(initial)} ${unit}</b></div>
+        <div><span>Movimientos</span><b>${rows.length}</b></div>
+      </div>
+      <div style="overflow:auto;max-height:56vh;margin-top:10px">
+        <table class="kdx-table">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Sucursal</th><th>Detalle</th><th style="text-align:right">Entra</th><th style="text-align:right">Sale</th><th style="text-align:right">Saldo</th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map((r) => `
+              <tr>
+                <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+                <td><span class="kdx-badge">${esc(r.type)}</span></td>
+                <td>${esc(bName(r.branch))}</td>
+                <td style="font-size:12px;color:var(--muted)">${esc(r.detail || '')}</td>
+                <td class="mono" style="text-align:right;color:#059669">${r.in ? n(r.in) : ''}</td>
+                <td class="mono" style="text-align:right;color:#DC2626">${r.out ? n(r.out) : ''}</td>
+                <td class="mono" style="text-align:right;font-weight:800">${n(r.saldo)}</td>
+              </tr>`).join('')
+              : `<tr><td colspan="7"><div class="cart-empty">Sin movimientos registrados.</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin-top:8px">
+        El saldo inicial es la existencia con la que arrancó el registro (${n(initial)} ${unit}).
+      </div>`,
+    foot: `<button class="btn ghost sm" data-close>Cerrar</button>
+           <button class="btn sm" id="kdx-xls">⬇ Excel</button>`,
+  });
+
+  m.root.querySelector('#kdx-xls').onclick = () => {
+    const head = 'Fecha,Tipo,Sucursal,Detalle,Entra,Sale,Saldo';
+    const body = rows.map((r) => [
+      fmtDate(r.date), r.type, bName(r.branch), String(r.detail || '').replace(/,/g, ' '),
+      r.in || '', r.out || '', r.saldo,
+    ].join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + head + '\n' + body], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kardex-' + p.name.replace(/[^\w]+/g, '-').toLowerCase() + '.csv';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    toast('Kardex exportado');
   };
 }

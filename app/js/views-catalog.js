@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
-import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal } from './views-inventory.js';
+import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
@@ -131,6 +131,7 @@ export function productsView(ctx) {
         <td class="mono t-strong">${money(p.price)}</td>
         <td>${p.catalog ? '<span class="badge ok">Sí</span>' : '<span class="badge grey">No</span>'}</td>
         <td style="text-align:right">
+          <button class="btn ghost sm" data-kdx="${p.id}" style="height:30px" title="Kardex">📋</button>
           <button class="btn ghost sm" data-edit="${p.id}" style="height:30px">Editar</button>
           <button class="btn ghost sm" data-del="${p.id}" style="height:30px;color:var(--danger)">✕</button>
         </td>
@@ -143,6 +144,7 @@ export function productsView(ctx) {
       paintBulk();
     });
     paintBulk();
+    rows.querySelectorAll('[data-kdx]').forEach((b) => b.onclick = () => openKardex(b.dataset.kdx));
     rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => editProduct(b.dataset.edit));
     rows.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
       const ok = await confirmDialog({ title: 'Eliminar producto', message: 'Esta acción no se puede deshacer.', okText: 'Eliminar', danger: true });

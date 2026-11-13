@@ -1200,3 +1200,13 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .perf-block{margin:14px 0 6px;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface-2,#F8FAFC)}
 .perf-check{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;margin:4px 0 10px}
 .perf-check input{width:16px;height:16px}
+/* Kardex */
+.kdx-top{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kdx-top div{background:var(--surface-2,#F8FAFC);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.kdx-top span{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+.kdx-top b{font-size:17px}
+.kdx-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.kdx-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.kdx-table td{padding:8px;border-bottom:1px solid var(--line)}
+.kdx-badge{background:var(--surface-2,#F1F5F9);border-radius:7px;padding:2px 7px;font-size:11px;font-weight:700;white-space:nowrap}
+@media (max-width:600px){ .kdx-top{grid-template-columns:1fr} }
