@@ -34,38 +34,39 @@ alter table companies enable row level security;
 alter table company_state enable row level security;
 alter table members enable row level security;
 
+-- Funciones SECURITY DEFINER (evitan recursión de políticas)
+create or replace function public.is_member(p_company text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from members m where m.company_id = p_company and m.user_id = auth.uid());
+$$;
+
+create or replace function public.is_owner(p_company text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from members m where m.company_id = p_company and m.user_id = auth.uid() and m.role = 'owner');
+$$;
+
 -- Cada usuario solo ve las empresas donde es miembro
 drop policy if exists companies_read on companies;
-create policy companies_read on companies for select
-  using (exists (select 1 from members m where m.company_id = companies.id and m.user_id = auth.uid()));
+create policy companies_read on companies for select using (public.is_member(id));
 
 drop policy if exists companies_insert on companies;
-create policy companies_insert on companies for insert
-  with check (true);
+create policy companies_insert on companies for insert with check (true);
 
 drop policy if exists state_read on company_state;
-create policy state_read on company_state for select
-  using (exists (select 1 from members m where m.company_id = company_state.company_id and m.user_id = auth.uid()));
+create policy state_read on company_state for select using (public.is_member(company_id));
 
 drop policy if exists state_write on company_state;
 create policy state_write on company_state for update
-  using (exists (select 1 from members m where m.company_id = company_state.company_id and m.user_id = auth.uid()))
-  with check (exists (select 1 from members m where m.company_id = company_state.company_id and m.user_id = auth.uid()));
+  using (public.is_member(company_id)) with check (public.is_member(company_id));
 
 drop policy if exists state_insert on company_state;
-create policy state_insert on company_state for insert
-  with check (exists (select 1 from members m where m.company_id = company_state.company_id and m.user_id = auth.uid()));
+create policy state_insert on company_state for insert with check (public.is_member(company_id));
 
--- Membresías: cada quien ve las suyas; el dueño puede invitar
 drop policy if exists members_read on members;
-create policy members_read on members for select
-  using (user_id = auth.uid() or exists (
-    select 1 from members m2 where m2.company_id = members.company_id and m2.user_id = auth.uid() and m2.role = 'owner'));
+create policy members_read on members for select using (user_id = auth.uid() or public.is_owner(company_id));
 
 drop policy if exists members_insert on members;
-create policy members_insert on members for insert
-  with check (true);
-
+create policy members_insert on members for insert with check (true);
 -- ============ Al registrarse, crea su empresa ============
 create or replace function public.bootstrap_company(company_name text, company_id text)
 returns void language plpgsql security definer as $$
