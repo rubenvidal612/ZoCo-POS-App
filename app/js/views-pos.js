@@ -8,6 +8,29 @@ import { printTicket, ticketText } from './printer.js';
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
+
+// Convierte "Negro", "Rosa", "#0EA5E9"… en un degradado válido
+const COLOR_MAP = {
+  negro: '#1F2937', blanco: '#E5E7EB', rojo: '#DC2626', rosa: '#EC4899', azul: '#2563EB',
+  verde: '#059669', amarillo: '#F59E0B', naranja: '#EA580C', cafe: '#92400E', 'café': '#92400E',
+  marron: '#92400E', 'marrón': '#92400E', beige: '#D6C7B0', gris: '#6B7280', miel: '#B45309',
+  morado: '#7C3AED', vino: '#7F1D1D', coral: '#FB7185', plateado: '#94A3B8', dorado: '#CA8A04',
+  crema: '#F3E8D6', camel: '#B98A5A', hueso: '#EFE6D8', chocolate: '#5B3A1E', tabaco: '#8A5A2B',
+};
+function colorGradient(color) {
+  const raw = String(color || '').trim();
+  let base = '#64748B';
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) base = raw;
+  else if (/^rgb/i.test(raw)) base = raw;
+  else if (COLOR_MAP[raw.toLowerCase()]) base = COLOR_MAP[raw.toLowerCase()];
+  else if (raw) {
+    // color por nombre desconocido → tono estable derivado del texto
+    let h = 0;
+    for (const ch of raw) h = (h * 31 + ch.charCodeAt(0)) % 360;
+    base = `hsl(${h} 45% 45%)`;
+  }
+  return `linear-gradient(150deg, ${base}, ${base}cc)`;
+}
 export function posView(ctx) {
   const { cart } = ctx;
   let screen = 'sell';           // sell | cart | pay | cash | success
@@ -102,7 +125,7 @@ export function posView(ctx) {
       const avail = sizesFor(p.section).filter((s) => stockOf(p, s) > 0);
       const inCart = cart.lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
       return `<button class="sq-card" data-id="${p.id}" ${avail.length ? '' : 'disabled'}>
-        <div class="sq-ph" style="background:linear-gradient(150deg,${p.color},${p.color}bb)">
+        <div class="sq-ph" style="background:${colorGradient(p.color)}">
           ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
           ${inCart ? `<b class="sq-badge">${inCart}</b>` : ''}
         </div>

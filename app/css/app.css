@@ -358,7 +358,7 @@ tbody tr:hover{background:var(--brand-softer)}
 @media (max-width:900px){
   .content{width:100%;max-width:100vw}
   .pos,.pos-left,.grid-wrap,.pgrid,.cart{width:100% !important;max-width:100% !important;box-sizing:border-box}
-  .pgrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr)) !important}
   .pcard{min-width:0}
   .pcard .nm{height:auto;max-height:32px}
   .cart-foot .row-kv{flex-wrap:wrap;gap:4px}
@@ -762,7 +762,7 @@ tbody tr:hover{background:var(--brand-softer)}
   .sell-tools .search{flex:1 1 100%;height:44px}
   .qr-btn{height:42px;font-size:10px;padding:0 12px;flex:1}
   .icon-btn{height:42px;width:42px;flex:0 0 42px}
-  .pgrid.sq{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}
+  .pgrid.sq{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))!important;gap:10px}
   .sq-card{border-radius:14px}
   .sq-name{font-size:10.5px}
   .cart-bar{bottom:70px}
@@ -1009,3 +1009,65 @@ tbody tr:hover{background:var(--brand-softer)}
 .bulkbar b{font-size:15px}
 tr.seled{background:var(--brand-50,#FFF7ED)}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+/* ================= MÓVIL: chat y vender ================= */
+.ai-gear{display:none}
+@media (max-width:900px){
+  /* Chat: ocupa toda la pantalla, con barra de escribir siempre visible */
+  .ai-wrap,.ai-shell{height:100% !important;min-height:0}
+  .ai-shell{display:flex;flex-direction:column;gap:10px}
+  .ai-main{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:16px}
+  .ai-msgs{flex:1;min-height:0;overflow-y:auto;padding:12px;gap:8px;-webkit-overflow-scrolling:touch}
+  .ai-input{padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));position:sticky;bottom:0;background:#fff;z-index:2}
+  .ai-input input{height:44px;font-size:15px}
+  .ai-input button{min-width:46px;height:44px}
+  .ai-side{display:none;order:-1;max-height:34vh;overflow:auto;border-radius:16px}
+  .ai-side.open{display:block}
+  .ai-gear{display:inline-flex}
+  .ai-head{padding:10px 12px}
+  .ai-side-h{margin-bottom:8px}
+
+  /* Vender: tarjetas proporcionadas */
+  .pgrid.sq{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+  .sq-card{aspect-ratio:auto;height:auto;padding:6px;border-radius:14px}
+  .sq-ph{flex:0 0 auto;height:min(34vw,132px);border-radius:10px;font-size:11px}
+  .sq-name{font-size:10.5px;margin-top:4px;white-space:normal;line-height:1.15;max-height:24px;overflow:hidden}
+  .sq-price{position:static;align-self:flex-start;margin:4px 0 0;font-size:10.5px}
+  .sq-out{font-size:10px}
+  .pcard-add{aspect-ratio:auto;height:min(34vw,132px)}
+}
+/* Avisos flotantes (instalar app / notificaciones): en móvil arriba, para no tapar el chat ni el carrito */
+@media (max-width:900px){
+  .install-card{left:12px;right:12px;bottom:auto;top:64px;width:auto;max-width:none;padding:14px}
+  .install-card .ic-logo{width:38px;height:38px;flex:0 0 38px}
+  .install-card .ic-actions .btn{height:38px;font-size:12.5px}
+  .notif-card{left:12px;right:12px;bottom:auto;top:64px;width:auto;max-width:none;padding:12px}
+  .install-card.in ~ .notif-card{top:auto;bottom:calc(74px + env(safe-area-inset-bottom))}
+}
+@media (max-width:900px){
+  .install-card .ic-points{display:none}
+  .install-card .ic-txt b{font-size:13.5px}
+  .install-card{max-height:40vh;overflow:auto}
+  .notif-card{max-height:32vh;overflow:auto}
+  .sq-price{font-size:10px;padding:1px 6px}
+}
+/* Tarjetas flotantes en móvil: no tapar el contenido principal */
+@media (max-width:900px){
+  .float-card{left:10px;right:10px;bottom:calc(74px + env(safe-area-inset-bottom));width:auto;max-width:none;padding:12px}
+  .float-card.pill{left:10px;right:10px;width:auto;bottom:calc(74px + env(safe-area-inset-bottom))}
+  .float-card .fc-notes{max-height:96px;overflow:auto}
+  .ftc-msg,.fc-notes li{font-size:11px}
+}
+/* POS: 3 columnas en celulares angostos para ver más producto */
+@media (max-width:430px){
+  .pgrid.sq{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .sq-ph{height:min(26vw,104px)}
+  .sq-name{font-size:9.5px;max-height:22px}
+  .sq-price{font-size:9.5px;padding:1px 5px}
+}
+/* Chat móvil: los atajos ya se muestran en el estado vacío */
+@media (max-width:900px){
+  .ai-quick{display:none}
+  .ai-empty .chips{flex-direction:column;align-items:stretch;gap:6px}
+  .ai-empty .chips .chip{justify-content:center;text-align:center;font-size:12px;padding:8px 10px}
+  .ai-empty{padding:10px}
+}

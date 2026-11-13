@@ -1,8 +1,9 @@
 {
-    "version":  "2.14.0",
+    "version":  "2.15.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Ya lee archivos Excel .xlsx (sin convertir a CSV)",
-                  "Detecta tallas tipo \"Dama 22\" o \"Caballero 27\""
+                  "Celular: Vender muestra 3 columnas y las tarjetas ya no se cortan",
+                  "Celular: el chat IA ocupa la pantalla y la barra de escribir siempre se ve",
+                  "Avisos flotantes arriba para no tapar el contenido"
               ]
 }

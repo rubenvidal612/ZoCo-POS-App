@@ -284,6 +284,8 @@ export function aiView() {
 
         <main class="ai-main">
           <div class="ai-head"><b>Asistente ZoCo</b><span class="badge info">beta</span>
+          <div class="sp"></div>
+          <button type="button" class="btn ghost sm ai-gear" id="ai-gear" title="Configuración del agente">⚙</button>
             <button class="btn ghost sm" id="ai-clear" style="margin-left:auto;height:30px;font-size:12px">Limpiar</button>
           </div>
           <div class="ai-msgs" id="msgs">
@@ -452,6 +454,9 @@ export function aiView() {
         toast('Error: ' + (e.message || e));
       }
     };
+    root.querySelector('#ai-gear')?.addEventListener('click', () => {
+      root.querySelector('.ai-side')?.classList.toggle('open');
+    });
     root.querySelector('#ai-form').onsubmit = (e) => {
       e.preventDefault();
       const v = root.querySelector('#ai-q').value.trim();
