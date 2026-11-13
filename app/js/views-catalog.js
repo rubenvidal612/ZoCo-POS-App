@@ -8,7 +8,7 @@ import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
   layawayPayment, cancelLayaway, upsertCoupon, registerSummary, upsertExpense, payExpense,
-  personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts,
+  personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
 } from './store.js';
@@ -554,8 +554,16 @@ export function settingsView(ctx) {
       <div class="panel">
         <div class="panel-head"><h2>Datos de prueba</h2></div>
         <div style="padding:16px">
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Reinicia productos y ventas de demostración.</div>
-          <button class="btn sm ghost" id="reset" style="color:var(--danger)">Restablecer demo</button>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            ¿Ya vas a usar tu negocio de verdad? Empieza de cero: borra el catálogo y las ventas de ejemplo.
+            Se conservan tu empresa, sucursales, usuarios y configuración.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" id="blank">🧹 Empezar de cero</button>
+            <button class="btn ghost sm" id="backup">⬇ Descargar respaldo</button>
+            <button class="btn ghost sm" id="reset" style="color:var(--danger)">Restablecer demo</button>
+          </div>
+          <div class="hint" style="margin-top:8px">El respaldo guarda TODO en un archivo JSON por si quieres volver atrás.</div>
         </div>
       </div>
     </div>`);
@@ -667,6 +675,28 @@ export function settingsView(ctx) {
     const r = await syncNow();
     paintSb();
     toast(r.ok ? 'Sincronizado ✓' : 'Error: ' + (r.error || ''));
+  });
+  // Empezar de cero + respaldo
+  $('#backup', root)?.addEventListener('click', () => {
+    const blob = new Blob([exportBackup()], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'respaldo-zoco-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    toast('Respaldo descargado');
+  });
+
+  $('#blank', root)?.addEventListener('click', async () => {
+    const ok = await confirmDialog({
+      title: 'Empezar de cero',
+      message: 'Se borrarán TODOS los productos, ventas, clientes, apartados, gastos, cupones, metas y registros del checador.\n\nSe conservan tu empresa, sucursales, usuarios y configuración.\n\nEsta acción no se puede deshacer (descarga un respaldo primero si quieres).',
+      okText: 'Sí, empezar de cero', danger: true,
+    });
+    if (!ok) return;
+    resetToBlank();
+    ctx.refreshShell?.();
+    toast('Listo: tu negocio está en blanco');
   });
   // Notificaciones y checador
   const notifBtn = $('#notif-enable', root);

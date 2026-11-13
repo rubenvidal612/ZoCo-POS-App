@@ -1,7 +1,8 @@
 {
-    "version":  "2.9.0",
+    "version":  "2.10.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Deshacer importacion: borra el ultimo lote subido y deja el inventario como estaba"
+                  "Boton \"Empezar de cero\" para quitar el demo y usar tu negocio real",
+                  "Descargar respaldo en JSON antes de limpiar"
               ]
 }

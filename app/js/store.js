@@ -770,3 +770,40 @@ export function undoRecentProducts(minutes = 30) {
   emit();
   return ids.length;
 }
+/* ================= Empezar de cero (quitar el demo) ================= */
+export function resetToBlank() {
+  // Conserva: empresa, sucursales, configuración, usuarios y al dueño
+  const owner = state.user || state.users.find((u) => u.role === 'owner') || state.users[0];
+
+  state.products = [];
+  state.sales = [];
+  state.customers = [];
+  state.layaways = [];
+  state.coupons = [];
+  state.expenses = [];
+  state.cashMovements = [];
+  state.timeRecords = [];
+  state.goals = [];
+  state.imports = [];
+  state.personal = { movements: [] };
+  state.register = { open: false, opening: 0 };
+
+  if (owner) {
+    state.users = [{
+      ...owner,
+      role: 'owner',
+      active: true,
+      balance: 0,
+    }];
+    state.user = state.users[0];
+  }
+
+  state.cart = makeCart ? makeCart() : [];
+  emit();
+  return true;
+}
+
+/** Respaldo completo en JSON (para guardar antes de limpiar). */
+export function exportBackup() {
+  return JSON.stringify({ zoco: 2, exportedAt: new Date().toISOString(), data: state }, null, 2);
+}
