@@ -152,6 +152,28 @@ function migrate(s) {
   });
   if (!s.settings) s.settings = { aiKey: '', aiProvider: 'gemini' };
 
+  // Repara usuarios perdidos o incompletos (sin correo o contraseña)
+  if (!Array.isArray(s.users)) s.users = [];
+  s.users = s.users.filter((u) => u && u.email && u.pass);
+  if (!s.users.length) {
+    s.users = [{
+      id: 'u-owner',
+      name: s.company?.name || 'Dueño',
+      email: 'ramberamericasefectivo@gmail.com',
+      pass: '1234',
+      role: 'owner',
+      pin: '1234',
+      active: true,
+      commission: 0,
+      balance: 0,
+    }];
+  }
+  if (s.user && (!s.user.email || !s.user.pass)) {
+    s.user = s.users.find((u) => u.id === s.user.id)
+      || s.users.find((u) => u.role === 'owner')
+      || s.users[0];
+  }
+
   // stock → stock por sucursal
   (s.products || []).forEach((p) => {
     if (!p.branchStock) {
@@ -174,7 +196,10 @@ function load() {
     if (!raw) return seed();
     const s = JSON.parse(raw);
     if (!s.products) return seed();
-    return migrate(s);
+    const migrated = migrate(s);
+    // guarda reparaciones (usuarios, etc.) de inmediato
+    try { localStorage.setItem(KEY, JSON.stringify(migrated)); } catch {}
+    return migrated;
   } catch { return seed(); }
 }
 
@@ -249,7 +274,7 @@ export function login(email, pass) {
   const u = state.users.find((x) => x.email.toLowerCase() === String(email).toLowerCase().trim() && x.pass === String(pass));
   if (!u || !u.active) return { ok: false, msg: 'Correo o contraseña incorrectos' };
   localStorage.setItem(SKEY, JSON.stringify({ userId: u.id, at: Date.now() }));
-  state.user = { name: u.name, role: u.role };
+  state.user = u;
   return { ok: true, user: u };
 }
 export function logout() { localStorage.removeItem(SKEY); }
@@ -773,7 +798,7 @@ export function undoRecentProducts(minutes = 30) {
 /* ================= Empezar de cero (quitar el demo) ================= */
 export function resetToBlank() {
   // Conserva: empresa, sucursales, configuración, usuarios y al dueño
-  const owner = state.user || state.users.find((u) => u.role === 'owner') || state.users[0];
+  const owner = state.users.find((u) => u.role === 'owner') || state.users[0] || null;
 
   state.products = [];
   state.sales = [];

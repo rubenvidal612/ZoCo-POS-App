@@ -1,8 +1,8 @@
 {
-    "version":  "2.13.1",
+    "version":  "2.13.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login ya no se queda en \"Conectando\": entra local al instante",
-                  "Tiempo limite en las llamadas a Supabase (9 s)"
+                  "Corregido: el dueno perdia correo y contrasena al usar \"Empezar de cero\"",
+                  "La app repara sola los usuarios y deja entrar con ramberamericasefectivo@gmail.com / 1234"
               ]
 }
