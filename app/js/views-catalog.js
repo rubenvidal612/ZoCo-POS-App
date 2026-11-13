@@ -29,16 +29,20 @@ export function productsView(ctx) {
           <h2>Productos</h2>
           <span style="font-size:12.5px;color:var(--muted)">${state.products.length} artículos</span>
           <div class="sp"></div>
-          <div class="search" style="max-width:300px"><span>🔍</span>
-            <input id="pq" placeholder="Artículo o código…"><span class="k">F3</span></div>
-          <button class="btn ghost sm" id="imp">⬆ Importar</button>
-          <button class="btn ghost sm" id="undo-imp">↩ Deshacer importación</button>
-          <button class="btn ghost sm" id="adj">↺ Merma</button>
-          <button class="btn ghost sm" id="mix">⚗ Mezcla</button>
-          <button class="btn ghost sm" id="produce">🍶 Preparar</button>
-          <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
-          <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
+          <div class="sp"></div>
+          <div class="search" style="max-width:280px"><span>🔍</span>
+            <input id="pq" placeholder="Artículo o código…"><span class="k">F3</span></div>
+          <div class="ph-tools">
+            <button class="btn ghost sm" id="imp">⬆ Importar</button>
+            <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
+            <button class="btn ghost sm" id="adj">↺ Merma</button>
+            ${state.company.mode === 'perfumeria' ? `
+              <button class="btn ghost sm" id="mix">⚗ Mezcla</button>
+              <button class="btn ghost sm" id="produce">🍶 Preparar</button>` : ''}
+            <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
+            <button class="btn ghost sm" id="exp">⬇ Excel</button>
+          </div>
         </div>
         <div class="bulkbar" id="bulk" style="display:none">
           <b id="bulk-n">0</b> seleccionados

@@ -1,8 +1,8 @@
 {
-    "version":  "2.24.0",
+    "version":  "2.24.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo: Kardex por producto (entradas, salidas y saldo corrido)",
-                  "Exporta el kardex a Excel"
+                  "Mezcla y Preparar solo aparecen en giro Perfumeria",
+                  "Boton \"+ Producto\" siempre visible (ya no se esconde con el menu)"
               ]
 }
