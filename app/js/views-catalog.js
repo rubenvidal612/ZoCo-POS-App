@@ -34,9 +34,18 @@ export function productsView(ctx) {
           <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
         </div>
+        <div class="bulkbar" id="bulk" style="display:none">
+          <b id="bulk-n">0</b> seleccionados
+          <div class="sp"></div>
+          <button class="btn sm" id="bulk-up">🛍 Subir al catálogo</button>
+          <button class="btn ghost sm" id="bulk-down">Quitar del catálogo</button>
+          <button class="btn ghost sm" id="bulk-del" style="color:var(--danger)">🗑 Eliminar</button>
+          <button class="btn ghost sm" id="bulk-clear">Cancelar</button>
+        </div>
         <div style="overflow:auto">
           <table>
             <thead><tr>
+              <th style="width:38px"><input type="checkbox" id="sel-all" title="Seleccionar todo"></th>
               <th>Producto</th><th>Sección</th><th>Tallas</th><th>Stock</th><th>Precio</th><th>Catálogo</th><th style="width:120px"></th>
             </tr></thead>
             <tbody id="rows"></tbody>
@@ -47,15 +56,60 @@ export function productsView(ctx) {
 
   const rows = $('#rows', root);
   const pq = $('#pq', root);
+  const sel = new Set();
   pq.addEventListener('input', () => { q = pq.value.toLowerCase(); render(); });
   $('#new', root).onclick = () => editProduct(null);
+
+  function paintBulk() {
+    const bar = $('#bulk', root);
+    const n = $('#bulk-n', root);
+    if (!bar) return;
+    bar.style.display = sel.size ? 'flex' : 'none';
+    if (n) n.textContent = sel.size;
+  }
+
+  $('#bulk-clear', root).onclick = () => { sel.clear(); render(); };
+  $('#bulk-up', root).onclick = () => {
+    if (!sel.size) return;
+    state.products.forEach((p) => { if (sel.has(p.id)) p.catalog = true; });
+    emit();
+    toast(sel.size + ' productos en el catálogo online');
+    sel.clear(); render();
+  };
+  $('#bulk-down', root).onclick = () => {
+    if (!sel.size) return;
+    state.products.forEach((p) => { if (sel.has(p.id)) p.catalog = false; });
+    emit();
+    toast(sel.size + ' productos fuera del catálogo');
+    sel.clear(); render();
+  };
+  $('#bulk-del', root).onclick = async () => {
+    if (!sel.size) return;
+    const ok = await confirmDialog({
+      title: 'Eliminar productos',
+      message: `Se eliminarán ${sel.size} producto(s) del inventario. Esta acción no se puede deshacer.`,
+      okText: 'Eliminar ' + sel.size, danger: true,
+    });
+    if (!ok) return;
+    const ids = new Set(sel);
+    state.products = state.products.filter((p) => !ids.has(p.id));
+    emit();
+    toast(ids.size + ' eliminados');
+    sel.clear(); render();
+  };
+  $('#sel-all', root).onchange = (e) => {
+    const items = state.products.filter((p) => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
+    if (e.target.checked) items.forEach((p) => sel.add(p.id)); else sel.clear();
+    render();
+  };
 
   function render() {
     const items = state.products.filter((p) => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
     rows.innerHTML = items.map((p) => {
       const sizes = sizesFor(p.section);
       const withStock = sizes.filter((s) => stockOf(p, s) > 0).length;
-      return `<tr>
+      return `<tr class="${sel.has(p.id) ? 'seled' : ''}">
+        <td><input type="checkbox" data-sel="${p.id}" ${sel.has(p.id) ? 'checked' : ''}></td>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
             ${p.image
@@ -75,8 +129,14 @@ export function productsView(ctx) {
           <button class="btn ghost sm" data-del="${p.id}" style="height:30px;color:var(--danger)">✕</button>
         </td>
       </tr>`;
-    }).join('') || `<tr><td colspan="7"><div class="cart-empty">Sin productos.</div></td></tr>`;
+    }).join('') || `<tr><td colspan="8"><div class="cart-empty">Sin productos.</div></td></tr>`;
 
+    rows.querySelectorAll('[data-sel]').forEach((c) => c.onchange = () => {
+      if (c.checked) sel.add(c.dataset.sel); else sel.delete(c.dataset.sel);
+      const tr = c.closest('tr'); if (tr) tr.classList.toggle('seled', c.checked);
+      paintBulk();
+    });
+    paintBulk();
     rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => editProduct(b.dataset.edit));
     rows.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
       const ok = await confirmDialog({ title: 'Eliminar producto', message: 'Esta acción no se puede deshacer.', okText: 'Eliminar', danger: true });

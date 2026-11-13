@@ -151,6 +151,39 @@
     .wa{height:38px;font-size:11px;border-radius:10px;gap:4px;padding:0 6px}
     .wa-full{display:none}
   }
+
+  /* ---------- Tallas agotadas ---------- */
+  .sizes span.out{text-decoration:line-through;opacity:.45}
+  /* ---------- Ficha de producto ---------- */
+  .ov{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:80;display:none;
+    align-items:center;justify-content:center;padding:18px}
+  .ov.open{display:flex}
+  .sheet{background:var(--card);border-radius:22px;max-width:900px;width:100%;max-height:92vh;overflow:auto;
+    display:grid;grid-template-columns:1fr 1fr;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+  .sheet-img{background:linear-gradient(140deg,var(--pic1),var(--pic2));display:grid;place-items:center;min-height:320px}
+  .sheet-img img{width:100%;height:100%;object-fit:cover}
+  .sheet-img .ini{font-family:'Playfair Display',serif;font-size:70px;color:#fff;opacity:.9}
+  .sheet-body{padding:28px 26px;display:flex;flex-direction:column;gap:8px}
+  .sheet-body h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;line-height:1.15}
+  .sheet-cat{font-size:13px;color:var(--muted)}
+  .sheet-price{font-size:30px;font-weight:800;margin:6px 0 2px}
+  .sheet-desc{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .lbl{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+  .picks{display:flex;gap:8px;flex-wrap:wrap}
+  .pick{min-width:46px;height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+    font-size:13px;font-weight:700;cursor:pointer}
+  .pick.on{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+  .pick.off{text-decoration:line-through;opacity:.45;cursor:not-allowed}
+  .sheet .wa{margin-top:16px;height:50px;font-size:14.5px;border-radius:14px}
+  .x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);
+    font-size:18px;cursor:pointer;display:grid;place-items:center;color:#334155}
+  @media (max-width:760px){
+    .sheet{grid-template-columns:1fr;max-height:94vh}
+    .sheet-img{min-height:240px;max-height:300px}
+    .sheet-body{padding:18px 18px 22px}
+    .sheet-body h2{font-size:23px}
+    .sheet-price{font-size:25px}
+  }
 </style>
 </head>
 <body>
@@ -199,6 +232,13 @@
 
 <a class="fab" id="wa-fab" href="#" aria-label="WhatsApp">💬</a>
 
+<div class="ov" id="ov">
+  <div class="sheet" id="sheet">
+    <button class="x" id="ov-x" aria-label="Cerrar">✕</button>
+    <div class="sheet-img" id="sheet-img"></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
 <script>
 const $ = (s) => document.querySelector(s);
 const money = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
@@ -243,7 +283,8 @@ function waNumber() {
 }
 function waLink(text) {
   const n = waNumber();
-  return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : '#';
+  // si el negocio no tiene número, WhatsApp deja elegir el contacto
+  return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
 async function load() {
@@ -271,10 +312,9 @@ async function load() {
 function products() {
   return (state.products || []).filter((p) => p.catalog !== false && p.active !== false);
 }
-function sizesOf(p) {
-  const stock = Object.values(p.branchStock || {})[0] || {};
-  return Object.keys(stock).filter((k) => Number(stock[k]) > 0);
-}
+function stockMap(p) { return Object.values(p.branchStock || {})[0] || {}; }
+function allSizes(p) { return Object.keys(stockMap(p)); }
+function sizesOf(p) { return allSizes(p).filter((k) => Number(stockMap(p)[k]) > 0); }
 
 function renderHero() {
   const withImg = products().filter((p) => p.image).slice(0, 3);
@@ -293,8 +333,8 @@ function renderCats() {
 function renderFilters() {
   const colors = [...new Set(products().map((p) => colorOf(p).trim()).filter(Boolean))].sort();
   $('#f-color').innerHTML = '<option value="">Todos los colores</option>' + colors.map((c) => `<option ${color === c ? 'selected' : ''} value="${esc(c)}">${esc(c)}</option>`).join('');
-  const allSizes = [...new Set(products().flatMap(sizesOf))].sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0));
-  $('#f-size').innerHTML = '<option value="">Todas las tallas</option>' + allSizes.map((s) => `<option ${size === s ? 'selected' : ''} value="${esc(s)}">Talla ${esc(s)}</option>`).join('');
+  const sizeList = [...new Set(products().flatMap(sizesOf))].sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0));
+  $('#f-size').innerHTML = '<option value="">Todas las tallas</option>' + sizeList.map((s) => `<option ${size === s ? 'selected' : ''} value="${esc(s)}">Talla ${esc(s)}</option>`).join('');
 }
 
 $('#f-color').onchange = (e) => { color = e.target.value; render(); };
@@ -324,16 +364,16 @@ function render() {
     const on = favs.has(p.id);
     return `
       <article class="card">
-        <div class="pic">
+        <div class="pic" data-open="${esc(p.id)}" style="cursor:pointer">
           ${p.image ? `<img src="${p.image}" alt="${esc(p.name)}" loading="lazy">` : `<div class="ini">${esc(ini)}</div>`}
           <button class="heart ${on ? 'on' : ''}" data-fav="${esc(p.id)}" aria-label="Favorito">${on ? '♥' : '♡'}</button>
         </div>
         <div class="body">
-          <div class="name">${esc(p.name)}</div>
+          <div class="name" data-open="${esc(p.id)}" style="cursor:pointer">${esc(p.name)}</div>
           <div class="sub">${esc(cap(p.section || 'General'))}${colorOf(p) ? ' · ' + esc(colorOf(p)) : ''}</div>
           <div class="price">${money(p.price)}</div>
-          <div class="sizes">${sizes.length
-            ? sizes.slice(0, 7).map((s) => `<span>${esc(s)}</span>`).join('')
+          <div class="sizes">${allSizes(p).length
+            ? allSizes(p).slice(0, 8).map((s) => `<span class="${Number(stockMap(p)[s]) > 0 ? '' : 'out'}">${esc(s)}</span>`).join('')
             : '<span class="none">Pregunta disponibilidad</span>'}</div>
           <a class="wa" href="${wa}" target="_blank" rel="noopener">
             <span>💬</span> <span class="wa-full">Consultar por</span> <b>WhatsApp</b>
@@ -342,13 +382,75 @@ function render() {
       </article>`;
   }).join('') : '<div class="empty">No encontramos productos con esos filtros.<br><small>Prueba con otra talla, color o modelo.</small></div>';
 
-  $('#grid').querySelectorAll('[data-fav]').forEach((b) => b.onclick = () => {
+  $('#grid').querySelectorAll('[data-open]').forEach((n) => n.onclick = () => openDetail(n.dataset.open));
+  $('#grid').querySelectorAll('[data-fav]').forEach((b) => b.onclick = (e) => {
+    e.stopPropagation();
     const id = b.dataset.fav;
     if (favs.has(id)) favs.delete(id); else favs.add(id);
     localStorage.setItem('zoco.cat.favs', JSON.stringify([...favs]));
     render();
   });
 }
+
+/* ---------- Ficha de producto ---------- */
+let picked = null;
+
+function openDetail(id) {
+  const p = products().find((x) => x.id === id);
+  if (!p) return;
+  picked = null;
+
+  const ini = (p.name || 'Z').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  $('#sheet-img').innerHTML = p.image
+    ? `<img src="${p.image}" alt="${esc(p.name)}">`
+    : `<div class="ini">${esc(ini)}</div>`;
+
+  const sizes = allSizes(p);
+  const stock = stockMap(p);
+  const avail = sizes.filter((s) => Number(stock[s]) > 0);
+
+  $('#sheet-body').innerHTML = `
+    <h2>${esc(p.name)}</h2>
+    <div class="sheet-cat">${esc(cap(p.section || 'General'))}${colorOf(p) ? ' · ' + esc(colorOf(p)) : ''}${p.code ? ' · ' + esc(p.code) : ''}</div>
+    <div class="sheet-price">${money(p.price)}</div>
+    ${p.desc ? `<div class="sheet-desc">${esc(p.desc)}</div>` : ''}
+    ${sizes.length ? `
+      <div class="lbl">Elige tu talla</div>
+      <div class="picks" id="picks">
+        ${sizes.map((s) => {
+          const n = Number(stock[s]) || 0;
+          return `<button class="pick ${n > 0 ? '' : 'off'}" data-sz="${esc(s)}" ${n > 0 ? '' : 'disabled'}
+            title="${n > 0 ? n + ' disponibles' : 'agotada'}">${esc(s)}</button>`;
+        }).join('')}
+      </div>
+      <div class="sheet-desc" id="stockinfo">${avail.length ? avail.length + ' tallas disponibles' : 'Sin stock por ahora'}</div>
+    ` : ''}
+    <a class="wa" id="sheet-wa" href="${waLink(`Hola, me interesa "${p.name}" (${money(p.price)}). ¿Está disponible?`)}" target="_blank" rel="noopener">
+      <span>💬</span> <span class="wa-full">Pedir por</span> <b>WhatsApp</b>
+    </a>`;
+
+  const picks = $('#picks');
+  if (picks) picks.querySelectorAll('.pick').forEach((b) => b.onclick = () => {
+    picked = b.dataset.sz;
+    picks.querySelectorAll('.pick').forEach((x) => x.classList.toggle('on', x === b));
+    $('#sheet-wa').href = waLink(`Hola, quiero pedir "${p.name}" talla ${picked} (${money(p.price)}). ¿Está disponible?`);
+    const n = Number(stock[picked]) || 0;
+    const info = $('#stockinfo');
+    if (info) info.textContent = n > 3 ? 'Disponible' : n > 0 ? 'Últimas ' + n + ' piezas' : 'Agotada';
+  });
+
+  $('#ov').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  $('#ov').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+$('#ov-x').onclick = closeDetail;
+$('#ov').onclick = (e) => { if (e.target.id === 'ov') closeDetail(); };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
 $('#burger').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 load();

@@ -1,8 +1,8 @@
 {
-    "version":  "2.12.0",
+    "version":  "2.13.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Catalogo: 6 temas de color (Claro, Cafe, Rosa, Naranja, Menta, Noche)",
-                  "Tema Claro por defecto; el cliente puede cambiarlo"
+                  "Productos: seleccion multiple para subir al catalogo o eliminar (con confirmacion)",
+                  "Catalogo: ficha de producto con tallas agotadas tachadas y pedido por WhatsApp"
               ]
 }
