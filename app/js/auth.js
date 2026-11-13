@@ -134,6 +134,7 @@ export async function handleOAuthReturn() {
   const hash = location.hash || '';
   if (!hash.includes('access_token=')) return { ok: false };
   const params = new URLSearchParams(hash.replace(/^#/, ''));
+  if (params.get('type') === 'recovery') { try { sessionStorage.setItem('zoco.recovery', '1'); } catch {} }
   const access_token = params.get('access_token');
   const refresh_token = params.get('refresh_token');
   const expires_in = Number(params.get('expires_in') || 3600);
@@ -176,4 +177,39 @@ export async function sendMagicLink(email) {
     }
     return { ok: true };
   } catch (e) { return { ok: false, error: e.message }; }
+}
+/* ================= Recuperar contraseña ================= */
+export async function sendRecovery(email) {
+  if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
+  try {
+    const redirect = location.origin + location.pathname;
+    const r = await fetch(`${sbConfig().url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
+      body: JSON.stringify({ email }),
+    });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 160) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
+export async function updatePassword(newPass) {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
+  try {
+    const r = await fetch(`${sbConfig().url}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', apikey: sbConfig().key, Authorization: 'Bearer ' + s.access_token },
+      body: JSON.stringify({ password: newPass }),
+    });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 160) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
+export function isRecoveryReturn() {
+  try { return sessionStorage.getItem('zoco.recovery') === '1'; } catch { return false; }
+}
+export function clearRecoveryFlag() {
+  try { sessionStorage.removeItem('zoco.recovery'); } catch {}
 }

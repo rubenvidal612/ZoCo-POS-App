@@ -1,7 +1,8 @@
 {
-    "version":  "2.7.1",
+    "version":  "2.8.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Entrar con enlace magico por correo (sin contrasena)"
+                  "Login simplificado: correo y contrasena como principal",
+                  "Recuperar contrasena por correo"
               ]
 }
