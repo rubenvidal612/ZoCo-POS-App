@@ -6,7 +6,13 @@ const DIRTY = 'zoco.sync.dirty';
 const LAST = 'zoco.sync.last';
 
 export function sbConfig() {
-  try { return JSON.parse(localStorage.getItem(CFG) || '{}'); } catch { return {}; }
+  let local = {};
+  try { local = JSON.parse(localStorage.getItem(CFG) || '{}'); } catch {}
+  const def = window.ZOCO_CONFIG || {};
+  return {
+    url: local.url || def.supabaseUrl || '',
+    key: local.key || def.supabaseKey || '',
+  };
 }
 export function setSbConfig(url, key) {
   localStorage.setItem(CFG, JSON.stringify({ url: String(url || '').replace(/\/$/, ''), key: key || '' }));

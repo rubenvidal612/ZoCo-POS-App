@@ -9,7 +9,7 @@ import { initInstallPrompt, showInstallCard, mountInstallButtons } from './insta
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
 import { startSync, sbReady } from './sync.js';
-import { cloudSignIn, amISuperadmin, cloudSession } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
@@ -90,8 +90,11 @@ function paintLogin() {
         <div class="field"><label>Contraseña</label>
           <input id="lg-pass" type="password" placeholder="••••" autocomplete="current-password"></div>
         <div class="login-err" id="lg-err"></div>
+        <div class="field" id="lg-name-wrap" style="display:none"><label>Nombre de tu negocio</label>
+          <input id="lg-name" placeholder="Mi tienda"></div>
         <button class="btn orange" type="submit">Entrar</button>
         <button class="btn ghost" type="button" id="lg-cloud" style="margin-top:8px;width:100%">☁ Entrar con cuenta en la nube</button>
+        <button class="btn ghost" type="button" id="lg-register" style="margin-top:6px;width:100%">Crear cuenta nueva</button>
         <div class="login-hint">
           Demo: <b>ramberamericasefectivo@gmail.com</b> / <b>1234</b><br>
           Cajero: <b>cajero@zoco.app</b> / <b>1234</b>
@@ -99,21 +102,42 @@ function paintLogin() {
       </form>
     </div>`;
 
+  let mode = 'login';
+  $('#lg-register').onclick = () => {
+    mode = mode === 'login' ? 'register' : 'login';
+    $('#lg-name-wrap').style.display = mode === 'register' ? 'block' : 'none';
+    $('#lg-register').textContent = mode === 'register' ? '← Ya tengo cuenta' : 'Crear cuenta nueva';
+    $('#lg-cloud').textContent = mode === 'register' ? '☁ Crear mi cuenta en la nube' : '☁ Entrar con cuenta en la nube';
+    $('#lg-err').textContent = '';
+  };
+
+  if (!sbReady()) {
+    const b = $('#lg-cloud'); if (b) b.style.display = 'none';
+    const r = $('#lg-register'); if (r) r.style.display = 'none';
+  }
+
   $('#lg-cloud').onclick = async () => {
     const email = $('#lg-email').value.trim();
     const pass = $('#lg-pass').value;
     if (!email || !pass) { $('#lg-err').textContent = 'Escribe correo y contraseña'; return; }
+    if (mode === 'register' && pass.length < 6) { $('#lg-err').textContent = 'La contraseña debe tener 6 caracteres o más'; return; }
     $('#lg-err').textContent = 'Conectando…';
-    const r = await cloudSignIn(email, pass);
+
+    const r = mode === 'register'
+      ? await cloudSignUp(email, pass, $('#lg-name').value.trim() || email.split('@')[0])
+      : await cloudSignIn(email, pass);
+
     if (!r.ok) { $('#lg-err').textContent = r.error; return; }
-    // Mezcla: se cargan los datos y se entra con el perfil del dueño
+    if (r.needConfirm) { $('#lg-err').textContent = 'Revisa tu correo para confirmar la cuenta'; return; }
+
     const local = login(email, pass);
     if (!local.ok) {
       const u = state.users.find((x) => x.role === 'owner') || state.users[0];
       if (u) state.user = u;
     }
     state.superadmin = await amISuperadmin();
-    toast('Bienvenido' + (r.user?.email ? ', ' + r.user.email : ''));
+    toast(mode === 'register' ? 'Cuenta creada. ¡Bienvenido!' : 'Bienvenido' + (r.user?.email ? ', ' + r.user.email : ''));
+    if (mode === 'register') setTimeout(() => toast('En Configuración → Datos de prueba puedes borrar el catálogo de ejemplo'), 2000);
     route = 'inicio'; location.hash = '#/inicio'; paintShell();
   };
 
