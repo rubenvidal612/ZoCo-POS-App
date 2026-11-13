@@ -1,8 +1,8 @@
 {
-    "version":  "2.16.0",
+    "version":  "2.16.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Configuracion en celular: menu de tarjetas (cada seccion abre aparte)",
-                  "En PC sigue igual, en dos columnas"
+                  "Configuracion movil: dentro de cada seccion los campos se ven como filas compactas",
+                  "Etiqueta a la izquierda y valor a la derecha, con la ayuda debajo"
               ]
 }
