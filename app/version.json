@@ -1,8 +1,8 @@
 {
-    "version":  "2.13.4",
+    "version":  "2.14.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "\"Empezar de cero\" ya no toca usuarios, roles ni pestanas",
-                  "Aviso claro de que se conserva y que se borra"
+                  "Ya lee archivos Excel .xlsx (sin convertir a CSV)",
+                  "Detecta tallas tipo \"Dama 22\" o \"Caballero 27\""
               ]
 }

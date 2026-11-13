@@ -1,5 +1,6 @@
 // Importador inteligente de inventario (Excel/CSV pegado o archivo)
 import { state, emit, fmtSize, sizesFor, recordImport } from './store.js';
+import { readXlsx, matrixToTable } from './xlsx.js';
 import { $, el, money, esc, toast, modal } from './ui.js';
 import { downloadExcel } from './exports.js';
 
@@ -56,9 +57,16 @@ export function detectMapping(headers) {
   headers.forEach((h, i) => {
     const n = norm(h);
     if (!n) return;
-    // columnas que son tallas (22, 23.5, S, M…)
+    // columnas que son tallas: "22", "23.5", "S", "M"…
+    // también "Dama 22", "Caballero 27", "Talla 26", "Infantil 14.5"
     if (/^\d{1,2}([.,]5)?$/.test(n) || /^(xs|s|m|l|xl|xxl)$/.test(n)) {
       mapping['size:' + h] = i;
+      used.add(i);
+      return;
+    }
+    const sizeSuffix = n.match(/(?:^|\s)(\d{1,2}(?:[.,]5)?)$/);
+    if (sizeSuffix && /dama|caballero|infantil|escolar|nino|niña|nina|unisex|talla|talle|size|numero|número/.test(n)) {
+      mapping['size:' + sizeSuffix[1].replace(',', '.')] = i;
       used.add(i);
       return;
     }
@@ -193,9 +201,9 @@ export function openImportModal(onDone, seedText) {
       <div class="imp">
         <div class="imp-top">
           <label class="imp-drop" id="imp-drop">
-            <input type="file" id="imp-file" accept=".csv,.txt,.tsv" hidden>
+            <input type="file" id="imp-file" accept=".csv,.txt,.tsv,.xlsx,.xls" hidden>
             <b>📄 Arrastra tu archivo o haz clic para subirlo</b>
-            <span>CSV exportado de Excel, o copia y pega las celdas abajo</span>
+            <span>Excel (.xlsx) o CSV · o pega las celdas abajo</span>
           </label>
           <div class="imp-tpl">
             <div style="font-size:11.5px;font-weight:800;color:var(--muted)">PLANTILLAS</div>
@@ -222,14 +230,35 @@ export function openImportModal(onDone, seedText) {
 
   m.root.querySelectorAll('[data-tpl]').forEach((b) => b.onclick = () => downloadTemplate(b.dataset.tpl));
   if (seedText) setTimeout(() => analyze(seedText), 50);
-  m.root.querySelector('#imp-drop').onclick = () => m.root.querySelector('#imp-file').click();
-  m.root.querySelector('#imp-file').onchange = (e) => {
-    const f = e.target.files[0];
+  async function handleFile(f) {
     if (!f) return;
+    const name = (f.name || '').toLowerCase();
+    if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xls')) {
+      try {
+        toast('Leyendo Excel…');
+        const buf = await f.arrayBuffer();
+        const matrix = await readXlsx(buf);
+        const t = matrixToTable(matrix);
+        if (!t.headers.length) { toast('El Excel no tiene datos legibles'); return; }
+        table = t;
+        mapping = detectMapping(t.headers);
+        renderMapping();
+        renderPreview();
+        const ta = m.root.querySelector('#imp-paste');
+        if (ta) ta.value = [t.headers.join(','), ...t.rows.map((r) => r.join(','))].join('\n');
+        toast(`Excel leído: ${t.rows.length} filas · ${t.headers.length} columnas`);
+      } catch (err) {
+        console.error(err);
+        toast('No pude leer el Excel: ' + (err.message || 'formato no soportado'));
+      }
+      return;
+    }
     const rd = new FileReader();
     rd.onload = () => { analyze(String(rd.result || '')); };
     rd.readAsText(f, 'utf-8');
-  };
+  }
+  m.root.querySelector('#imp-drop').onclick = () => m.root.querySelector('#imp-file').click();
+  m.root.querySelector('#imp-file').onchange = (e) => { handleFile(e.target.files[0]); };
   m.root.querySelector('#imp-parse').onclick = () => analyze(m.root.querySelector('#imp-paste').value);
 
   m.root.querySelector('#imp-drop').addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('over'); });
