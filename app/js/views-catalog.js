@@ -462,8 +462,10 @@ export function settingsView(ctx) {
   ];
 
   const root = el(`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-      <div class="panel">
+    <div class="settings-page" id="settings-root">
+      <div class="settings-nav" id="settings-nav"></div>
+      <div class="settings-grid">
+      <div class="panel" data-sec="Apariencia">
         <div class="panel-head"><h2>Apariencia</h2></div>
         <div style="padding:16px">
           <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tema de la empresa. Se aplica al instante en todas las cajas.</div>
@@ -626,7 +628,65 @@ export function settingsView(ctx) {
           <div class="hint" style="margin-top:8px">El respaldo guarda TODO en un archivo JSON por si quieres volver atrás.</div>
         </div>
       </div>
+      </div>
     </div>`);
+
+  /* ===== Configuración en móvil: menú de tarjetas en vez de un chorizo largo ===== */
+  (function buildSettingsNav() {
+    const page = root.classList?.contains('settings-page') ? root : root.querySelector('.settings-page');
+    const gridEl = root.querySelector('.settings-grid');
+    const nav = root.querySelector('#settings-nav');
+    if (!page || !gridEl || !nav) return;
+    const panels = [...gridEl.querySelectorAll(':scope > .panel')];
+    const iconFor = (t) => {
+      const k = t.toLowerCase();
+      if (k.includes('apariencia')) return '🎨';
+      if (k.includes('negocio')) return '🏪';
+      if (k.includes('agente') || k.includes(' ia')) return '✦';
+      if (k.includes('impresora')) return '🖨';
+      if (k.includes('notificacion')) return '🔔';
+      if (k.includes('nube') || k.includes('supabase')) return '☁';
+      if (k.includes('empresa')) return '🏢';
+      if (k.includes('excel') || k.includes('inventario')) return '📗';
+      if (k.includes('prueba')) return '🧪';
+      return '⚙';
+    };
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'set-back';
+    back.innerHTML = '← Volver';
+    back.onclick = () => {
+      page.classList.remove('in-sec');
+      panels.forEach((x) => x.classList.remove('open'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    page.prepend(back);
+
+    panels.forEach((p, i) => {
+      const t = (p.querySelector('h2')?.textContent || 'Sección').trim();
+      p.dataset.sec = t;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'set-tile';
+      b.dataset.target = String(i);
+      const ico = document.createElement('span');
+      ico.className = 'st-ico';
+      ico.textContent = iconFor(t);
+      const tx = document.createElement('span');
+      tx.className = 'st-txt';
+      tx.textContent = t;
+      const ch = document.createElement('span');
+      ch.className = 'st-arrow';
+      ch.textContent = '›';
+      b.append(ico, tx, ch);
+      b.onclick = () => {
+        panels.forEach((x, k) => x.classList.toggle('open', k === i));
+        page.classList.add('in-sec');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      nav.appendChild(b);
+    });
+  })();
 
   const grid = $('#themes', root);
   grid.innerHTML = THEMES.map(([id, name, sw]) => `
