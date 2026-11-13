@@ -1,9 +1,9 @@
 {
-    "version":  "2.22.0",
+    "version":  "2.23.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Secciones y tallas editables por giro (cambia rangos o crea secciones)",
-                  "Nuevo giro Perfumeria / fragancias con concentrados, alcohol y frascos",
-                  "Calculadora de mezclas: frascos por litro, ml de concentrado y alcohol, costo y precio"
+                  "Perfumeria: receta por producto (concentrado, alcohol, frasco, ml, % y merma)",
+                  "Preparar lote descuenta ingredientes y suma frascos listos",
+                  "Preparar al vender: al cobrar descuenta concentrado, alcohol y frasco"
               ]
 }

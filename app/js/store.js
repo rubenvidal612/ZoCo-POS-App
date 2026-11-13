@@ -151,6 +151,103 @@ export const MODES = {
 };
 
 
+
+/* ================= Perfumería: recetas y producción ================= */
+/** ¿El producto se mide en ml? */
+export const isLiquid = (p) => !!(p && p.porMl);
+
+/** Calcula lo que consume preparar `qty` unidades de un producto con receta. */
+export function recipeNeeds(p, qty = 1) {
+  const r = p?.recipe;
+  if (!r) return null;
+  const q = Math.max(0, Number(qty) || 0);
+  const ml = Math.max(1, Number(r.bottleMl) || 50);
+  const pct = Math.max(1, Number(r.pct) || 20);
+  const waste = Math.max(0, Number(r.waste) || 0);
+  const concMl = ml * (pct / 100) * (1 + waste / 100) * q;
+  const alcMl = ml * (1 - pct / 100) * (1 + waste / 100) * q;
+  return {
+    concId: r.concId || null,
+    alcoholId: r.alcoholId || null,
+    bottleId: r.bottleId || null,
+    bottleSize: r.bottleSize || '',
+    concMl: Math.round(concMl * 10) / 10,
+    alcMl: Math.round(alcMl * 10) / 10,
+    bottles: Number(r.withBottle === false ? 0 : q),
+    ml,
+    pct,
+    qty: q,
+  };
+}
+
+/** Descuenta ingredientes de una receta (sin tocar el producto terminado). */
+function consumeRecipe(p, qty, branchId, refId) {
+  const need = recipeNeeds(p, qty);
+  if (!need) return null;
+  const b = branchId || state.currentBranch;
+  const take = (id, amount) => {
+    if (!id || !amount) return;
+    const ing = productById(id);
+    if (!ing) return;
+    const stock = ing.branchStock?.[b] || {};
+    const key = Object.keys(stock)[0] || 'Único';
+    stock[key] = Math.max(0, Number(stock[key] || 0) - amount);
+    ing.branchStock[b] = stock;
+  };
+  take(need.concId, need.concMl);
+  take(need.alcoholId, need.alcMl);
+  take(need.bottleId, need.bottles);
+  if (!Array.isArray(state.consumptions)) state.consumptions = [];
+  state.consumptions.unshift({
+    id: uid('cons'), date: new Date().toISOString(), branchId: b,
+    productId: p.id, name: p.name, qty,
+    concId: need.concId, concMl: need.concMl,
+    alcoholId: need.alcoholId, alcMl: need.alcMl,
+    bottleId: need.bottleId, bottles: need.bottles,
+    ref: refId || null, user: state.user?.name || '-',
+  });
+  return need;
+}
+
+/** Prepara un lote: descuenta ingredientes y suma frascos al producto terminado. */
+export function produceBatch(productId, qty, branchId) {
+  const p = productById(productId);
+  if (!p?.recipe) return { ok: false, msg: 'El producto no tiene receta' };
+  const q = Math.max(1, Number(qty) || 0);
+  const b = branchId || state.currentBranch;
+  const need = recipeNeeds(p, q);
+
+  // valida existencias
+  const check = (id, amount, label) => {
+    if (!id || !amount) return null;
+    const ing = productById(id);
+    if (!ing) return label + ' no encontrado';
+    const stock = ing.branchStock?.[b] || {};
+    const key = Object.keys(stock)[0] || 'Único';
+    const have = Number(stock[key] || 0);
+    if (have < amount) return `${ing.name}: faltan ${(amount - have).toFixed(1)} (hay ${have})`;
+    return null;
+  };
+  const err = check(need.concId, need.concMl, 'Concentrado')
+    || check(need.alcoholId, need.alcMl, 'Alcohol')
+    || check(need.bottleId, need.bottles, 'Frasco');
+  if (err) return { ok: false, msg: err };
+
+  consumeRecipe(p, q, b, 'lote');
+
+  // suma al inventario del producto terminado
+  p.branchStock[b] = p.branchStock[b] || {};
+  const key = Object.keys(p.branchStock[b])[0] || 'Único';
+  p.branchStock[b][key] = Number(p.branchStock[b][key] || 0) + q;
+
+  if (!Array.isArray(state.productions)) state.productions = [];
+  state.productions.unshift({
+    id: uid('prod'), date: new Date().toISOString(), branchId: b,
+    productId, name: p.name, qty: q, need, user: state.user?.name || '-',
+  });
+  emit();
+  return { ok: true, need, qty: q };
+}
 /* ================= Secciones y tallas editables ================= */
 /** Aplica overrides guardados en settings.customSections sobre SECTIONS. */
 export function applyCustomSections() {
@@ -310,6 +407,8 @@ function migrate(s) {
   if (!Array.isArray(s.returns)) s.returns = [];
   if (!Array.isArray(s.adjustments)) s.adjustments = [];
   if (!Array.isArray(s.transfers)) s.transfers = [];
+  if (!Array.isArray(s.consumptions)) s.consumptions = [];
+  if (!Array.isArray(s.productions)) s.productions = [];
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -651,8 +750,13 @@ export function commitSale({ cart, method, received, customerName, note, custome
   sale.commission = commissionOf(sale);
   sale.items.forEach((l) => {
     const p = productById(l.productId);
+    const preparaAlVender = !!(p?.recipe && p.prepararAlVender);
     const b = p?.branchStock?.[state.currentBranch];
-    if (b && b[l.size] != null) b[l.size] = Math.max(0, Number(b[l.size]) - l.qty);
+    // Si se prepara al momento, no se descuenta el producto terminado: se descuentan ingredientes
+    if (!preparaAlVender && b && b[l.size] != null) b[l.size] = Math.max(0, Number(b[l.size]) - l.qty);
+    if (preparaAlVender) {
+      try { consumeRecipe(p, l.qty, state.currentBranch, sale.id); } catch {}
+    }
   });
   if (customerId && (method === 'credit_sale' || (payments || []).some((p) => p.method === 'credit_sale'))) {
     const c = state.customers.find((x) => x.id === customerId);

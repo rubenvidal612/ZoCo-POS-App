@@ -2,7 +2,7 @@
 import { el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
   state, emit, sizesFor, stockOf, fmtSize, productById,
-  returnSale, registerAdjustment, transferStock,
+  returnSale, registerAdjustment, transferStock, recipeNeeds, produceBatch,
 } from './store.js';
 
 const money0 = (n) => money(Number(n) || 0);
@@ -361,4 +361,54 @@ export function openMixCalculator() {
     i.onchange = i.oninput;
   });
   calc();
+}
+/* ================= Preparar lote (perfumería) ================= */
+export function openProduceModal(onDone) {
+  const prods = state.products.filter((p) => p.recipe && p.active !== false);
+  if (!prods.length) {
+    toast('Primero crea un producto con receta (Configuración → Negocio: giro Perfumería)');
+    return;
+  }
+  const m = modal({
+    title: 'Preparar lote',
+    body: `
+      <div class="hint" style="margin-bottom:10px">
+        Se descuentan el concentrado, el alcohol y los frascos, y se suman los frascos listos al inventario.
+      </div>
+      <div class="field"><label>Producto preparado</label>
+        <select id="pr-prod">${prods.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Cantidad de frascos</label>
+        <input id="pr-qty" type="number" min="1" value="10"></div>
+      <div class="mx-out" id="pr-out"></div>`,
+    foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="pr-go">Preparar</button>`,
+  });
+
+  const root = m.root;
+  const paint = () => {
+    const p = state.products.find((x) => x.id === root.querySelector('#pr-prod').value);
+    const q = Math.max(1, Number(root.querySelector('#pr-qty').value) || 1);
+    const need = recipeNeeds(p, q);
+    if (!need) { root.querySelector('#pr-out').textContent = 'Sin receta'; return; }
+    const nameOf = (id) => (state.products.find((x) => x.id === id) || {}).name || '—';
+    root.querySelector('#pr-out').innerHTML = `
+      <div class="mx-big"><b>${q}</b> frascos de ${need.ml} ml al ${need.pct}%</div>
+      <div class="mx-grid">
+        <div><span>Concentrado</span><b>${need.concMl} ml · ${esc(nameOf(need.concId))}</b></div>
+        <div><span>Alcohol</span><b>${need.alcMl} ml · ${esc(nameOf(need.alcoholId))}</b></div>
+        <div><span>Frascos</span><b>${need.bottles} · ${esc(nameOf(need.bottleId))}</b></div>
+      </div>`;
+  };
+  root.querySelector('#pr-prod').onchange = paint;
+  root.querySelector('#pr-qty').oninput = paint;
+  paint();
+
+  root.querySelector('#pr-go').onclick = () => {
+    const id = root.querySelector('#pr-prod').value;
+    const q = Number(root.querySelector('#pr-qty').value) || 1;
+    const r = produceBatch(id, q);
+    if (!r.ok) { toast(r.msg); return; }
+    m.close();
+    toast(`Lote listo: ${r.qty} frascos agregados al inventario`);
+    onDone?.();
+  };
 }

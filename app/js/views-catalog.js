@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
-import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator } from './views-inventory.js';
+import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
@@ -35,6 +35,7 @@ export function productsView(ctx) {
           <button class="btn ghost sm" id="undo-imp">↩ Deshacer importación</button>
           <button class="btn ghost sm" id="adj">↺ Merma</button>
           <button class="btn ghost sm" id="mix">⚗ Mezcla</button>
+          <button class="btn ghost sm" id="produce">🍶 Preparar</button>
           <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
           <button class="btn ghost sm" id="exp">⬇ Excel</button>
           <button class="btn sm" id="new">+ Producto</button>
@@ -187,7 +188,23 @@ export function productsView(ctx) {
           <div id="f-img-prev" style="margin-top:8px">${p?.image ? `<img src="${p.image}" style="width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">` : ''}</div>
           <div class="hint">Se comprime automáticamente al subir (máx 1200px).</div>
         </div>
-        <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
+        ${state.company.mode === 'perfumeria' ? (() => {
+          const opts = (sec) => state.products.filter((x) => x.section === sec && x.id !== p?.id);
+          const sel = (id, list, cur) => `<select id="${id}"><option value="">— ninguno —</option>${list.map((x) => `<option value="${x.id}" ${cur === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>`;
+          return `<div class="perf-block">
+            <div class="cfl-title">Perfumería</div>
+            <label class="perf-check"><input type="checkbox" id="f-perfml" ${p?.porMl ? 'checked' : ''}> Este producto se mide en <b>ml</b> (concentrado o alcohol)</label>
+            <div class="row2">
+              <div class="field"><label>Concentrado (esencia)</label>${sel('f-conc', opts('perf_concentrado'), p?.recipe?.concId)}</div>
+              <div class="field"><label>Alcohol / fijador</label>${sel('f-alc', opts('perf_alcohol'), p?.recipe?.alcoholId)}</div>
+              <div class="field"><label>Frasco</label>${sel('f-bottle', opts('perf_frascos'), p?.recipe?.bottleId)}</div>
+              <div class="field"><label>ml del frasco</label><input id="f-bottleml" type="number" value="${p?.recipe?.bottleMl ?? 50}"></div>
+              <div class="field"><label>% concentración</label><input id="f-pct" type="number" value="${p?.recipe?.pct ?? 20}"></div>
+              <div class="field"><label>Merma %</label><input id="f-waste" type="number" value="${p?.recipe?.waste ?? 3}"></div>
+            </div>
+            <label class="perf-check"><input type="checkbox" id="f-prepare" ${p?.prepararAlVender ? 'checked' : ''}> <b>Preparar al vender</b>: al cobrar, descuenta concentrado, alcohol y frasco</label>
+          </div>`;
+        })() : ''}        <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
         <div class="size-grid" id="f-sizes">
           ${sizes.map((s) => `<div style="text-align:center">
             <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:3px">${fmtSize(s)}</div>
@@ -227,10 +244,27 @@ export function productsView(ctx) {
       m.root.querySelectorAll('.sz-in').forEach((i) => { stock[i.dataset.size] = Math.max(0, Number(i.value) || 0); });
       const branchStock = { ...(p?.branchStock || {}) };
       branchStock[state.currentBranch] = stock;
+      // Perfumería
+      let porMl = false, prepararAlVender = false, recipe = null;
+      if (m.root.querySelector('#f-perfml')) {
+        porMl = m.root.querySelector('#f-perfml').checked;
+        prepararAlVender = m.root.querySelector('#f-prepare').checked;
+        const concId = m.root.querySelector('#f-conc').value;
+        const alcoholId = m.root.querySelector('#f-alc').value;
+        const bottleId = m.root.querySelector('#f-bottle').value;
+        if (concId) {
+          recipe = {
+            concId, alcoholId: alcoholId || null, bottleId: bottleId || null,
+            bottleMl: Number(m.root.querySelector('#f-bottleml').value) || 50,
+            pct: Number(m.root.querySelector('#f-pct').value) || 20,
+            waste: Number(m.root.querySelector('#f-waste').value) || 0,
+          };
+        }
+      }
       const extra = {};
       m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
-        id: p?.id, name, price, image: pendingImage, extra,
+        id: p?.id, name, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,
         section: m.root.querySelector('#f-sec').value,
@@ -256,6 +290,7 @@ export function productsView(ctx) {
   root.querySelector('#adj')?.addEventListener('click', () => openAdjustmentModal(render));
   root.querySelector('#trf')?.addEventListener('click', () => openTransferModal(render));
   root.querySelector('#mix')?.addEventListener('click', () => openMixCalculator());
+  root.querySelector('#produce')?.addEventListener('click', () => openProduceModal(render));
 
   // Deshacer la última importación (como en ZoCo 2.13)
   const undoBtn = root.querySelector('#undo-imp');
