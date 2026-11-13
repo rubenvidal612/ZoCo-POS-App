@@ -1,8 +1,9 @@
 {
-    "version":  "2.10.0",
+    "version":  "2.11.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Boton \"Empezar de cero\" para quitar el demo y usar tu negocio real",
-                  "Descargar respaldo en JSON antes de limpiar"
+                  "Catalogo online rediseñado (estilo beige elegante)",
+                  "Buscador por modelo, color y talla",
+                  "Favoritos y boton flotante de WhatsApp"
               ]
 }
