@@ -1,8 +1,8 @@
 {
-    "version":  "2.13.3",
+    "version":  "2.13.4",
     "date":  "2026-11-10",
     "notes":  [
-                  "Corregido: las pestanas desaparecian si el rol del usuario estaba en minusculas",
-                  "Roles se normalizan solos (owner -\u003e OWNER)"
+                  "\"Empezar de cero\" ya no toca usuarios, roles ni pestanas",
+                  "Aviso claro de que se conserva y que se borra"
               ]
 }

@@ -799,8 +799,8 @@ export function undoRecentProducts(minutes = 30) {
 }
 /* ================= Empezar de cero (quitar el demo) ================= */
 export function resetToBlank() {
-  // Conserva: empresa, sucursales, configuración, usuarios y al dueño
-  const owner = state.users.find((u) => u.role === 'owner') || state.users[0] || null;
+  // NUNCA toca usuarios, empresa, sucursales ni configuración.
+  const owner = state.users.find((u) => String(u.role).toUpperCase() === 'OWNER') || state.users[0] || null;
 
   state.products = [];
   state.sales = [];
@@ -814,16 +814,18 @@ export function resetToBlank() {
   state.imports = [];
   state.personal = { movements: [] };
   state.register = { open: false, opening: 0 };
+  state.cart = [];
 
-  if (owner) {
-    state.users = [{
-      ...owner,
-      role: 'OWNER',
-      active: true,
-      balance: 0,
-    }];
-    state.user = state.users[0];
-  }
+  // Los usuarios se conservan tal cual (solo se normaliza el rol y se limpian saldos)
+  state.users = (state.users || []).map((u) => ({
+    ...u,
+    role: String(u.role || 'CASHIER').toUpperCase(),
+    balance: 0,
+    active: u.active !== false,
+  }));
+  if (!state.users.length && owner) state.users = [owner];
+  state.user = state.users.find((u) => u.email === (state.user?.email || '')) || state.users[0] || null;
+
 
   state.cart = makeCart ? makeCart() : [];
   emit();

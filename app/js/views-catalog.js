@@ -750,7 +750,7 @@ export function settingsView(ctx) {
   $('#blank', root)?.addEventListener('click', async () => {
     const ok = await confirmDialog({
       title: 'Empezar de cero',
-      message: 'Se borrarán TODOS los productos, ventas, clientes, apartados, gastos, cupones, metas y registros del checador.\n\nSe conservan tu empresa, sucursales, usuarios y configuración.\n\nEsta acción no se puede deshacer (descarga un respaldo primero si quieres).',
+      message: 'Se borran los datos del DEMO: productos, ventas, clientes, apartados, cupones, gastos, caja, checador y metas.\n\nNO se toca: tu empresa, sucursales, usuarios y sus roles, tema, configuración ni la llave de IA. Las pestañas siguen igual.\n\nDespués carga tu inventario con "Importar". ¿Continuar?',
       okText: 'Sí, empezar de cero', danger: true,
     });
     if (!ok) return;
