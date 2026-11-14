@@ -1,9 +1,7 @@
 {
-    "version":  "2.26.0",
+    "version":  "2.26.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Los ejemplos quedan marcados como DEMO",
-                  "Boton \"Quitar ejemplos (demo)\" borra solo el demo, conserva tus productos",
-                  "Cada cliente nuevo arranca con el demo de su giro"
+                  "Cargar ejemplos reemplaza solo los productos DEMO; tus productos reales se conservan"
               ]
 }

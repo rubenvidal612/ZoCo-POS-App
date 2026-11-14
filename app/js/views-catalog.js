@@ -871,9 +871,9 @@ export function settingsView(ctx) {
         body: `<div style="font-size:13px;line-height:1.5">
           ¿Quieres cargar <b>productos de ejemplo</b> de este giro?
           <div class="hint" style="margin-top:8px">
-            Los ejemplos son pocos (3–4) y sirven para ver cómo queda. Puedes borrarlos después con "Empezar de cero".
+            Solo reemplazan a otros ejemplos. <b>Tus productos reales no se tocan.</b>
           </div>
-          <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) actualmente.</div>
+          <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) en total y ${demoCount()} de ejemplo.</div>
         </div>`,
         foot: `<button class="btn ghost sm" data-close>Mantener mi catálogo</button>
                <button class="btn ghost sm" id="demo-blank">Empezar en blanco</button>

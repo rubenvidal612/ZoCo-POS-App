@@ -331,8 +331,9 @@ export function demoCount() {
 }
 export function loadDemoForMode(mode, { replace = true } = {}) {
   const demo = demoForMode(mode);
-  if (replace) state.products = demo;
-  else state.products = [...state.products, ...demo];
+  // replace = reemplaza SOLO los productos marcados DEMO; los reales se conservan
+  const base = replace ? (state.products || []).filter((p) => !p.isDemo) : (state.products || []);
+  state.products = [...base, ...demo];
   // en perfumería, enlaza la receta del kit con el concentrado/alcohol/frasco
   if (mode === 'perfumeria') {
     const conc = state.products.find((p) => p.section === 'perf_concentrado' && p.porMl);
