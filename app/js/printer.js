@@ -7,6 +7,7 @@ const LS_USB = 'zoco.printer.usb';
 const LS_BT = 'zoco.printer.bt';
 const LS_WIFI = 'zoco.printer.wifi';
 const LS_PAPER = 'zoco.printer.paper';
+const LS_WIN = 'zoco.printer.win';
 
 /** Ancho de papel en caracteres: 58mm = 32, 80mm = 48 */
 export function paperWidth() {
@@ -25,6 +26,7 @@ export function printerStatus() {
     usb: !!localStorage.getItem(LS_USB),
     bt: !!localStorage.getItem(LS_BT),
     wifi: localStorage.getItem(LS_WIFI) || '',
+    win: localStorage.getItem(LS_WIN) || '',
     paper: paperMm(),
   };
 }
@@ -244,6 +246,34 @@ async function sendWifi(bytes) {
   return true;
 }
 
+
+/* ---------- Impresora de Windows (USB, ESC/POS crudo) ---------- */
+export function connectWindowsPrinter(name) {
+  localStorage.setItem(LS_WIN, name);
+  return name;
+}
+
+export async function listWindowsPrinters() {
+  const r = await fetch('/api/printers');
+  if (!r.ok) throw new Error('El servidor local no está corriendo (abre la app desde la PC)');
+  const data = await r.json();
+  if (!data.ok) throw new Error(data.error || 'No se pudieron listar');
+  return data.printers || [];
+}
+
+async function sendWindows(bytes) {
+  const printer = localStorage.getItem(LS_WIN);
+  if (!printer) throw new Error('Elige tu impresora de Windows');
+  const b64 = btoa(String.fromCharCode(...bytes));
+  const r = await fetch('/api/print-raw', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ printer, data: b64 }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.ok) throw new Error(data.error || 'No se pudo imprimir');
+  return true;
+}
 /* ---------- Respaldo: impresión del navegador (sin ventanas emergentes) ---------- */
 function printViaBrowser(sale) {
   const text = ticketText(sale);
@@ -284,6 +314,7 @@ export async function printTicket(sale) {
   const st = printerStatus();
   const bytes = buildEscPos(sale);
   const tries = [];
+  if (st.win) tries.push(['Windows/' + st.win, () => sendWindows(bytes)]);
   if (st.usb) tries.push(['USB', () => sendUsb(bytes)]);
   if (st.wifi) tries.push(['WiFi', () => sendWifi(bytes)]);
   if (st.bt) tries.push(['Bluetooth', () => sendBluetooth(bytes)]);

@@ -1,10 +1,9 @@
 {
-    "version":  "2.27.0",
+    "version":  "2.28.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Boton grande \"Imprimir prueba\" en Configuracion de impresora",
-                  "Indicadores de estado: USB, Bluetooth, WiFi y papel",
-                  "Boton \"Probar WiFi\" que verifica la IP de la impresora",
-                  "Impresion del navegador sin ventanas emergentes (ya no sale en blanco)"
+                  "Impresora de Windows: elige tu POS58D instalada y imprime directo sin dialogos",
+                  "Boton \"Buscar impresoras\" en Configuracion",
+                  "Servidor local imprime ESC/POS crudo a la cola de Windows"
               ]
 }

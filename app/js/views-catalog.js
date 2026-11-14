@@ -17,7 +17,7 @@ import {
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
 import { openImportModal, downloadTemplate } from './importer.js';
-import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus, connectWifiPrinter, paperWidth, setPaperWidth, paperMm, ticketText } from './printer.js';
+import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus, connectWifiPrinter, paperWidth, setPaperWidth, paperMm, ticketText, listWindowsPrinters, connectWindowsPrinter } from './printer.js';
 
 /* ================= PRODUCTOS ================= */
 export function productsView(ctx) {
@@ -670,6 +670,21 @@ export function settingsView(ctx) {
               <option value="80">80 mm (48 caracteres)</option>
             </select>
           </div>
+          <div style="margin-top:14px">
+            <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">
+              Impresora de Windows / USB (recomendada para POS58D)
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="pr-win" style="flex:1;min-width:190px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+                <option value="">— elige tu impresora —</option>
+              </select>
+              <button class="btn sm ghost" id="pr-win-find">Buscar impresoras</button>
+              <button class="btn sm ghost" id="pr-win-save">Usar esta</button>
+            </div>
+            <div class="hint" style="margin-top:6px">
+              Instala el driver de la POS58D en Windows (USB), luego búscala aquí: imprime directo, sin diálogos.
+            </div>
+          </div>
           <div style="margin-top:12px">
             <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Impresora WiFi (TCP 9100)</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1153,6 +1168,30 @@ export function settingsView(ctx) {
     }
   };
   paintPrinter();
+
+  // Impresora de Windows (USB, ESC/POS crudo)
+  const winSel = $('#pr-win', root);
+  if (winSel && printerStatus().win) {
+    winSel.innerHTML = `<option value="${esc(printerStatus().win)}">${esc(printerStatus().win)}</option>` + winSel.innerHTML;
+    winSel.value = printerStatus().win;
+  }
+  $('#pr-win-find', root)?.addEventListener('click', async () => {
+    try {
+      toast('Buscando impresoras…');
+      const list = await listWindowsPrinters();
+      if (!list.length) { toast('No hay impresoras instaladas en Windows'); return; }
+      winSel.innerHTML = list.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      toast(list.length + ' impresora(s) encontradas. Si no ves tu POS58D, instala su driver USB en Windows.');
+    } catch (e) { toast(e.message); }
+  });
+  $('#pr-win-save', root)?.addEventListener('click', () => {
+    const name = winSel.value;
+    if (!name) { toast('Busca y elige una impresora'); return; }
+    connectWindowsPrinter(name);
+    toast('Impresora guardada: ' + name);
+    paintPrinter();
+  });
+
   $('#pr-usb', root)?.addEventListener('click', async () => {
     try { await connectUsbPrinter(); toast('Impresora USB conectada'); paintPrinter(); }
     catch (e) { toast('No se pudo conectar: ' + e.message); }

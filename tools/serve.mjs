@@ -9,6 +9,7 @@ import { loadVapid, loadSubs, saveSubs, sendPush } from './push.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -293,6 +294,100 @@ const server = http.createServer(async (req, res) => {
         });
         return json(res, 200, { ok: true });
       }
+      if (url === '/api/printers' && req.method === 'GET') {
+        // Lista las impresoras instaladas en Windows (para POS58D por USB)
+        try {
+          const { execFile } = await import('node:child_process');
+          const ps = 'Get-Printer | Select-Object -ExpandProperty Name';
+          const out = await new Promise((resolve, reject) => {
+            execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { timeout: 8000 }, (e, so, se) => {
+              if (e) reject(new Error(String(se || e.message).slice(0, 200)));
+              else resolve(String(so || ''));
+            });
+          });
+          const list = out.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+          return json(res, 200, { ok: true, printers: list });
+        } catch (e) {
+          return json(res, 500, { ok: false, error: 'No se pudieron listar las impresoras: ' + (e.message || e) });
+        }
+      }
+
+      if (url === '/api/print-raw' && req.method === 'POST') {
+        // Manda ESC/POS crudo a una impresora instalada en Windows (silencioso)
+        const body = await readBody(req);
+        const printer = String(body?.printer || '').trim();
+        const b64 = body?.data;
+        if (!printer || !b64) return json(res, 400, { ok: false, error: 'printer y data requeridos' });
+        const tmp = path.join(os.tmpdir(), 'zoco-print-' + Date.now() + '.bin');
+        fs.writeFileSync(tmp, Buffer.from(b64, 'base64'));
+        const ps = `
+$ErrorActionPreference = 'Stop'
+Add-Type -TypeDefinition @"
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+public class RawPrint {
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+  public class DOCINFOA {
+    [MarshalAs(UnmanagedType.LPWStr)] public string pDocName;
+    [MarshalAs(UnmanagedType.LPWStr)] public string pOutputFile;
+    [MarshalAs(UnmanagedType.LPWStr)] public string pDataType;
+  }
+  [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)]
+  public static extern bool OpenPrinter(string src, out IntPtr hPrinter, IntPtr pd);
+  [DllImport("winspool.drv", SetLastError = true)]
+  public static extern bool ClosePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)]
+  public static extern bool StartDocPrinter(IntPtr hPrinter, Int32 level, DOCINFOA di);
+  [DllImport("winspool.drv", SetLastError = true)]
+  public static extern bool EndDocPrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError = true)]
+  public static extern bool StartPagePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError = true)]
+  public static extern bool EndPagePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError = true)]
+  public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, Int32 dwCount, out Int32 dwWritten);
+  public static bool Send(string printer, byte[] bytes) {
+    IntPtr h; if (!OpenPrinter(printer, out h, IntPtr.Zero)) return false;
+    DOCINFOA di = new DOCINFOA(); di.pDocName = "ZoCo POS"; di.pDataType = "RAW";
+    bool ok = false;
+    if (StartDocPrinter(h, 1, di)) {
+      if (StartPagePrinter(h)) {
+        IntPtr p = Marshal.AllocCoTaskMem(bytes.Length);
+        Marshal.Copy(bytes, 0, p, bytes.Length);
+        Int32 written;
+        ok = WritePrinter(h, p, bytes.Length, out written);
+        Marshal.FreeCoTaskMem(p);
+        EndPagePrinter(h);
+      }
+      EndDocPrinter(h);
+    }
+    ClosePrinter(h);
+    return ok;
+  }
+}
+"@
+$bytes = [System.IO.File]::ReadAllBytes('${tmp}')
+$r = [RawPrint]::Send('${printer.replace(/'/g, "''")}', $bytes)
+if (-not $r) { throw 'WritePrinter failed' }
+'imprimió'
+`;
+        try {
+          const { execFile } = await import('node:child_process');
+          await new Promise((resolve, reject) => {
+            execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { timeout: 20000 }, (e, so, se) => {
+              if (e) reject(new Error(String(se || e.message).slice(0, 300)));
+              else resolve(so);
+            });
+          });
+          try { fs.unlinkSync(tmp); } catch {}
+          return json(res, 200, { ok: true });
+        } catch (e) {
+          try { fs.unlinkSync(tmp); } catch {}
+          return json(res, 500, { ok: false, error: String(e.message || e) });
+        }
+      }
+
       if (url === '/api/health') {
         const db = readDb(company);
         return json(res, 200, { ok: true, hasData: !!db, rev: db?.rev || 0, updatedAt: db?.updatedAt || null, companies: listCompanies() });
