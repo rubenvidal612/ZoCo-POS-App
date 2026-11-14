@@ -1,9 +1,8 @@
 {
-    "version":  "2.28.0",
+    "version":  "2.28.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Impresora de Windows: elige tu POS58D instalada y imprime directo sin dialogos",
-                  "Boton \"Buscar impresoras\" en Configuracion",
-                  "Servidor local imprime ESC/POS crudo a la cola de Windows"
+                  "Corregido: modal de usuario ya no se corta y los botones quedan dentro",
+                  "Los modales ahora siempre muestran su pie (Guardar/Cancelar)"
               ]
 }

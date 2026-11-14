@@ -1536,7 +1536,6 @@ export function usersView() {
           <div class="field"><label>Rol</label>
             <select id="u-r">${Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${u?.role === k ? 'selected' : ''}>${r.label}</option>`).join('')}</select>
           </div>
-        </div>
         <div class="row2">
           <div class="field"><label>Tipo de pago</label>
             <select id="u-pt"><option value="HOURLY" ${u?.payType !== 'DAILY' ? 'selected' : ''}>Por hora</option><option value="DAILY" ${u?.payType === 'DAILY' ? 'selected' : ''}>Por día</option></select>
