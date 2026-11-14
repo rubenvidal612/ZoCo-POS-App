@@ -1495,7 +1495,6 @@ export function usersView() {
         <td>${esc(u.jobTitle || '—')}</td>
         <td class="mono">${u.payType === 'DAILY' ? money(u.payRate) + '/día' : money(u.payRate) + '/h'}</td>
         <td class="mono">${u.commissionPct ? u.commissionPct + '%' : '—'}</td>
-        <td class="mono">${(u.commissionPct || 0) ? u.commissionPct + '%' : '—'}</td>
         <td class="mono">${esc(u.pin || '—')}</td>
         <td>${u.active ? '<span class="badge ok">Activo</span>' : '<span class="badge grey">Inactivo</span>'}</td>
         <td style="text-align:right;white-space:nowrap">
@@ -1661,6 +1660,8 @@ export function usersView() {
       emit(); m.close(); render();
     };
   }
+
+  $('#new', root).onclick = () => edit(null);
 
   render();
   return { root, refresh: render };
