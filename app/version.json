@@ -1,7 +1,10 @@
 {
-    "version":  "2.26.1",
+    "version":  "2.27.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Cargar ejemplos reemplaza solo los productos DEMO; tus productos reales se conservan"
+                  "Boton grande \"Imprimir prueba\" en Configuracion de impresora",
+                  "Indicadores de estado: USB, Bluetooth, WiFi y papel",
+                  "Boton \"Probar WiFi\" que verifica la IP de la impresora",
+                  "Impresion del navegador sin ventanas emergentes (ya no sale en blanco)"
               ]
 }

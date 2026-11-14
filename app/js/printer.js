@@ -244,25 +244,41 @@ async function sendWifi(bytes) {
   return true;
 }
 
-/* ---------- Respaldo: diálogo del navegador ---------- */
+/* ---------- Respaldo: impresión del navegador (sin ventanas emergentes) ---------- */
 function printViaBrowser(sale) {
   const text = ticketText(sale);
-  const w = window.open('', '_blank', 'width=380,height=640');
-  if (!w) return { ok: false, message: 'Permite las ventanas emergentes para imprimir' };
   const mm = paperMm();
-  w.document.write(`<!doctype html><html><head><title>Ticket ${esc(sale.code)}</title>
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket ${esc(sale.code)}</title>
   <style>
     @page { size: ${mm}mm auto; margin: 0; }
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Courier New',monospace;font-size:${mm === 58 ? '11px' : '12px'};line-height:1.35;padding:4mm;}
+    html,body{background:#fff}
+    body{font-family:'Courier New',monospace;font-size:${mm === 58 ? '11px' : '12px'};line-height:1.35;padding:4mm;color:#000}
     pre{white-space:pre-wrap;word-break:break-word;font-family:inherit}
-  </style></head><body><pre>${esc(text)}</pre>
-  <script>window.onload=()=>{setTimeout(()=>{window.print()},150)}</script>
-  </body></html>`);
-  w.document.close();
-  return { ok: true, message: 'Abriendo diálogo de impresión (58/80 mm)' };
-}
+  </style></head><body><pre>${esc(text)}</pre></body></html>`;
 
+  let fr = document.getElementById('zoco-print-frame');
+  if (fr) fr.remove();
+  fr = document.createElement('iframe');
+  fr.id = 'zoco-print-frame';
+  fr.setAttribute('aria-hidden', 'true');
+  fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(fr);
+
+  const doc = fr.contentDocument;
+  doc.open(); doc.write(html); doc.close();
+
+  setTimeout(() => {
+    try {
+      fr.contentWindow.focus();
+      fr.contentWindow.print();
+    } catch (e) {
+      console.warn('print', e);
+    }
+  }, 250);
+
+  return { ok: true, message: 'Abriendo impresión del navegador (' + mm + ' mm)' };
+}
 /* ---------- Imprimir ---------- */
 export async function printTicket(sale) {
   const st = printerStatus();
@@ -280,5 +296,8 @@ export async function printTicket(sale) {
       console.warn('print', name, e);
     }
   }
-  return printViaBrowser(sale);
+  if (!tries.length) return printViaBrowser(sale);
+  // si todo falló, explica y usa el navegador
+  const r = printViaBrowser(sale);
+  return { ok: r.ok, message: 'No se pudo conectar la impresora; se abrió el diálogo del navegador' };
 }

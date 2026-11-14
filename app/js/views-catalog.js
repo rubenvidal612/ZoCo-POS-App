@@ -656,14 +656,12 @@ export function settingsView(ctx) {
       <div class="panel">
         <div class="panel-head"><h2>Impresora y escáner</h2></div>
         <div style="padding:16px">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
-            Ticket ESC/POS por USB o Bluetooth. Si no hay impresora conectada, se abre el diálogo del navegador.
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn sm" id="pr-usb">Conectar USB</button>
-            <button class="btn sm ghost" id="pr-bt">Conectar Bluetooth</button>
-            <button class="btn sm ghost" id="pr-test">Probar ticket</button>
+          <div id="pr-chips" class="pr-chips"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn sm" id="pr-test">🖨 Imprimir prueba</button>
             <button class="btn sm ghost" id="pr-view">👁 Ver ticket</button>
+            <button class="btn sm ghost" id="pr-usb">Conectar USB</button>
+            <button class="btn sm ghost" id="pr-bt">Conectar Bluetooth</button>
           </div>
           <div style="margin-top:12px">
             <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Ancho de papel</div>
@@ -674,10 +672,11 @@ export function settingsView(ctx) {
           </div>
           <div style="margin-top:12px">
             <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Impresora WiFi (TCP 9100)</div>
-            <div style="display:flex;gap:8px">
-              <input id="pr-host" placeholder="192.168.1.50" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input id="pr-host" placeholder="192.168.1.50" style="flex:1;min-width:130px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
               <input id="pr-port" placeholder="9100" style="width:80px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
-              <button class="btn sm" id="pr-wifi">Guardar</button>
+              <button class="btn sm ghost" id="pr-wifi">Guardar</button>
+              <button class="btn sm ghost" id="pr-wifi-test">Probar WiFi</button>
             </div>
           </div>
           <div class="hint" style="margin-top:10px" id="pr-state"></div>
@@ -1136,13 +1135,30 @@ export function settingsView(ctx) {
   });
   const st = printerStatus();
   const stEl = $('#pr-state', root);
-  if (stEl) stEl.textContent = 'USB: ' + st.usb + ' · Bluetooth: ' + st.bt + ' · WiFi: ' + st.wifi;
+  const chips = $('#pr-chips', root);
+  const paintPrinter = () => {
+    const s = printerStatus();
+    if (chips) {
+      const chip = (on, label) => `<span class="pr-chip ${on ? 'on' : ''}">${on ? '●' : '○'} ${label}</span>`;
+      chips.innerHTML =
+        chip(s.usb, s.usb ? 'USB conectada' : 'USB sin conectar') +
+        chip(!!s.bt, s.bt ? 'Bluetooth guardada' : 'Bluetooth sin conectar') +
+        chip(!!s.wifi, s.wifi ? 'WiFi ' + s.wifi : 'WiFi sin configurar') +
+        `<span class="pr-chip on">● Papel ${s.paper} mm</span>`;
+    }
+    if (stEl) {
+      stEl.textContent = s.usb || s.bt || s.wifi
+        ? 'Listo para imprimir por ' + [s.usb && 'USB', s.bt && 'Bluetooth', s.wifi && 'WiFi'].filter(Boolean).join(' o ')
+        : 'Sin impresora conectada: al imprimir se abrirá el diálogo del navegador (funciona con cualquier impresora instalada).';
+    }
+  };
+  paintPrinter();
   $('#pr-usb', root)?.addEventListener('click', async () => {
-    try { await connectUsbPrinter(); toast('Impresora USB conectada'); ctx.refreshShell?.(); }
+    try { await connectUsbPrinter(); toast('Impresora USB conectada'); paintPrinter(); }
     catch (e) { toast('No se pudo conectar: ' + e.message); }
   });
   $('#pr-bt', root)?.addEventListener('click', async () => {
-    try { await connectBluetoothPrinter(); toast('Impresora Bluetooth guardada'); ctx.refreshShell?.(); }
+    try { await connectBluetoothPrinter(); toast('Impresora Bluetooth guardada'); paintPrinter(); }
     catch (e) { toast('No se pudo conectar: ' + e.message); }
   });
   $('#pr-wifi', root)?.addEventListener('click', () => {
@@ -1151,10 +1167,35 @@ export function settingsView(ctx) {
     if (!host) { toast('Escribe la IP de la impresora'); return; }
     connectWifiPrinter(host, port);
     toast('Impresora WiFi guardada: ' + host + ':' + port);
-    if (stEl) stEl.textContent = 'USB: ' + st.usb + ' · BT: ' + st.bt + ' · WiFi: ' + host + ':' + port;
+    paintPrinter();
+  });
+  $('#pr-wifi-test', root)?.addEventListener('click', async () => {
+    const host = ($('#pr-host', root).value.trim()) || (printerStatus().wifi || '').split(':')[0];
+    const port = Number($('#pr-port', root).value) || 9100;
+    if (!host) { toast('Escribe la IP de la impresora'); return; }
+    toast('Probando ' + host + ':' + port + '…');
+    try {
+      const res = await fetch('/api/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, port, data: btoa('\x1b@\x1b\x61\x01PRUEBA WiFi OK\n\x1b\x64\x03') }),
+      });
+      if (!res.ok) throw new Error('el servidor no pudo abrir la conexión');
+      connectWifiPrinter(host, port);
+      toast('✓ Impresora WiFi responde: ' + host + ':' + port);
+      paintPrinter();
+    } catch (e) {
+      toast('✗ No responde ' + host + ':' + port + ' — revisa IP y que la PC esté encendida');
+    }
   });
   $('#pr-test', root)?.addEventListener('click', async () => {
-    const fake = { code: 'TEST', date: new Date().toISOString(), branchName: 'Prueba', customer: '-', items: [{ name: 'Artículo de prueba', size: '26', qty: 1, price: 100 }], subtotal: 100, discount: 0, total: 100, method: 'cash', received: 150, change: 50, user: 'Sistema' };
+    const fake = {
+      code: 'TEST', date: new Date().toISOString(),
+      branchName: state.branches[0]?.name || 'Prueba', customer: '-',
+      items: [{ name: 'Artículo de prueba', size: '26', qty: 1, price: 100 }],
+      subtotal: 100, discount: 0, total: 100, method: 'cash', received: 150, change: 50,
+      user: state.user?.name || 'Sistema',
+    };
     const r = await printTicket(fake);
     toast(r.message);
   });
