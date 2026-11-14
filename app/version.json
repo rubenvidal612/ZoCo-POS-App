@@ -1,8 +1,8 @@
 {
-    "version":  "2.29.0",
+    "version":  "2.29.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo panel Sucursales: agregar, renombrar, cambiar y eliminar sucursales",
-                  "Cada sucursal con su propio inventario y ventas"
+                  "Renombrar empresa desde el panel Empresas (sin crear una nueva)",
+                  "La lista de empresas muestra el nombre real de la empresa activa"
               ]
 }

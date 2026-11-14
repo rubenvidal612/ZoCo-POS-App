@@ -783,12 +783,25 @@ export function settingsView(ctx) {
       <div class="panel">
         <div class="panel-head"><h2>Empresas (multiempresa)</h2></div>
         <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
+            Cambia el <b>nombre de esta empresa</b> aquí. Abajo solo se crean negocios
+            <b>nuevos e independientes</b> (otro catálogo, otras ventas).
+          </div>
+          <div class="field"><label>Nombre de esta empresa</label>
+            <div style="display:flex;gap:8px">
+              <input id="co-rename" value="${esc(state.company.name || '')}" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+              <button class="btn sm" id="co-rename-go">Guardar nombre</button>
+            </div>
+          </div>
           <div id="co-list" style="margin-bottom:12px"></div>
           <div style="display:flex;gap:8px">
-            <input id="co-new" placeholder="Nombre del nuevo negocio" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
-            <button class="btn sm" id="co-create">Crear</button>
+            <input id="co-new" placeholder="Nombre de OTRO negocio (se crea vacío)" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+            <button class="btn ghost sm" id="co-create">+ Crear empresa</button>
           </div>
-          <div class="hint" style="margin-top:8px">Cada empresa guarda sus datos por separado en el servidor.</div>
+          <div class="hint" style="margin-top:8px">
+            Cada empresa guarda sus datos por separado en el servidor.
+            Para dos tiendas del <b>mismo</b> negocio usa <b>Sucursales</b>, no una empresa nueva.
+          </div>
         </div>
       </div>
       <div class="panel">
@@ -1429,11 +1442,14 @@ export function settingsView(ctx) {
   // Empresas
   const coList = $('#co-list', root);
   const renderCos = () => {
-    coList.innerHTML = state.companies.map((c) => `
+    coList.innerHTML = state.companies.map((c) => {
+      const label = c.id === state.currentCompany ? (state.company.name || c.name) : c.name;
+      return `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line-2)">
-        <span style="font-weight:700">${esc(c.name)} ${c.id === state.currentCompany ? '<span class="badge info">Activa</span>' : ''}</span>
+        <span style="font-weight:700">${esc(label)} ${c.id === state.currentCompany ? '<span class="badge info">Activa</span>' : ''}</span>
         ${c.id !== state.currentCompany ? `<button class="btn ghost sm" data-co="${c.id}" style="height:28px">Cambiar</button>` : ''}
-      </div>`).join('');
+      </div>`;
+    }).join('');
     coList.querySelectorAll('[data-co]').forEach((b) => b.onclick = () => {
       switchCompany(b.dataset.co);
       ctx.refreshShell?.();
@@ -1441,6 +1457,18 @@ export function settingsView(ctx) {
     });
   };
   renderCos();
+
+  // Renombrar la empresa actual
+  $('#co-rename-go', root)?.addEventListener('click', () => {
+    const n = ($('#co-rename', root).value || '').trim();
+    if (!n) { toast('Escribe el nombre'); return; }
+    state.company.name = n;
+    emit();
+    ctx.refreshShell?.();
+    renderCos();
+    toast('Empresa renombrada a "' + n + '"');
+  });
+
   $('#co-create', root)?.addEventListener('click', () => {
     const name = $('#co-new', root).value.trim();
     if (!name) { toast('Escribe el nombre'); return; }
