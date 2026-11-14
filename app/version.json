@@ -1,9 +1,9 @@
 {
-    "version":  "2.25.0",
+    "version":  "2.26.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Al cambiar de giro te ofrece cargar ejemplos de ese giro",
-                  "Cada giro tiene su propio mini catalogo (3-4 productos de ejemplo)",
-                  "Boton \"Cargar ejemplos de mi giro\" en Datos de prueba"
+                  "Los ejemplos quedan marcados como DEMO",
+                  "Boton \"Quitar ejemplos (demo)\" borra solo el demo, conserva tus productos",
+                  "Cada cliente nuevo arranca con el demo de su giro"
               ]
 }

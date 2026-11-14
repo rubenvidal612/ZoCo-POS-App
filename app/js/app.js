@@ -9,6 +9,7 @@ import { initInstallPrompt, showInstallCard, mountInstallButtons } from './insta
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
+import { loadDemoForMode } from './store.js';
 import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
@@ -154,6 +155,10 @@ function paintLogin() {
       const u = state.users.find((x) => x.role === 'owner') || state.users[0];
       if (u) state.user = u;
       state.superadmin = await amISuperadmin();
+      // cada cliente nuevo arranca con el demo de su giro (se puede quitar después)
+      if (!(state.products || []).length) {
+        try { loadDemoForMode(state.company.mode || 'shoe', { replace: true }); } catch {}
+      }
       toast('Cuenta creada. ¡Bienvenido!');
       setTimeout(() => toast('Configuración → Datos de prueba: borra el catálogo de ejemplo'), 2000);
       route = 'inicio'; location.hash = '#/inicio'; paintShell();

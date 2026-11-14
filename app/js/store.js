@@ -295,7 +295,7 @@ export function demoForMode(mode) {
       name, section, price, cost,
       code: name.replace(/[^\w]/g, '').slice(0, 3).toUpperCase() + (10 + i),
       color: COLORS[i % COLORS.length],
-      catalog: true, active: true, createdAt: new Date().toISOString(),
+      catalog: true, active: true, isDemo: true, createdAt: new Date().toISOString(),
       branchStock: {},
     };
     state.branches.forEach((b) => {
@@ -316,6 +316,19 @@ export function demoForMode(mode) {
 }
 
 /** Carga los ejemplos del giro. mode: reemplaza el catálogo actual. */
+
+/** Quita SOLO los productos de ejemplo; conserva los que el cliente cargó. */
+export function removeDemoProducts() {
+  const before = state.products.length;
+  state.products = state.products.filter((p) => !p.isDemo);
+  emit();
+  return before - state.products.length;
+}
+
+/** ¿Hay productos de ejemplo cargados? */
+export function demoCount() {
+  return (state.products || []).filter((p) => p.isDemo).length;
+}
 export function loadDemoForMode(mode, { replace = true } = {}) {
   const demo = demoForMode(mode);
   if (replace) state.products = demo;
@@ -1117,6 +1130,7 @@ export function switchCompany(id) {
   emit();
 }
 export function createCompany(name) {
+  // (el demo del giro se carga desde la vista con loadDemoForMode)
   const id = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || ('negocio-' + Date.now().toString(36));
   if (!state.companies.some((x) => x.id === id)) state.companies.push({ id, name });
   return id;

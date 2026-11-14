@@ -12,7 +12,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -125,7 +125,7 @@ export function productsView(ctx) {
             ${p.image
               ? `<img src="${p.image}" style="width:34px;height:34px;border-radius:9px;object-fit:cover">`
               : `<div style="width:34px;height:34px;border-radius:9px;background:${p.color};display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">${esc(sectionOf(p).label.slice(0, 2).toUpperCase())}</div>`}
-            <div><div class="t-strong">${esc(p.name)}</div>
+            <div><div class="t-strong">${esc(p.name)}${p.isDemo ? ` <span class="badge grey" style="font-size:9px">DEMO</span>` : ""}</div>
             <div style="font-size:11.5px;color:var(--muted)">${esc(p.code)}</div></div>
           </div>
         </td>
@@ -770,6 +770,7 @@ export function settingsView(ctx) {
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn sm" id="blank">🧹 Empezar de cero</button>
             <button class="btn ghost sm" id="demo-mode">🧪 Cargar ejemplos de mi giro</button>
+            <button class="btn ghost sm" id="demo-off" style="color:var(--danger)">🗑 Quitar ejemplos (demo)</button>
             <button class="btn ghost sm" id="backup">⬇ Descargar respaldo</button>
             <button class="btn ghost sm" id="reset" style="color:var(--danger)">Restablecer demo</button>
           </div>
@@ -1210,6 +1211,20 @@ export function settingsView(ctx) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
     toast('Respaldo descargado');
+  });
+
+  $('#demo-off', root)?.addEventListener('click', async () => {
+    const n = demoCount();
+    if (!n) { toast('No hay productos de ejemplo cargados'); return; }
+    const ok = await confirmDialog({
+      title: 'Quitar productos de ejemplo',
+      message: `Se eliminarán los ${n} productos de ejemplo (marcados DEMO). Tus productos reales no se tocan.`,
+      okText: 'Sí, quitarlos', danger: true,
+    });
+    if (!ok) return;
+    const del = removeDemoProducts();
+    toast(del + ' ejemplos eliminados · tus productos siguen ahí');
+    ctx.refreshShell?.();
   });
 
   $('#demo-mode', root)?.addEventListener('click', () => {
