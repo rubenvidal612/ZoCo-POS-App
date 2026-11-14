@@ -12,7 +12,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -587,6 +587,23 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Sucursales">
+        <div class="panel-head"><h2>Sucursales</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Una <b>sucursal</b> es una tienda del mismo negocio: comparte catálogo y clientes,
+            pero cada una lleva <b>su propio inventario</b> y sus ventas.
+          </div>
+          <div id="br-list" class="sec-list"></div>
+          <div class="row2" style="margin-top:12px">
+            <div class="field"><label>Nueva sucursal</label>
+              <input id="br-name" placeholder="Ej. Plaza Las Américas"></div>
+            <div class="field" style="display:flex;align-items:flex-end">
+              <button class="btn sm" id="br-add" style="width:100%">+ Agregar sucursal</button></div>
+          </div>
+          <div class="hint">El inventario nuevo arranca en cero; usa <b>⇄ Traspaso</b> en Productos para mover mercancía entre sucursales.</div>
+        </div>
+      </div>
       <div class="panel" data-sec="Secciones y tallas">
         <div class="panel-head"><h2>Secciones y tallas</h2></div>
         <div style="padding:16px">
@@ -926,6 +943,54 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Sucursales =====
+  const brList = $('#br-list', root);
+  const paintBranches = () => {
+    if (!brList) return;
+    brList.innerHTML = state.branches.map((b) => {
+      const total = state.products.reduce((a, p) => a + sizesFor(p.section).reduce((x, s) => x + (Number(p.branchStock?.[b.id]?.[fmtSize(s)]) || 0), 0), 0);
+      return `<div class="sec-row">
+        <div class="sec-top">
+          <input class="sec-label" data-br-name="${b.id}" value="${esc(b.name)}">
+          ${b.id === state.currentBranch ? '<span class="badge ok">Actual</span>' : `<button class="btn ghost sm" data-br-use="${b.id}" style="height:30px">Usar</button>`}
+          <button class="sec-del" data-br-del="${b.id}" title="Eliminar">✕</button>
+        </div>
+        <div class="sec-range"><span>${total} pieza(s) en inventario</span></div>
+      </div>`;
+    }).join('');
+    brList.querySelectorAll('[data-br-name]').forEach((inp) => inp.onchange = () => {
+      const r = renameBranch(inp.dataset.brName, inp.value);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Sucursal renombrada');
+      ctx.refreshShell?.(); paintBranches();
+    });
+    brList.querySelectorAll('[data-br-use]').forEach((btn) => btn.onclick = () => {
+      setCurrentBranch(btn.dataset.brUse);
+      toast('Ahora estás en ' + (state.branches.find((x) => x.id === btn.dataset.brUse) || {}).name);
+      ctx.refreshShell?.(); paintBranches();
+    });
+    brList.querySelectorAll('[data-br-del]').forEach((btn) => btn.onclick = async () => {
+      const b = state.branches.find((x) => x.id === btn.dataset.brDel);
+      const ok = await confirmDialog({
+        title: 'Eliminar sucursal',
+        message: `Se quitará "${b.name}" y su inventario de este negocio. Las ventas ya hechas se conservan en el historial.`,
+        okText: 'Eliminar', danger: true,
+      });
+      if (!ok) return;
+      const r = removeBranch(b.id);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Sucursal eliminada');
+      ctx.refreshShell?.(); paintBranches();
+    });
+  };
+  paintBranches();
+  $('#br-add', root)?.addEventListener('click', () => {
+    const r = addBranch($('#br-name', root).value);
+    if (!r.ok) { toast(r.msg); return; }
+    $('#br-name', root).value = '';
+    toast('Sucursal "' + r.name + '" agregada');
+    ctx.refreshShell?.(); paintBranches();
+  });
   // ===== Secciones y tallas editables =====
   const secList = $('#sec-list', root);
   const paintSecs = () => {

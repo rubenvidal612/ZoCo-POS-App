@@ -348,6 +348,54 @@ export function loadDemoForMode(mode, { replace = true } = {}) {
   emit();
   return demo.length;
 }
+
+/* ================= Sucursales ================= */
+export function addBranch(name) {
+  const n = String(name || '').trim();
+  if (!n) return { ok: false, msg: 'Escribe el nombre de la sucursal' };
+  if ((state.branches || []).some((b) => b.name.toLowerCase() === n.toLowerCase())) {
+    return { ok: false, msg: 'Ya existe una sucursal con ese nombre' };
+  }
+  const id = uid('b');
+  state.branches.push({ id, name: n });
+  // crea el stock en cero para todos los productos
+  (state.products || []).forEach((p) => {
+    p.branchStock = p.branchStock || {};
+    p.branchStock[id] = {};
+    sizesFor(p.section).forEach((s) => { p.branchStock[id][fmtSize(s)] = 0; });
+  });
+  emit();
+  return { ok: true, id, name: n };
+}
+
+export function renameBranch(id, name) {
+  const n = String(name || '').trim();
+  if (!n) return { ok: false, msg: 'Escribe un nombre' };
+  const b = (state.branches || []).find((x) => x.id === id);
+  if (!b) return { ok: false, msg: 'Sucursal no encontrada' };
+  b.name = n;
+  emit();
+  return { ok: true };
+}
+
+export function removeBranch(id) {
+  if ((state.branches || []).length <= 1) return { ok: false, msg: 'Debe quedar al menos una sucursal' };
+  const b = state.branches.find((x) => x.id === id);
+  if (!b) return { ok: false, msg: 'Sucursal no encontrada' };
+  const vendido = (state.sales || []).some((s) => s.branchId === id);
+  state.branches = state.branches.filter((x) => x.id !== id);
+  if (state.currentBranch === id) state.currentBranch = state.branches[0].id;
+  (state.products || []).forEach((p) => { if (p.branchStock) delete p.branchStock[id]; });
+  emit();
+  return { ok: true, hadSales: vendido };
+}
+
+export function setCurrentBranch(id) {
+  if (!(state.branches || []).some((b) => b.id === id)) return false;
+  state.currentBranch = id;
+  emit();
+  return true;
+}
 /* ================= Perfumería: recetas y producción ================= */
 /** ¿El producto se mide en ml? */
 export const isLiquid = (p) => !!(p && p.porMl);
