@@ -3,6 +3,7 @@ import { el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
   state, emit, sizesFor, stockOf, fmtSize, productById, totalStock,
   returnSale, registerAdjustment, transferStock, recipeNeeds, produceBatch,
+  cashBreakdown, closeRegisterZ, listCuts,
 } from './store.js';
 
 const money0 = (n) => money(Number(n) || 0);
@@ -540,5 +541,106 @@ export function openKardex(productId) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
     toast('Kardex exportado');
+  };
+}
+/* ================= Corte de caja Z ================= */
+export function openCutZ(onDone) {
+  if (!state.register?.open) {
+    toast('Abre la caja primero (Inicio → Abrir caja)');
+    return;
+  }
+  const d = cashBreakdown();
+  const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
+
+  const m = modal({
+    wide: true,
+    title: 'Corte de caja (Z)',
+    body: `
+      <div class="kdx-top" style="grid-template-columns:repeat(3,1fr)">
+        <div><span>Fondo inicial</span><b>${money2(d.opening)}</b></div>
+        <div><span>Efectivo esperado</span><b>${money2(d.expected)}</b></div>
+        <div><span>Ventas</span><b>${d.countSales}</b></div>
+      </div>
+
+      <div class="cut-grid">
+        <div><span>Efectivo</span><b>${money2(d.methods.cash)}</b></div>
+        <div><span>Tarjeta</span><b>${money2(d.cardSales)}</b></div>
+        ${d.methods.transfer ? `<div><span>Transferencia</span><b>${money2(d.methods.transfer)}</b></div>` : ''}
+        ${d.methods.credit_sale ? `<div><span>Crédito cliente</span><b>${money2(d.methods.credit_sale)}</b></div>` : ''}
+        <div><span>Devoluciones (efectivo)</span><b style="color:#DC2626">−${money2(d.returns.cash)}</b></div>
+        <div><span>Gastos pagados</span><b style="color:#DC2626">−${money2(d.expenseCash)}</b></div>
+        ${d.cashIn ? `<div><span>Entradas de efectivo</span><b>${money2(d.cashIn)}</b></div>` : ''}
+        ${d.cashOut ? `<div><span>Salidas de efectivo</span><b>−${money2(d.cashOut)}</b></div>` : ''}
+        <div><span>Total vendido</span><b>${money2(d.totalSales)}</b></div>
+      </div>
+
+      <div class="row2" style="margin-top:14px">
+        <div class="field"><label>Efectivo contado en caja</label>
+          <input id="cut-count" type="number" step="0.01" value="${d.expected.toFixed(2)}"
+            style="font-size:20px;font-weight:800;text-align:center;height:48px"></div>
+        <div class="field"><label>Diferencia</label>
+          <div id="cut-diff" style="height:48px;display:flex;align-items:center;justify-content:center;
+            font-size:20px;font-weight:800;border-radius:9px;border:1px solid var(--line)">$0.00</div></div>
+      </div>
+      <div class="field"><label>Nota (opcional)</label><input id="cut-note" placeholder="Ej. falto cambio, retiro para depósito…"></div>`,
+    foot: `<button class="btn ghost sm" data-close>Cancelar</button>
+           <button class="btn ghost sm" id="cut-print">🖨 Imprimir corte</button>
+           <button class="btn sm" id="cut-close">Cerrar caja</button>`,
+  });
+
+  const root = m.root;
+  const inp = root.querySelector('#cut-count');
+  const diffEl = root.querySelector('#cut-diff');
+  const paintDiff = () => {
+    const c = Number(inp.value) || 0;
+    const diff = Math.round((c - d.expected) * 100) / 100;
+    diffEl.textContent = (diff < 0 ? '−' : '') + '$' + Math.abs(diff).toFixed(2);
+    diffEl.style.color = diff === 0 ? '#059669' : (diff < 0 ? '#DC2626' : '#B45309');
+    diffEl.style.background = diff === 0 ? '#ECFDF5' : (diff < 0 ? '#FEF2F2' : '#FFFBEB');
+    return diff;
+  };
+  inp.oninput = paintDiff;
+  paintDiff();
+
+  root.querySelector('#cut-print').onclick = async () => {
+    const { cutText } = await import('./printer.js');
+    const preview = {
+      ...d,
+      folio: 'BORRADOR',
+      date: new Date().toISOString(),
+      branchName: (state.branches.find((x) => x.id === d.branchId) || {}).name || '',
+      user: state.user?.name || '-',
+      counted: Number(inp.value) || 0,
+      difference: Math.round(((Number(inp.value) || 0) - d.expected) * 100) / 100,
+      note: root.querySelector('#cut-note').value,
+    };
+    modal({
+      title: 'Vista previa del corte',
+      body: `<pre class="ticket-preview">${esc(cutText(preview))}</pre>`,
+      foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+    });
+  };
+
+  root.querySelector('#cut-close').onclick = async () => {
+    const counted = Number(inp.value) || 0;
+    const note = root.querySelector('#cut-note').value;
+    const diff = Math.round((counted - d.expected) * 100) / 100;
+    const ok = await confirmDialog({
+      title: 'Cerrar caja',
+      message: `Se cerrará el turno con ${money2(counted)} contados${diff !== 0 ? ` y una diferencia de ${(diff < 0 ? '−' : '') + money2(Math.abs(diff))}` : ' (cuadra exacto)'}.`,
+      okText: 'Sí, cerrar',
+    });
+    if (!ok) return;
+    const r = closeRegisterZ({ counted, note });
+    if (!r.ok) { toast(r.msg); return; }
+    m.close();
+    toast('Corte ' + r.cut.folio + ' guardado · diferencia ' + (r.cut.difference < 0 ? '−' : '') + money2(Math.abs(r.cut.difference)));
+    onDone?.();
+    const { cutText } = await import('./printer.js');
+    modal({
+      title: 'Corte ' + r.cut.folio,
+      body: `<pre class="ticket-preview">${esc(cutText(r.cut))}</pre>`,
+      foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+    });
   };
 }

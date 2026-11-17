@@ -1249,3 +1249,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .aff-stats span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
 .aff-stats b{font-size:20px}
 @media (max-width:900px){ .aff-grid{grid-template-columns:1fr} .aff-stats{grid-template-columns:1fr 1fr} }
+/* Corte de caja Z */
+.cut-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:12px;font-size:13px}
+.cut-grid div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.cut-grid span{color:var(--muted)}
+@media (max-width:600px){ .cut-grid{grid-template-columns:1fr} }

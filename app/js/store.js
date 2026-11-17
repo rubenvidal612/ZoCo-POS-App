@@ -783,6 +783,7 @@ function migrate(s) {
   if (!Array.isArray(s.consumptions)) s.consumptions = [];
   if (!Array.isArray(s.productions)) s.productions = [];
   if (!Array.isArray(s.referrals)) s.referrals = [];
+  if (!Array.isArray(s.cuts)) s.cuts = [];
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -995,7 +996,8 @@ export function returnSale(saleId, lines, reason, refundMethod) {
 
     const p = productById(l.productId);
     const b = p?.branchStock?.[sale.branchId];
-    if (b) b[fmtSize(item.size)] = Number(b[fmtSize(item.size)] || 0) + q;
+    const rk = item.vkey || fmtSize(item.size);
+    if (b) b[rk] = round3(Number(b[rk] || 0) + q);
 
     const price = Number(item.price) || 0;
     total += price * q;
@@ -1301,6 +1303,81 @@ export function registerSummary() {
   return { opening: state.register.opening, inc, out, cashSales, expected: state.register.opening + cashSales + inc - out };
 }
 
+
+/* ================= Corte de caja Z ================= */
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+/** Desglose de caja del periodo (por defecto: todo lo del turno abierto). */
+export function cashBreakdown({ branchId = state.currentBranch, from = null, to = null } = {}) {
+  const ok = (d) => (!from || new Date(d) >= new Date(from)) && (!to || new Date(d) <= new Date(to));
+  const b = branchId;
+
+  const sales = (state.sales || []).filter((s) => s.branchId === b && s.status !== 'cancelled' && ok(s.date));
+  const methods = { cash: 0, debit: 0, credit: 0, transfer: 0, credit_sale: 0, other: 0 };
+  let totalSales = 0, countSales = 0;
+
+  sales.forEach((s) => {
+    totalSales += Number(s.total) || 0;
+    countSales++;
+    if (Array.isArray(s.payments) && s.payments.length) {
+      s.payments.forEach((pm) => { methods[pm.method] = round2((methods[pm.method] || 0) + (Number(pm.amount) || 0)); });
+    } else {
+      const m = methods[s.method] != null ? s.method : 'other';
+      methods[m] = round2(methods[m] + (Number(s.total) || 0));
+    }
+  });
+
+  const returns = (state.returns || []).filter((r) => r.branchId === b && ok(r.date));
+  const refunds = { cash: 0, card: 0, total: 0 };
+  returns.forEach((r) => {
+    refunds.total = round2(refunds.total + (Number(r.total) || 0));
+    if (r.method === 'cash' || r.method === 'credit_note') refunds.cash = round2(refunds.cash + (Number(r.total) || 0));
+    else refunds.card = round2(refunds.card + (Number(r.total) || 0));
+  });
+
+  const expenses = (state.expenses || []).filter((e) => (e.branchId || b) === b && e.paid && ok(e.paidAt || e.date));
+  const expenseCash = round2(expenses.reduce((a, e) => a + (Number(e.amount) || 0), 0));
+
+  const moves = (state.cashMovements || []).filter((m) => m.branchId === b && ok(m.date) && m.type !== 'open' && m.type !== 'close');
+  const cashIn = round2(moves.filter((m) => m.type === 'in').reduce((a, m) => a + (Number(m.amount) || 0), 0));
+  const cashOut = round2(moves.filter((m) => m.type === 'out').reduce((a, m) => a + (Number(m.amount) || 0), 0));
+
+  const opening = Number(state.register?.opening) || 0;
+  const expected = round2(opening + methods.cash - refunds.cash - expenseCash + cashIn - cashOut);
+
+  return {
+    branchId: b, from: from || state.register?.openedAt || null, to: to || new Date().toISOString(),
+    opening, countSales, totalSales: round2(totalSales), methods,
+    returns: refunds, expenseCash, cashIn, cashOut,
+    cashSales: methods.cash, cardSales: round2(methods.debit + methods.credit),
+    expected,
+  };
+}
+
+/** Cierra el turno y guarda el corte Z. */
+export function closeRegisterZ({ counted = 0, note = '', branchId = state.currentBranch } = {}) {
+  if (!state.register?.open) return { ok: false, msg: 'La caja no está abierta' };
+  const d = cashBreakdown({ branchId });
+  const c = round2(Number(counted) || 0);
+  const diff = round2(c - d.expected);
+  if (!Array.isArray(state.cuts)) state.cuts = [];
+  const folio = 'Z-' + String((state.cuts.length + 1)).padStart(4, '0');
+  const cut = {
+    id: uid('cut'), folio, date: new Date().toISOString(),
+    branchId, branchName: (state.branches.find((x) => x.id === branchId) || {}).name || '',
+    user: state.user?.name || '-', note: String(note || '').trim(),
+    ...d, counted: c, difference: diff,
+  };
+  state.cuts.unshift(cut);
+  state.register = { open: false, opening: 0, closedAt: cut.date };
+  addCash('close', 0, 'Corte ' + folio);
+  emit();
+  return { ok: true, cut };
+}
+
+export function listCuts(limit = 30) {
+  return (state.cuts || []).slice(0, limit);
+}
 /* ================= Gastos ================= */
 export function upsertExpense(data) {
   if (data.id) {

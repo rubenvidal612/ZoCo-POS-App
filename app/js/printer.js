@@ -334,3 +334,43 @@ export async function printTicket(sale) {
   const r = printViaBrowser(sale);
   return { ok: r.ok, message: 'No se pudo conectar la impresora; se abrió el diálogo del navegador' };
 }
+
+/* ---------- Ticket de corte Z ---------- */
+export function cutText(cut) {
+  const W = paperWidth();
+  const L = [];
+  const plain2 = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const center = (s) => { const t = plain2(s); L.push(' '.repeat(Math.max(0, Math.floor((W - t.length) / 2))) + t); };
+  const pair = (a, b) => { const aa = plain2(a), bb = plain2(b); L.push(aa + ' '.repeat(Math.max(1, W - aa.length - bb.length)) + bb); };
+  const rule = () => L.push('-'.repeat(W));
+  const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
+
+  center('CORTE DE CAJA ' + (cut.folio || ''));
+  center(state.company.name || '');
+  center(cut.branchName || '');
+  L.push('');
+  pair('Fecha', new Date(cut.date).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }));
+  pair('Cajero', cut.user || '');
+  rule();
+  pair('Fondo inicial', money2(cut.opening));
+  pair('Ventas efectivo', money2(cut.methods?.cash));
+  if (cut.methods?.debit) pair('Tarjeta debito', money2(cut.methods.debit));
+  if (cut.methods?.credit) pair('Tarjeta credito', money2(cut.methods.credit));
+  if (cut.methods?.transfer) pair('Transferencia', money2(cut.methods.transfer));
+  if (cut.methods?.credit_sale) pair('Credito cliente', money2(cut.methods.credit_sale));
+  if (cut.returns?.cash) pair('Devoluciones', '-' + money2(cut.returns.cash));
+  if (cut.expenseCash) pair('Gastos', '-' + money2(cut.expenseCash));
+  if (cut.cashIn) pair('Entradas', money2(cut.cashIn));
+  if (cut.cashOut) pair('Salidas', '-' + money2(cut.cashOut));
+  rule();
+  pair('ESPERADO', money2(cut.expected));
+  pair('CONTADO', money2(cut.counted));
+  pair('DIFERENCIA', money2(cut.difference));
+  rule();
+  pair('Ventas', String(cut.countSales || 0));
+  pair('Total vendido', money2(cut.totalSales));
+  if (cut.note) { L.push(''); center(cut.note); }
+  L.push('');
+  center('Firma: ____________________');
+  return L.join('\n');
+}

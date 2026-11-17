@@ -1,6 +1,7 @@
 // Vista Inicio (home) — estilo ZoCo Classic
 import { el, money, esc } from './ui.js';
-import { state, totalStock } from './store.js';
+import { state, totalStock, cashBreakdown, openRegister } from './store.js';
+import { openCutZ } from './views-inventory.js';
 
 const spark = (color) => `
   <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
@@ -32,6 +33,7 @@ export function homeView(ctx) {
     });
     const sum = (a) => a.reduce((x, s) => x + s.total, 0);
     const lowStock = state.products.filter((p) => totalStock(p) <= 3).length;
+    const cashSummary = cashBreakdown();
 
     root.innerHTML = `
       <div class="seg-wrap"><div class="seg" id="seg">
@@ -70,6 +72,26 @@ export function homeView(ctx) {
         </div>
 
         <div class="panel">
+          <div class="panel-head"><h2>Caja</h2>
+            <span class="badge ${state.register?.open ? 'ok' : 'grey'}" style="margin-left:auto">
+              ${state.register?.open ? 'Abierta' : 'Cerrada'}</span></div>
+          <div style="padding:16px 18px">
+            <div class="home-stats">
+              <div><b>${money(state.register?.opening || 0)}</b><span>FONDO</span></div>
+              <div><b>${money(cashSummary.expected)}</b><span>ESPERADO</span></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              ${state.register?.open
+                ? `<button class="btn sm" id="cut-z" style="flex:1">✂ Corte Z</button>
+                   <button class="btn ghost sm" id="add-cash" style="flex:1">+ Efectivo</button>`
+                : `<button class="btn sm" id="open-reg" style="flex:1">Abrir caja</button>`}
+            </div>
+            ${state.cuts?.length ? `<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
+              Último corte: <b>${esc(state.cuts[0].folio)}</b> · diferencia ${money(state.cuts[0].difference || 0)}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="panel">
           <div class="panel-head"><h2>Inventario</h2>
             <span class="badge ${lowStock ? 'warn' : 'ok'}" style="margin-left:auto">${lowStock ? lowStock + ' con stock bajo' : 'Al día'}</span></div>
           <div style="padding:16px 18px">
@@ -104,6 +126,46 @@ export function homeView(ctx) {
     root.querySelector('#go-sell').onclick = () => ctx.go('vender');
     root.querySelector('#go-new').onclick = () => ctx.go('productos', { create: true });
     root.querySelector('#go-stock').onclick = () => ctx.go('productos');
+    root.querySelector('#cut-z')?.addEventListener('click', () => openCutZ(render));
+    root.querySelector('#open-reg')?.addEventListener('click', () => {
+      const m = modal({
+        title: 'Abrir caja',
+        body: `<div class="field"><label>Fondo inicial en efectivo</label>
+            <input id="op-amt" type="number" step="0.01" value="0"
+              style="font-size:22px;font-weight:800;text-align:center;height:52px"></div>
+          <div class="hint">Es el cambio con el que arrancas el turno.</div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button>
+               <button class="btn sm" id="op-go">Abrir caja</button>`,
+      });
+      m.root.querySelector('#op-go').onclick = () => {
+        const v = Number(m.root.querySelector('#op-amt').value) || 0;
+        openRegister(v);
+        m.close();
+        toast('Caja abierta con ' + money(v));
+        render();
+      };
+    });
+    root.querySelector('#add-cash')?.addEventListener('click', () => {
+      const m = modal({
+        title: 'Entrada de efectivo',
+        body: `<div class="field"><label>Monto</label>
+            <input id="in-amt" type="number" step="0.01" value="0"></div>
+          <div class="field"><label>Motivo</label>
+            <input id="in-note" placeholder="Cambio, retiro, depósito…"></div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button>
+               <button class="btn sm" id="in-go">Agregar</button>`,
+      });
+      m.root.querySelector('#in-go').onclick = async () => {
+        const v = Number(m.root.querySelector('#in-amt').value) || 0;
+        const note = m.root.querySelector('#in-note').value || 'Entrada manual';
+        const { emit } = await import('./store.js');
+        state.cashMovements.push({
+          id: 'cm' + Date.now(), type: 'in', amount: v, note,
+          user: state.user?.name || '-', date: new Date().toISOString(), branchId: state.currentBranch,
+        });
+        emit(); m.close(); toast('Entrada registrada'); render();
+      };
+    });
   }
 
   render();

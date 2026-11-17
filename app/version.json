@@ -1,8 +1,9 @@
 {
-    "version":  "2.36.1",
+    "version":  "2.37.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Las funciones aceptan NEXT_PUBLIC_SUPABASE_URL como respaldo",
-                  "Aclaracion: ZoCo no es Next.js; las llaves secretas no llevan prefijo publico"
+                  "P5: tarjeta de Caja en Inicio con abrir caja, entradas de efectivo y Corte Z",
+                  "P5: corte Z con desglose por metodo, devoluciones, gastos, esperado vs contado y diferencia",
+                  "P5: folio Z-0001, historial de cortes y ticket imprimible"
               ]
 }
