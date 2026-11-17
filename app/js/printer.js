@@ -1,7 +1,7 @@
 // Impresión de tickets ESC/POS (USB / Bluetooth / WiFi) y respaldo por el navegador.
 // Formato compatible con impresoras térmicas de 58 mm (32 caracteres) y 80 mm (48).
 import { money, esc } from './ui.js';
-import { state } from './store.js';
+import { state, unitOf, fmtQty } from './store.js';
 
 const LS_USB = 'zoco.printer.usb';
 const LS_BT = 'zoco.printer.bt';
@@ -87,7 +87,8 @@ export function ticketText(sale) {
 
   (sale.items || []).forEach((i) => {
     const sizeTxt = i.size && i.size !== 'Único' ? 'T.' + i.size : '';
-    const qty = i.qty + 'x ';
+    const u = i.unit || 'pza';
+    const qty = u !== 'pza' ? fmtQty(i.qty, u) + ' x ' : i.qty + 'x ';
     const amount = money(i.price * i.qty);
     const oneLine = qty.length + plain(i.name).length + (sizeTxt ? sizeTxt.length + 1 : 0) + amount.length + 1;
     if (oneLine <= W) {

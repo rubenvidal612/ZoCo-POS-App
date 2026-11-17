@@ -41,6 +41,41 @@ function writeDb(company, obj) {
   fs.renameSync(tmp, f);
 }
 
+/* ---------- Secretos cifrados por empresa (AES-256-GCM) ---------- */
+import crypto from 'node:crypto';
+
+function masterKey() {
+  const f = path.join(DATA_DIR, '.master');
+  try { return Buffer.from(fs.readFileSync(f, 'utf8').trim(), 'base64'); } catch {}
+  const k = crypto.randomBytes(32);
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(f, k.toString('base64'), { mode: 0o600 }); } catch {}
+  return k;
+}
+function encSecret(txt) {
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', masterKey(), iv);
+  const enc = Buffer.concat([c.update(String(txt), 'utf8'), c.final()]);
+  return Buffer.concat([iv, c.getAuthTag(), enc]).toString('base64');
+}
+function decSecret(b64) {
+  const buf = Buffer.from(String(b64), 'base64');
+  const iv = buf.subarray(0, 12), tag = buf.subarray(12, 28), data = buf.subarray(28);
+  const d = crypto.createDecipheriv('aes-256-gcm', masterKey(), iv);
+  d.setAuthTag(tag);
+  return Buffer.concat([d.update(data), d.final()]).toString('utf8');
+}
+function readSecrets() {
+  try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'secrets.json'), 'utf8')); } catch { return {}; }
+}
+function writeSecrets(o) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(path.join(DATA_DIR, 'secrets.json'), JSON.stringify(o), { mode: 0o600 }); } catch {}
+}
+function getAiKey(company) {
+  const s = readSecrets()[company];
+  if (!s) return '';
+  try { return decSecret(s.key); } catch { return ''; }
+}
+
 /* ---------- Push ---------- */
 const VAPID = loadVapid(DATA_DIR);
 
@@ -278,8 +313,37 @@ const server = http.createServer(async (req, res) => {
       }
       if (url === '/api/ai' && req.method === 'POST') {
         const body = await readBody(req);
+        // si el cliente no manda llave, se usa la guardada cifrada para esa empresa
+        if (!body?.key) {
+          const c = String(body?.company || company || 'default');
+          const saved = getAiKey(c);
+          if (saved) body.key = saved;
+        }
         const out = await callProvider(body || {});
         return json(res, 200, out);
+      }
+
+      // Guardar / consultar la llave de IA de la empresa (nunca se devuelve la llave)
+      if (url === '/api/secret' && req.method === 'GET') {
+        const c = String(q.get('c') || company || 'default');
+        const s = readSecrets()[c];
+        return json(res, 200, { ok: true, hasKey: !!s, provider: s?.provider || null, updatedAt: s?.updatedAt || null });
+      }
+      if (url === '/api/secret' && req.method === 'POST') {
+        const body = await readBody(req);
+        const c = String(body?.company || company || 'default');
+        const key = String(body?.key || '').trim();
+        const provider = String(body?.provider || '').trim();
+        if (!key) {
+          const all = readSecrets();
+          delete all[c];
+          writeSecrets(all);
+          return json(res, 200, { ok: true, hasKey: false });
+        }
+        const all = readSecrets();
+        all[c] = { key: encSecret(key), provider, updatedAt: new Date().toISOString() };
+        writeSecrets(all);
+        return json(res, 200, { ok: true, hasKey: true });
       }
       if (url === '/api/print' && req.method === 'POST') {
         const body = await readBody(req);

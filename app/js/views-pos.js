@@ -3,6 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
   state, sectionsForMode, sizesFor, stockOf, totalStock, productById,
   cartTotals, addLine, commitSale, sectionOf, fmtSize, can, createLayaway, applyCoupon,
+  unitOf, isFractional, fmtQty, unitStep, round3, UNITS,
 } from './store.js';
 import { printTicket, ticketText } from './printer.js';
 
@@ -173,9 +174,49 @@ export function posView(ctx) {
   }
 
   function add(product, size) {
+    if (isFractional(product)) { askQty(product, size); return; }
     const r = addLine(cart, product, size);
     if (!r.ok) { toast(r.msg); return; }
     render();
+  }
+
+  /** Pide cantidad cuando el producto se vende por kg / L / ml / m */
+  function askQty(product, size) {
+    const unit = unitOf(product);
+    const u = UNITS[unit] || UNITS.kg;
+    const disponible = stockOf(product, size);
+    const m = modal({
+      title: product.name,
+      body: `
+        <div class="hint" style="margin-bottom:10px">
+          Se vende por <b>${esc(u.label.toLowerCase())}</b> · precio ${money(product.price)} / ${esc(u.short)}
+          ${disponible > 0 ? ` · disponible ${fmtQty(disponible, unit)}` : ''}
+        </div>
+        <div class="field"><label>Cantidad (${esc(u.short)})</label>
+          <input id="q-amt" type="number" min="0" step="${u.step}" value="1"
+            style="font-size:22px;font-weight:800;text-align:center;height:52px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+          ${[0.25, 0.5, 1, 2, 5].map((v) => `<button class="btn ghost sm" data-q="${v}">${v} ${esc(u.short)}</button>`).join('')}
+        </div>
+        <div class="mx-out" style="margin-top:12px;text-align:center">
+          <span style="font-size:12px;color:var(--muted)">Total</span>
+          <div style="font-size:24px;font-weight:800" id="q-total">${money(product.price)}</div>
+        </div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="q-add">Agregar</button>`,
+    });
+    const inp = m.root.querySelector('#q-amt');
+    const total = m.root.querySelector('#q-total');
+    const paint = () => { total.textContent = money((Number(inp.value) || 0) * product.price); };
+    inp.oninput = paint;
+    m.root.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { inp.value = b.dataset.q; paint(); });
+    setTimeout(() => { inp.focus(); inp.select(); }, 60);
+    m.root.querySelector('#q-add').onclick = () => {
+      const qty = Number(inp.value) || 0;
+      const r = addLine(cart, product, size, qty);
+      if (!r.ok) { toast(r.msg); return; }
+      m.close(); render();
+    };
   }
 
   /* ---------------- CART ---------------- */
@@ -199,7 +240,7 @@ export function posView(ctx) {
               </div>
               <div class="ci-chips">
                 <span class="chip">🏷 ${money(l.price)}</span>
-                <span class="chip"># × ${l.qty}</span>
+                <span class="chip">${l.unit && l.unit !== 'pza' ? fmtQty(l.qty, l.unit) + ' × ' + money(l.price) : '# × ' + l.qty}</span>
                 <span class="chip link" data-minus="${l.key}">−</span>
                 <span class="chip link" data-plus="${l.key}">+</span>
                 <span class="chip link" data-disc="${l.key}">Descuento</span>
@@ -238,11 +279,17 @@ export function posView(ctx) {
   function changeQty(key, d) {
     const l = cart.lines.find((x) => x.key === key);
     if (!l) return;
-    if (d > 0 && l.productId) {
-      const p = productById(l.productId);
-      if (p && stockOf(p, l.size) <= l.qty) { toast('Sin más stock de la talla ' + l.size); return; }
+    const p = l.productId ? productById(l.productId) : null;
+    const step = p ? unitStep(p) : 1;
+    const delta = d > 0 ? step : -step;
+    if (d > 0 && p) {
+      const avail = stockOf(p, l.size);
+      if (round3(l.qty + delta) > round3(avail) + 1e-9) {
+        toast('Sin más stock (' + fmtQty(avail, unitOf(p)) + ')');
+        return;
+      }
     }
-    l.qty += d;
+    l.qty = round3(l.qty + delta);
     if (l.qty <= 0) cart.lines = cart.lines.filter((x) => x.key !== key);
     render();
   }

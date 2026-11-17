@@ -13,7 +13,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional,
   myAffCode, affiliateLink, referralsOf, setAffiliateCommission,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
@@ -174,6 +174,9 @@ export function productsView(ctx) {
           <div class="field"><label>Color / Variante</label><input id="f-color" value="${esc(p?.color || '')}" placeholder="Negro, Rojo…"></div>
           <div class="field"><label>Sección</label>
             <select id="f-sec">${secs.map(([k, s]) => `<option value="${k}" ${k === section ? 'selected' : ''}>${esc(s.label)}</option>`).join('')}</select></div>
+          <div class="field"><label>Se vende por</label>
+            <select id="f-unit">${Object.entries(UNITS).map(([k, u]) => `<option value="${k}" ${(p?.sellBy || 'pza') === k ? 'selected' : ''}>${esc(u.label)}${k !== 'pza' ? ' (' + u.short + ')' : ''}</option>`).join('')}</select>
+            <div class="hint" style="margin-top:4px">Pieza = normal · kg/L/ml/m = venta a granel</div></div>
           <div class="field"><label>Precio de venta</label><input id="f-price" type="number" step="0.01" value="${p?.price ?? ''}" placeholder="0.00"></div>
           <div class="field"><label>Costo</label><input id="f-cost" type="number" step="0.01" value="${p?.cost ?? ''}" placeholder="0.00"></div>
           <div class="field"><label>Visible en catálogo</label>
@@ -273,6 +276,7 @@ export function productsView(ctx) {
       m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
         id: p?.id, name, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
+        sellBy: m.root.querySelector('#f-unit')?.value || 'pza',
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,
         section: m.root.querySelector('#f-sec').value,
@@ -950,14 +954,34 @@ export function settingsView(ctx) {
     }, 350);
   };
 
-  $('#save-ai', root).onclick = () => {
+  $('#ai-k-show', root)?.addEventListener('click', () => {
+    const i = root.querySelector('#ai-k');
+    i.type = i.type === 'password' ? 'text' : 'password';
+  });
+
+  $('#save-ai', root).onclick = async () => {
     state.settings.aiProvider = $('#ai-p', root).value;
-    root.querySelector('#ai-k-show')?.addEventListener('click', () => {
-      const i = root.querySelector('#ai-k');
-      i.type = i.type === 'password' ? 'text' : 'password';
-    });
-    state.settings.aiKey = $('#ai-k', root).value.trim();
-    toast('Llave guardada (demo local)'); ctx.persist();
+    const newKey = $('#ai-k', root).value.trim();
+    state.settings.aiKey = newKey;
+    emit();
+    // la llave se guarda CIFRADA en el servidor, no en el estado sincronizado
+    try {
+      const r = await fetch('/api/secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: state.currentCompany || 'default', key: newKey, provider: state.settings.aiProvider }),
+      });
+      const j = await r.json();
+      if (j.ok) {
+        state.settings.aiKey = '';
+        state.settings.aiKeySaved = !!j.hasKey;
+        $('#ai-k', root).value = '';
+        emit();
+        toast(j.hasKey ? 'Llave guardada cifrada en el servidor ✓' : 'Llave eliminada');
+        return;
+      }
+    } catch {}
+    toast('Llave guardada en este dispositivo');
   };
 
   $('#reset', root).onclick = async () => {

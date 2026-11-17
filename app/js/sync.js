@@ -53,7 +53,10 @@ export async function pushCloud() {
     const cur = await fetch(`${sbConfig().url}/rest/v1/company_state?company_id=eq.${encodeURIComponent(c)}&select=rev`, { headers: headers() });
     const rows = await cur.json();
     const rev = Array.isArray(rows) && rows[0] ? Number(rows[0].rev) + 1 : 1;
-    const body = { company_id: c, data: state, rev, updated_at: new Date().toISOString() };
+    // nunca subir la llave de IA al estado sincronizado
+    const clean = { ...state, settings: { ...(state.settings || {}) } };
+    if (clean.settings) { delete clean.settings.aiKey; }
+    const body = { company_id: c, data: clean, rev, updated_at: new Date().toISOString() };
     const r = await fetch(`${sbConfig().url}/rest/v1/company_state`, {
       method: 'POST', ...T(12000),
       headers: { ...headers(), Prefer: 'resolution=merge-duplicates,return=minimal' },

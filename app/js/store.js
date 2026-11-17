@@ -350,6 +350,28 @@ export function loadDemoForMode(mode, { replace = true } = {}) {
 }
 
 
+
+/* ================= Unidades y cantidades fraccionadas (P1) ================= */
+export const UNITS = {
+  pza: { label: 'Pieza', short: 'pza', step: 1 },
+  kg:  { label: 'Kilogramo', short: 'kg', step: 0.1 },
+  g:   { label: 'Gramo', short: 'g', step: 50 },
+  L:   { label: 'Litro', short: 'L', step: 0.1 },
+  ml:  { label: 'Mililitro', short: 'ml', step: 50 },
+  m:   { label: 'Metro', short: 'm', step: 0.1 },
+};
+
+export const round3 = (n) => Math.round((Number(n) || 0) * 1000) / 1000;
+export const unitOf = (p) => (p && p.sellBy && p.sellBy !== 'pza' ? p.sellBy : 'pza');
+export const isFractional = (p) => unitOf(p) !== 'pza';
+export const unitStep = (p) => (UNITS[unitOf(p)] || UNITS.pza).step;
+
+/** Formatea una cantidad: 2 → "2", 1.5 → "1.5 kg" */
+export function fmtQty(q, unit = 'pza') {
+  const n = round3(q);
+  const txt = Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+  return unit && unit !== 'pza' ? txt + ' ' + (UNITS[unit]?.short || unit) : txt;
+}
 /* ================= Afiliados ================= */
 const REF_KEY = 'zoco.ref';
 
@@ -1031,19 +1053,26 @@ export function makeCart() { return { lines: [], discount: 0, coupon: null }; }
 export function cartTotals(cart) {
   const subtotal = cart.lines.reduce((a, l) => a + l.price * l.qty, 0);
   const discount = Math.min(cart.discount || 0, subtotal);
-  return { subtotal, discount, total: Math.max(0, subtotal - discount), count: cart.lines.reduce((a, l) => a + l.qty, 0) };
+  return { subtotal, discount, total: Math.max(0, subtotal - discount), count: cart.lines.length };
 }
-export function addLine(cart, product, size) {
+export function addLine(cart, product, size, qty = 1) {
   const key = product.id + '|' + fmtSize(size);
   const found = cart.lines.find((l) => l.key === key);
   const available = stockOf(product, size);
+  const unit = unitOf(product);
+  const amount = round3(isFractional(product) ? (Number(qty) || 0) : Math.max(1, Math.round(Number(qty) || 1)));
+  if (amount <= 0) return { ok: false, msg: 'Cantidad inválida' };
   if (found) {
-    if (found.qty + 1 > available) return { ok: false, msg: 'Sin stock en talla ' + fmtSize(size) };
-    found.qty += 1;
+    if (round3(found.qty + amount) > round3(available) + 1e-9) {
+      return { ok: false, msg: 'Sin stock suficiente (quedan ' + fmtQty(available, unit) + ')' };
+    }
+    found.qty = round3(found.qty + amount);
     return { ok: true };
   }
-  if (available < 1) return { ok: false, msg: 'Sin stock en talla ' + fmtSize(size) };
-  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), price: product.price, qty: 1, color: product.color });
+  if (round3(available) + 1e-9 < amount) {
+    return { ok: false, msg: 'Sin stock suficiente (quedan ' + fmtQty(available, unit) + ')' };
+  }
+  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), price: product.price, qty: round3(amount), unit, color: product.color });
   return { ok: true };
 }
 
@@ -1077,7 +1106,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
     const preparaAlVender = !!(p?.recipe && p.prepararAlVender);
     const b = p?.branchStock?.[state.currentBranch];
     // Si se prepara al momento, no se descuenta el producto terminado: se descuentan ingredientes
-    if (!preparaAlVender && b && b[l.size] != null) b[l.size] = Math.max(0, Number(b[l.size]) - l.qty);
+    if (!preparaAlVender && b && b[l.size] != null) b[l.size] = Math.max(0, round3(Number(b[l.size]) - l.qty));
     if (preparaAlVender) {
       try { consumeRecipe(p, l.qty, state.currentBranch, sale.id); } catch {}
     }
@@ -1100,7 +1129,7 @@ export function cancelSale(saleId, reason) {
   sale.items.forEach((l) => {
     const p = productById(l.productId);
     const b = p?.branchStock?.[sale.branchId];
-    if (b && b[l.size] != null) b[l.size] = Number(b[l.size]) + l.qty;
+    if (b && b[l.size] != null) b[l.size] = round3(Number(b[l.size]) + l.qty);
   });
   if (sale.customerId && sale.method === 'credit_sale') {
     const c = state.customers.find((x) => x.id === sale.customerId);
@@ -1184,7 +1213,7 @@ export function createLayaway({ cart, customerId, customerName }) {
   lay.items.forEach((l) => {
     const p = productById(l.productId);
     const b = p?.branchStock?.[state.currentBranch];
-    if (b && b[l.size] != null) b[l.size] = Math.max(0, Number(b[l.size]) - l.qty);
+    if (b && b[l.size] != null) b[l.size] = Math.max(0, round3(Number(b[l.size]) - l.qty));
   });
   state.layaways.unshift(lay);
   emit();
@@ -1547,5 +1576,7 @@ export function resetToBlank() {
 
 /** Respaldo completo en JSON (para guardar antes de limpiar). */
 export function exportBackup() {
-  return JSON.stringify({ zoco: 2, exportedAt: new Date().toISOString(), data: state }, null, 2);
+  const safe = { ...state, settings: { ...(state.settings || {}) } };
+  if (safe.settings) delete safe.settings.aiKey;
+  return JSON.stringify({ zoco: 2, exportedAt: new Date().toISOString(), data: safe }, null, 2);
 }

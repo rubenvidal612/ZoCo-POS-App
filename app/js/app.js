@@ -433,6 +433,17 @@ async function bootOAuth() {
 
 captureRef();
 
+  // Migración P6: si hay una llave de IA vieja en el estado, moverla cifrada al servidor
+  if (state.settings?.aiKey) {
+    try {
+      const r = await fetch('/api/secret', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: state.currentCompany || 'default', key: state.settings.aiKey, provider: state.settings.aiProvider }),
+      });
+      const j = await r.json();
+      if (j.ok) { state.settings.aiKey = ''; state.settings.aiKeySaved = true; emit(); }
+    } catch {}
+  }
 bootOAuth().then((ok) => {
   hydrate().then(async () => {
     if (ok && sbReady()) {

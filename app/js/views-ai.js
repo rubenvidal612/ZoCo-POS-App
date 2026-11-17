@@ -136,7 +136,8 @@ async function callModel({ provider, key, model, baseUrl, messages, images }) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      provider, key, model, baseUrl, messages, images: images || [],
+      provider, key: key || '', model, baseUrl, messages, images: images || [],
+      company: state.currentCompany || 'default',
       system: systemPrompt(), tools: TOOL_DEFS,
     }),
   });
