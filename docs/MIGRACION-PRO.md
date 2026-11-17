@@ -1,5 +1,11 @@
 # Migración a la organización PRO (RAMBER Tunes)
 
+> **ACTUALIZACIÓN (17 nov 2026):** para mover un proyecto existente ya NO uses respaldo/restauración.
+> Supabase tiene **Transfer Project**: Project Settings → General → Transfer project.
+> Conserva URL, llaves, usuarios de Auth y Storage, y no requiere cambios de código.
+> Requisitos: ser owner de la org origen, ser member de la destino, sin GitHub integration activa,
+> sin project-scoped roles (Team/Enterprise) ni log drains.
+> El respaldo/restauración queda solo como plan B.
 Objetivo: **todos los proyectos en Pro pagando una sola organización**.
 Destino: **RAMBER Tunes** (`byhtaxoqjfetrwjwxsy`).
 Origen a vaciar: **Ruben Nuevos** (contiene Rulu).
