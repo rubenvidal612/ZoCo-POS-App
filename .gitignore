@@ -22,7 +22,6 @@ tools/serve.log
 tools/serve.err
 tools/test-inventario.csv
 preview/
-docs/
 
 *.txt
 *.log
