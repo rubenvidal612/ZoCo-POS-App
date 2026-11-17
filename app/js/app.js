@@ -435,7 +435,11 @@ captureRef();
 
 bootOAuth().then((ok) => {
   hydrate().then(async () => {
-    if (ok && sbReady()) { try { await pullCloud(true); } catch {} }
+    if (ok && sbReady()) {
+      // al entrar con Google: asegura empresa/membresía y sube el estado local
+      try { await ensureCompany(state.company.name); } catch {}
+      try { await pullCloud(true); } catch {}
+    }
     paintShell();
     setTimeout(() => initInstallPrompt(), 1200);
     setTimeout(() => maybeDailyNotice(), 2500);

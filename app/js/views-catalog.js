@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
-import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany } from './auth.js';
+import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle } from './auth.js';
 import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
@@ -1366,21 +1366,58 @@ export function settingsView(ctx) {
   };
   paintSb();
 
-  $('#sb-link', root)?.addEventListener('click', async () => {
+  const openCloudModal = () => {
     const u = state.user || {};
-    const email = (u.email || '').trim();
-    const pass = (u.pass || '').trim();
-    if (!email || !pass) { toast('Tu usuario no tiene correo o contraseña guardados'); return; }
-    if (pass.length < 6) { toast('La contraseña debe tener 6 caracteres o más'); return; }
-    toast('Vinculando con la nube…');
-    let r = await cloudSignIn(email, pass);
-    if (!r.ok) r = await cloudSignUp(email, pass, state.company.name);
-    if (!r.ok) { toast('No se pudo: ' + (r.error || 'revisa tu correo')); return; }
-    try { await ensureCompany(state.company.name); } catch {}
-    const up = await pushCloud();
-    paintSb();
-    toast(up.ok ? '✓ Cuenta vinculada y datos subidos' : 'Vinculado, pero no se pudo subir: ' + (up.error || ''));
-  });
+    const m = modal({
+      title: 'Cuenta en la nube',
+      body: `
+        <div class="hint" style="margin-bottom:12px">
+          Con una cuenta en la nube tus datos se ven en todos tus dispositivos.
+          Usa el mismo correo y contraseña con los que entras a ZoCo.
+        </div>
+        <div class="field"><label>Correo</label>
+          <input id="cl-email" type="email" value="${esc(u.email || '')}" placeholder="tu@correo.com"></div>
+        <div class="field"><label>Contraseña</label>
+          <input id="cl-pass" type="password" value="${esc(u.pass || '')}" placeholder="Mínimo 6 caracteres"></div>
+        <div class="hint" id="cl-msg" style="min-height:18px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn sm" id="cl-in">Entrar</button>
+          <button class="btn ghost sm" id="cl-up">Crear cuenta</button>
+          <button class="btn ghost sm" id="cl-google">Entrar con Google</button>
+        </div>`,
+      foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+    });
+    const root2 = m.root;
+    const msg = (t, bad) => { const e = root2.querySelector('#cl-msg'); e.textContent = t; e.style.color = bad ? 'var(--danger)' : 'var(--ok,#059669)'; };
+    const finish = async () => {
+      try { await ensureCompany(state.company.name); } catch {}
+      const up = await pushCloud();
+      paintSb();
+      if (up.ok) { msg('✓ Conectado y datos subidos'); toast('Cuenta vinculada ✓'); setTimeout(() => m.close(), 900); }
+      else msg('Conectado, pero no se pudo subir: ' + (up.error || ''), true);
+    };
+    root2.querySelector('#cl-in').onclick = async () => {
+      const email = root2.querySelector('#cl-email').value.trim();
+      const pass = root2.querySelector('#cl-pass').value;
+      if (!email || !pass) { msg('Escribe correo y contraseña', true); return; }
+      msg('Entrando…');
+      const r = await cloudSignIn(email, pass);
+      if (!r.ok) { msg('No se pudo entrar: ' + (r.error || 'revisa tus datos'), true); return; }
+      await finish();
+    };
+    root2.querySelector('#cl-up').onclick = async () => {
+      const email = root2.querySelector('#cl-email').value.trim();
+      const pass = root2.querySelector('#cl-pass').value;
+      if (!email || !pass || pass.length < 6) { msg('Correo válido y contraseña de 6+ caracteres', true); return; }
+      msg('Creando cuenta…');
+      const r = await cloudSignUp(email, pass, state.company.name);
+      if (!r.ok) { msg('No se pudo crear: ' + (r.error || ''), true); return; }
+      if (r.needConfirm) { msg('📬 Revisa tu correo para confirmar y luego entra aquí'); return; }
+      await finish();
+    };
+    root2.querySelector('#cl-google').onclick = () => { signInWithGoogle(); };
+  };
+  $('#sb-link', root)?.addEventListener('click', openCloudModal);
 
   $('#sb-out', root)?.addEventListener('click', () => {
     cloudSignOut();

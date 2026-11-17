@@ -1,9 +1,8 @@
 {
-    "version":  "2.32.0",
+    "version":  "2.33.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Sincronizacion automatica a la nube al hacer cambios",
-                  "Usa el token del usuario (RLS) para leer/escribir",
-                  "Panel Nube muestra si hay sesion y permite vincular la cuenta"
+                  "Ventana \"Cuenta en la nube\" con correo, contrasena, crear cuenta y Google",
+                  "Al entrar con Google se asegura la empresa y se baja/sube el estado"
               ]
 }
