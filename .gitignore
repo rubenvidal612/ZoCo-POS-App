@@ -10,7 +10,8 @@
 _legacy/
 kyte-static/
 
-# ===== Datos privados del negocio =====
+# ===== Datos privados del negocio (NUNCA subir) =====
+data/
 data/*.json
 data/vapid.json
 data/push-subs.json
@@ -30,3 +31,8 @@ preview/
 node_modules/
 .DS_Store
 Thumbs.db
+
+# ===== Variables de entorno locales (NUNCA subir) =====
+tools/.env.vercel
+.env
+.env.*
