@@ -1,9 +1,9 @@
 {
-    "version":  "2.34.0",
+    "version":  "2.35.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "P1: venta fraccionada por kg, g, L, ml y m con cantidad decimal",
-                  "P1: selector \"se vende por\" en el producto y ticket con unidad",
-                  "P6: llave de IA cifrada en el servidor (AES-256-GCM), ya no viaja en el estado"
+                  "P2: variantes por talla + color con inventario independiente",
+                  "P2: selector de color al vender y color en el ticket",
+                  "P6 produccion: /api/secret y /api/ai guardan la llave cifrada en Supabase (activar con variables de entorno)"
               ]
 }

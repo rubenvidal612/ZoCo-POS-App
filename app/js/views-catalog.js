@@ -13,7 +13,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   myAffCode, affiliateLink, referralsOf, setAffiliateCommission,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
@@ -215,17 +215,49 @@ export function productsView(ctx) {
             </div>
             <label class="perf-check"><input type="checkbox" id="f-prepare" ${p?.prepararAlVender ? 'checked' : ''}> <b>Preparar al vender</b>: al cobrar, descuenta concentrado, alcohol y frasco</label>
           </div>`;
-        })() : ''}        <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
+        })() : ''}        <div class="field"><label>Colores / variantes (separados por coma)</label>
+          <input id="f-colors" value="${esc((p?.colors || []).join(', '))}" placeholder="Ej. Negro, Blanco, Rosa">
+          <div class="hint">Si agregas colores, el inventario se maneja por talla + color.</div></div>
+        <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
         <div class="size-grid" id="f-sizes">
           ${sizes.map((s) => `<div style="text-align:center">
             <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:3px">${fmtSize(s)}</div>
             <input class="sz-in" data-size="${fmtSize(s)}" type="number" min="0" step="1"
               value="${p ? stockOf(p, s) : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
           </div>`).join('')}
-        </div>`,
+        </div>
+        <div id="f-variants"></div>`,
       foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="save">Guardar</button>`,
     });
 
+
+    // Variantes por color: pinta una rejilla por color
+    const paintVariants = () => {
+      const box = m.root.querySelector('#f-variants');
+      if (!box) return;
+      const colors = (m.root.querySelector('#f-colors').value || '').split(',').map((c) => c.trim()).filter(Boolean);
+      const sec = m.root.querySelector('#f-sec').value;
+      const sizes = sizesFor(sec);
+      if (!colors.length) { box.innerHTML = ''; return; }
+      box.innerHTML = `<div class="field" style="margin:14px 0 6px"><label>Inventario por talla + color</label></div>` +
+        colors.map((c) => `
+          <div style="margin-bottom:10px">
+            <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:4px">${esc(c)}</div>
+            <div class="size-grid">
+              ${sizes.map((s) => {
+                const vk = variantKey(s, c);
+                const val = p?.branchStock?.[state.currentBranch]?.[vk] ?? 0;
+                return `<div style="text-align:center">
+                  <div style="font-size:10.5px;font-weight:800;color:var(--text-2);margin-bottom:2px">${fmtSize(s)}</div>
+                  <input data-vsize="${esc(vk)}" data-vkey="${esc(vk)}" type="number" min="0" step="1" value="${val}"
+                    style="width:100%;height:34px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`).join('');
+    };
+    m.root.querySelector('#f-colors').oninput = paintVariants;
+    paintVariants();
     m.root.querySelector('#f-sec').onchange = (e) => {
       const sizes = sizesFor(e.target.value);
       m.root.querySelector('#f-sizes').innerHTML = sizes.map((s) => `<div style="text-align:center">
@@ -252,7 +284,16 @@ export function productsView(ctx) {
       if (!name) { toast('Falta el nombre'); return; }
       if (price <= 0) { toast('Falta el precio'); return; }
       const stock = {};
-      m.root.querySelectorAll('.sz-in').forEach((i) => { stock[i.dataset.size] = Math.max(0, Number(i.value) || 0); });
+      m.root.querySelectorAll('.sz-in').forEach((i) => {
+        if (i.dataset.vkey) stock[i.dataset.vkey] = Math.max(0, Number(i.value) || 0);
+        else stock[i.dataset.size] = Math.max(0, Number(i.value) || 0);
+      });
+      // variantes: si hay colores, se guardan claves talla|color
+      const colors = (m.root.querySelector('#f-colors')?.value || '')
+        .split(',').map((c) => c.trim()).filter(Boolean);
+      m.root.querySelectorAll('[data-vsize]').forEach((i) => {
+        stock[i.dataset.vkey] = Math.max(0, Number(i.value) || 0);
+      });
       const branchStock = { ...(p?.branchStock || {}) };
       branchStock[state.currentBranch] = stock;
       // Perfumería
@@ -276,7 +317,7 @@ export function productsView(ctx) {
       m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
         id: p?.id, name, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
-        sellBy: m.root.querySelector('#f-unit')?.value || 'pza',
+        sellBy: m.root.querySelector('#f-unit')?.value || 'pza', colors,
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,
         section: m.root.querySelector('#f-sec').value,
@@ -966,9 +1007,10 @@ export function settingsView(ctx) {
     emit();
     // la llave se guarda CIFRADA en el servidor, no en el estado sincronizado
     try {
+      const tok = (() => { try { return JSON.parse(localStorage.getItem('zoco.cloud.session') || 'null')?.access_token || ''; } catch { return ''; } })();
       const r = await fetch('/api/secret', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) },
         body: JSON.stringify({ company: state.currentCompany || 'default', key: newKey, provider: state.settings.aiProvider }),
       });
       const j = await r.json();

@@ -3,7 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
   state, sectionsForMode, sizesFor, stockOf, totalStock, productById,
   cartTotals, addLine, commitSale, sectionOf, fmtSize, can, createLayaway, applyCoupon,
-  unitOf, isFractional, fmtQty, unitStep, round3, UNITS,
+  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey,
 } from './store.js';
 import { printTicket, ticketText } from './printer.js';
 
@@ -133,7 +133,11 @@ export function posView(ctx) {
       return;
     }
     grid.innerHTML = items.map((p) => {
-      const avail = sizesFor(p.section).filter((s) => stockOf(p, s) > 0);
+      // con colores, la disponibilidad se calcula por variante (talla|color)
+      const hasColors = (p.colors || []).length > 0;
+      const avail = hasColors
+        ? variantsOf(p).filter((v) => stockOf(p, v.key) > 0)
+        : sizesFor(p.section).filter((s) => stockOf(p, s) > 0);
       const inCart = cart.lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
       return `<button class="sq-card" data-id="${p.id}" ${avail.length ? '' : 'disabled'}>
         <div class="sq-ph" style="background:${colorGradient(p.color)}">
@@ -159,29 +163,61 @@ export function posView(ctx) {
         <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">${esc(product.name)} · ${money(product.price)}</div>
         <div class="size-grid">
           ${sizes.map((s) => {
-            const q = stockOf(product, s);
+            const colors = (product.colors || []).filter(Boolean);
+            const q = colors.length
+              ? colors.reduce((a, c) => a + (Number(stockOf(product, variantKey(s, c))) || 0), 0)
+              : Number(stockOf(product, s)) || 0;
             return `<div class="size-cell ${q > 0 ? 'has' : 'zero'}" data-s="${fmtSize(s)}">
-              <div class="s">${fmtSize(s)}</div><div class="q">${q > 0 ? 'Stock: ' + q : '—'}</div></div>`;
+              <div class="s">${fmtSize(s)}</div><div class="q">${q > 0 ? 'Stock: ' + fmtQty(q, unitOf(product)) : '—'}</div></div>`;
           }).join('')}
         </div>`,
       foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
     });
     m.root.querySelectorAll('.size-cell').forEach((c) => c.onclick = () => {
       const s = c.dataset.s;
-      if (stockOf(product, s) <= 0) { toast('Talla ' + s + ' sin stock'); return; }
-      add(product, s); m.close();
+      const colores = (product.colors || []).filter(Boolean);
+      const disp = colores.length
+        ? colores.reduce((a, cc) => a + (Number(stockOf(product, variantKey(s, cc))) || 0), 0)
+        : Number(stockOf(product, s)) || 0;
+      if (disp <= 0) { toast('Talla ' + s + ' sin stock'); return; }
+      m.close();
+      if (!colores.length) { add(product, s); return; }
+      pickColor(product, s);
     });
   }
 
-  function add(product, size) {
-    if (isFractional(product)) { askQty(product, size); return; }
-    const r = addLine(cart, product, size);
+  /** Elige color cuando el producto maneja variantes por color */
+  function pickColor(product, size) {
+    const colors = (product.colors || []).filter(Boolean);
+    const m = modal({
+      title: product.name + ' · Talla ' + size,
+      body: `<div class="hint" style="margin-bottom:10px">Elige el color</div>
+        <div class="size-grid">
+          ${colors.map((c) => {
+            const n = stockOf(product, variantKey(size, c));
+            return `<div class="size-cell ${n > 0 ? 'has' : 'zero'}" data-c="${esc(c)}">
+              <div class="s">${esc(c)}</div><div class="q">${n > 0 ? 'Stock: ' + fmtQty(n, unitOf(product)) : '—'}</div></div>`;
+          }).join('')}
+        </div>`,
+      foot: `<button class="btn ghost sm" data-close>Cerrar</button>`,
+    });
+    m.root.querySelectorAll('.size-cell').forEach((el) => el.onclick = () => {
+      const c = el.dataset.c;
+      if (stockOf(product, variantKey(size, c)) <= 0) { toast('Color ' + c + ' sin stock'); return; }
+      m.close();
+      add(product, size, c);
+    });
+  }
+
+  function add(product, size, color = '') {
+    if (isFractional(product)) { askQty(product, size, color); return; }
+    const r = addLine(cart, product, size, 1, color);
     if (!r.ok) { toast(r.msg); return; }
     render();
   }
 
   /** Pide cantidad cuando el producto se vende por kg / L / ml / m */
-  function askQty(product, size) {
+  function askQty(product, size, color = '') {
     const unit = unitOf(product);
     const u = UNITS[unit] || UNITS.kg;
     const disponible = stockOf(product, size);
@@ -213,7 +249,7 @@ export function posView(ctx) {
     setTimeout(() => { inp.focus(); inp.select(); }, 60);
     m.root.querySelector('#q-add').onclick = () => {
       const qty = Number(inp.value) || 0;
-      const r = addLine(cart, product, size, qty);
+      const r = addLine(cart, product, size, qty, color);
       if (!r.ok) { toast(r.msg); return; }
       m.close(); render();
     };

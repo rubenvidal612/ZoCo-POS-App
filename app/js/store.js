@@ -351,6 +351,36 @@ export function loadDemoForMode(mode, { replace = true } = {}) {
 
 
 
+
+/* ================= Variantes (P2): talla + color ================= */
+export const variantKey = (size, color) => (color ? fmtSize(size) + '|' + color : fmtSize(size));
+
+/** Lista de variantes de un producto (talla × color). */
+export function variantsOf(p) {
+  const sizes = sizesFor(p?.section);
+  const colors = (p?.colors || []).map((c) => String(c).trim()).filter(Boolean);
+  const skus = p?.variantSku || {};
+  const out = [];
+  if (!colors.length) {
+    sizes.forEach((s) => {
+      const key = fmtSize(s);
+      out.push({ key, size: fmtSize(s), color: '', sku: skus[key] || '' });
+    });
+    return out;
+  }
+  sizes.forEach((s) => {
+    colors.forEach((c) => {
+      const key = variantKey(s, c);
+      out.push({ key, size: fmtSize(s), color: c, sku: skus[key] || '' });
+    });
+  });
+  return out;
+}
+
+/** Variantes con existencia en la sucursal actual. */
+export function availableVariants(p, branchId = state.currentBranch) {
+  return variantsOf(p).filter((v) => (Number(p?.branchStock?.[branchId]?.[v.key]) || 0) > 0);
+}
 /* ================= Unidades y cantidades fraccionadas (P1) ================= */
 export const UNITS = {
   pza: { label: 'Pieza', short: 'pza', step: 1 },
@@ -1055,10 +1085,11 @@ export function cartTotals(cart) {
   const discount = Math.min(cart.discount || 0, subtotal);
   return { subtotal, discount, total: Math.max(0, subtotal - discount), count: cart.lines.length };
 }
-export function addLine(cart, product, size, qty = 1) {
-  const key = product.id + '|' + fmtSize(size);
+export function addLine(cart, product, size, qty = 1, color = '') {
+  const vkey = variantKey(size, color);
+  const key = product.id + '|' + vkey;
   const found = cart.lines.find((l) => l.key === key);
-  const available = stockOf(product, size);
+  const available = stockOf(product, vkey);
   const unit = unitOf(product);
   const amount = round3(isFractional(product) ? (Number(qty) || 0) : Math.max(1, Math.round(Number(qty) || 1)));
   if (amount <= 0) return { ok: false, msg: 'Cantidad inválida' };
@@ -1072,7 +1103,7 @@ export function addLine(cart, product, size, qty = 1) {
   if (round3(available) + 1e-9 < amount) {
     return { ok: false, msg: 'Sin stock suficiente (quedan ' + fmtQty(available, unit) + ')' };
   }
-  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), price: product.price, qty: round3(amount), unit, color: product.color });
+  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), vkey, price: product.price, qty: round3(amount), unit, color: color || product.color, colorVariant: (product.colors || []).length ? color : '' });
   return { ok: true };
 }
 
@@ -1106,7 +1137,8 @@ export function commitSale({ cart, method, received, customerName, note, custome
     const preparaAlVender = !!(p?.recipe && p.prepararAlVender);
     const b = p?.branchStock?.[state.currentBranch];
     // Si se prepara al momento, no se descuenta el producto terminado: se descuentan ingredientes
-    if (!preparaAlVender && b && b[l.size] != null) b[l.size] = Math.max(0, round3(Number(b[l.size]) - l.qty));
+    const vk = l.vkey || l.size;
+    if (!preparaAlVender && b && b[vk] != null) b[vk] = Math.max(0, round3(Number(b[vk]) - l.qty));
     if (preparaAlVender) {
       try { consumeRecipe(p, l.qty, state.currentBranch, sale.id); } catch {}
     }
@@ -1129,7 +1161,8 @@ export function cancelSale(saleId, reason) {
   sale.items.forEach((l) => {
     const p = productById(l.productId);
     const b = p?.branchStock?.[sale.branchId];
-    if (b && b[l.size] != null) b[l.size] = round3(Number(b[l.size]) + l.qty);
+    const vk3 = l.vkey || l.size;
+    if (b && b[vk3] != null) b[vk3] = round3(Number(b[vk3]) + l.qty);
   });
   if (sale.customerId && sale.method === 'credit_sale') {
     const c = state.customers.find((x) => x.id === sale.customerId);
@@ -1213,7 +1246,8 @@ export function createLayaway({ cart, customerId, customerName }) {
   lay.items.forEach((l) => {
     const p = productById(l.productId);
     const b = p?.branchStock?.[state.currentBranch];
-    if (b && b[l.size] != null) b[l.size] = Math.max(0, round3(Number(b[l.size]) - l.qty));
+    const vk2 = l.vkey || l.size;
+    if (b && b[vk2] != null) b[vk2] = Math.max(0, round3(Number(b[vk2]) - l.qty));
   });
   state.layaways.unshift(lay);
   emit();

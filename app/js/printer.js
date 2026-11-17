@@ -87,16 +87,17 @@ export function ticketText(sale) {
 
   (sale.items || []).forEach((i) => {
     const sizeTxt = i.size && i.size !== 'Único' ? 'T.' + i.size : '';
+    const colorTxt = i.colorVariant ? ' ' + i.colorVariant : '';
     const u = i.unit || 'pza';
     const qty = u !== 'pza' ? fmtQty(i.qty, u) + ' x ' : i.qty + 'x ';
     const amount = money(i.price * i.qty);
-    const oneLine = qty.length + plain(i.name).length + (sizeTxt ? sizeTxt.length + 1 : 0) + amount.length + 1;
+    const oneLine = qty.length + plain(i.name).length + (sizeTxt ? sizeTxt.length + 1 : 0) + colorTxt.length + amount.length + 1;
     if (oneLine <= W) {
-      const left = qty + plain(i.name) + (sizeTxt ? ' ' + sizeTxt : '');
+      const left = qty + plain(i.name) + (sizeTxt ? ' ' + sizeTxt : '') + colorTxt;
       line(padR(left, W - amount.length) + amount);
     } else {
       line(qty + fit(i.name, W - qty.length));
-      const left2 = sizeTxt ? '   ' + sizeTxt : '';
+      const left2 = (sizeTxt ? '   ' + sizeTxt : '') + colorTxt;
       line(padR(left2, W - amount.length) + amount);
     }
   });

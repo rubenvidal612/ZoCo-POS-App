@@ -12,6 +12,51 @@ function upper(s) {
   return out;
 }
 
+
+/* ---------- Llave cifrada por empresa (Supabase, service role) ---------- */
+const env = (k) => (typeof process !== 'undefined' ? process.env?.[k] : '') || '';
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function decryptKey(b64) {
+  const raw = b64ToBytes(b64);
+  const iv = raw.slice(0, 12);
+  const tag = raw.slice(12, 28);
+  const cipher = raw.slice(28);
+  const joined = new Uint8Array(cipher.length + tag.length);
+  joined.set(cipher, 0); joined.set(tag, cipher.length);
+  const kekBytes = b64ToBytes(env('ZOCO_KEK'));
+  const k = await crypto.subtle.importKey('raw', kekBytes, 'AES-GCM', false, ['decrypt']);
+  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, k, joined);
+  return new TextDecoder().decode(buf);
+}
+
+async function storedKey(company, authHeader) {
+  const url = env('SUPABASE_URL');
+  const svc = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !svc) return '';
+  // valida que el usuario pertenezca a la empresa
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return '';
+  const u = await fetch(`${url}/auth/v1/user`, { headers: { apikey: svc, Authorization: 'Bearer ' + token } });
+  if (!u.ok) return '';
+  const user = await u.json();
+  if (!user?.id) return '';
+  const m = await fetch(`${url}/rest/v1/members?user_id=eq.${encodeURIComponent(user.id)}&company_id=eq.${encodeURIComponent(company)}&select=role`,
+    { headers: { apikey: svc, Authorization: 'Bearer ' + svc } });
+  const rows = m.ok ? await m.json() : [];
+  if (!Array.isArray(rows) || !rows.length) return '';
+  const s = await fetch(`${url}/rest/v1/company_secrets?company_id=eq.${encodeURIComponent(company)}&select=encrypted`,
+    { headers: { apikey: svc, Authorization: 'Bearer ' + svc } });
+  const sr = s.ok ? await s.json() : [];
+  if (!Array.isArray(sr) || !sr.length) return '';
+  try { return await decryptKey(sr[0].encrypted); } catch { return ''; }
+}
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Método no permitido' }), { status: 405, headers: { 'Content-Type': 'application/json' } });
@@ -20,8 +65,14 @@ export default async function handler(req) {
   let body;
   try { body = await req.json(); } catch { body = {}; }
 
-  const { provider, key, model, baseUrl, messages = [], system = '', tools = [], images = [] } = body;
-  if (!key) return json({ error: 'Falta API key' });
+  const { provider, model, baseUrl, messages = [], system = '', tools = [], images = [] } = body;
+  let { key } = body;
+
+  // Si el cliente no manda llave, se usa la guardada cifrada de su empresa
+  if (!key && body.company) {
+    try { key = await storedKey(body.company, req.headers.get('authorization') || ''); } catch {}
+  }
+  if (!key) return json({ error: 'Falta API key (configúrala en Configuración → Agente IA)' });
 
   const imgs = (Array.isArray(images) ? images : []).map((d) => {
     const m = String(d).match(/^data:([^;]+);base64,(.*)$/);

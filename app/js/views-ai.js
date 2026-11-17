@@ -131,10 +131,16 @@ function toGeminiSchema(s) {
 }
 
 /* ---------- Llamada al proveedor vía servidor (sin CORS) ---------- */
+function cloudAuthHeader() {
+  try {
+    const s = JSON.parse(localStorage.getItem('zoco.cloud.session') || 'null');
+    return s?.access_token ? { Authorization: 'Bearer ' + s.access_token } : {};
+  } catch { return {}; }
+}
 async function callModel({ provider, key, model, baseUrl, messages, images }) {
   const r = await fetch('/api/ai', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(cloudAuthHeader()) },
     body: JSON.stringify({
       provider, key: key || '', model, baseUrl, messages, images: images || [],
       company: state.currentCompany || 'default',
