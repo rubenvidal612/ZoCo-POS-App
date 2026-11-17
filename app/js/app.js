@@ -2,7 +2,7 @@
 import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession } from './store.js';
 import { posView } from './views-pos.js';
 import { homeView } from './views-home.js';
-import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, payrollView } from './views-catalog.js';
+import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView } from './views-catalog.js';
 import { aiView } from './views-ai.js';
 import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
@@ -34,6 +34,7 @@ const NAV_GROUPS = [
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
+      { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
       { id: 'gastos', label: 'Gastos', icon: '🧾' },
       { id: 'mifin', label: 'Mis Finanzas', icon: '💵' },
@@ -71,7 +72,7 @@ let current = null;
 const titles = {
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', ventas: 'Transacciones',
   reportes: 'Reportes', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
-  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', apartados: 'Apartados', cupones: 'Cupones',
+  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', apartados: 'Apartados', cupones: 'Cupones',
 };
 
 function applyTheme() {
@@ -372,6 +373,7 @@ function mount() {
     finanzas: guard('finance.view', () => financeView(ctx)),
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
+    afiliados: () => affiliatesView(ctx),
   };
 
   const build = map[route] || map.inicio;

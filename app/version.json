@@ -1,10 +1,9 @@
 {
-    "version":  "2.30.0",
+    "version":  "2.31.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo panel Afiliados: link y codigo por persona",
-                  "Copia el link o compartelo por WhatsApp",
-                  "Cada registro con tu link queda ligado a ti",
-                  "Campo de comision por afiliado (listo para definir montos)"
+                  "Nueva pestaña Afiliados en el menu",
+                  "Link y codigo por persona con copiar y compartir",
+                  "Resumen de invitados y comision configurable"
               ]
 }

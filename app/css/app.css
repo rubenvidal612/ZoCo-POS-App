@@ -1233,3 +1233,19 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .modal-body{flex:1 1 auto;min-height:0;max-height:none;overflow:auto}
 .modal-foot{flex:0 0 auto}
 @media (max-height:700px){ .modal{max-height:96vh} }
+/* ===== Afiliados ===== */
+.aff-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:14px}
+.aff-title{font-size:20px;font-weight:800}
+.aff-sub{font-size:13px;color:#CBD5E1;margin-top:4px;max-width:640px}
+.aff-badge{background:rgba(249,115,22,.18);border:1px solid rgba(249,115,22,.5);color:#FDBA74;
+  border-radius:999px;padding:8px 14px;font-size:12.5px;white-space:nowrap}
+.aff-badge b{color:#fff;letter-spacing:.06em}
+.aff-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.aff-linkbox{display:flex;gap:8px}
+.aff-linkbox input{flex:1;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:12.5px;background:var(--surface-2,#F8FAFC)}
+.aff-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.aff-stats div{background:var(--surface-2,#F8FAFC);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.aff-stats span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+.aff-stats b{font-size:20px}
+@media (max-width:900px){ .aff-grid{grid-template-columns:1fr} .aff-stats{grid-template-columns:1fr 1fr} }

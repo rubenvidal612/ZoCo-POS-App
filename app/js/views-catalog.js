@@ -588,36 +588,6 @@ export function settingsView(ctx) {
         </div>
       </div>
 
-      <div class="panel" data-sec="Afiliados">
-        <div class="panel-head"><h2>Afiliados</h2></div>
-        <div style="padding:16px">
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
-            Comparte tu link: cada persona que se registre con él queda ligada a ti.
-            Más adelante podrás definir cuánto ganas por cada afiliado.
-          </div>
-          <div class="field"><label>Tu link de afiliado</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <input id="aff-link" readonly style="flex:1;min-width:200px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:12.5px;background:var(--surface-2,#F8FAFC)">
-              <button class="btn sm" id="aff-copy">Copiar</button>
-              <button class="btn ghost sm" id="aff-wa">WhatsApp</button>
-            </div>
-          </div>
-          <div class="field"><label>Tu código</label>
-            <input id="aff-code" readonly style="height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px;font-weight:800;width:160px;background:var(--surface-2,#F8FAFC)">
-          </div>
-          <div class="row2">
-            <div class="field"><label>Comisión por afiliado (%)</label>
-              <input id="aff-pct" type="number" min="0" max="100" step="1" value="0"></div>
-            <div class="field" style="display:flex;align-items:flex-end">
-              <button class="btn sm ghost" id="aff-save" style="width:100%">Guardar comisión</button></div>
-          </div>
-          <div class="hint" style="margin-top:2px">Déjalo en 0 por ahora; cuando definas el plan lo ajustamos.</div>
-          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
-            <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:8px">PERSONAS QUE INVITASTE</div>
-            <div id="aff-list" class="cf-list"></div>
-          </div>
-        </div>
-      </div>
       <div class="panel" data-sec="Sucursales">
         <div class="panel-head"><h2>Sucursales</h2></div>
         <div style="padding:16px">
@@ -987,36 +957,6 @@ export function settingsView(ctx) {
   };
 
   // Impresora
-  // ===== Afiliados =====
-  const affLink = $('#aff-link', root);
-  if (affLink) {
-    const code = myAffCode();
-    affLink.value = affiliateLink();
-    $('#aff-code', root).value = code;
-    $('#aff-pct', root).value = state.user?.affCommissionPct || 0;
-    const paintRefs = () => {
-      const list = referralsOf(code);
-      $('#aff-list', root).innerHTML = list.length
-        ? list.map((r) => `<div class="cf-row">
-            <span class="cf-name">${esc(r.name || r.email)}<br><span style="font-weight:500;color:var(--muted);font-size:11.5px">${esc(r.email)}</span></span>
-            <span class="cf-type">${new Date(r.date).toLocaleDateString('es-MX')}</span>
-          </div>`).join('')
-        : '<div class="hint">Aún nadie se ha registrado con tu link.</div>';
-    };
-    paintRefs();
-    $('#aff-copy', root).onclick = async () => {
-      try { await navigator.clipboard.writeText(affLink.value); toast('Link copiado ✓'); }
-      catch { affLink.select(); document.execCommand('copy'); toast('Link copiado'); }
-    };
-    $('#aff-wa', root).onclick = () => {
-      const txt = 'Te invito a probar ZoCo POS, el punto de venta para tu negocio: ' + affLink.value;
-      window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-    };
-    $('#aff-save', root).onclick = () => {
-      setAffiliateCommission($('#aff-pct', root).value);
-      toast('Comisión guardada: ' + (state.user?.affCommissionPct || 0) + '%');
-    };
-  }
   // ===== Sucursales =====
   const brList = $('#br-list', root);
   const paintBranches = () => {
@@ -2410,4 +2350,120 @@ export function payrollView() {
 
   render();
   return { root, refresh: render };
+}
+
+/* ================= AFILIADOS ================= */
+export function affiliatesView(ctx) {
+  const root = el(`<div id="aff-root">
+    <div class="aff-hero">
+      <div>
+        <div class="aff-title">Programa de afiliados</div>
+        <div class="aff-sub">Comparte tu link: cada persona que se registre con él queda ligada a ti.</div>
+      </div>
+      <div class="aff-badge">Tu código: <b id="aff-code">—</b></div>
+    </div>
+
+    <div class="aff-grid">
+      <div class="panel aff-link-card">
+        <div class="panel-head"><h2>Tu link</h2></div>
+        <div style="padding:16px">
+          <div class="aff-linkbox">
+            <input id="aff-link" readonly>
+            <button class="btn sm" id="aff-copy">Copiar</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm" id="aff-wa" style="background:#25D366">WhatsApp</button>
+            <button class="btn ghost sm" id="aff-share">Compartir…</button>
+          </div>
+          <div class="hint" style="margin-top:10px">
+            También puedes mandarlo por Facebook, Instagram o donde quieras: el link ya trae tu código.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Resumen</h2></div>
+        <div style="padding:16px">
+          <div class="aff-stats">
+            <div><span>Invitados</span><b id="aff-total">0</b></div>
+            <div><span>Registrados</span><b id="aff-active">0</b></div>
+            <div><span>Comisión</span><b id="aff-pct-show">0%</b></div>
+          </div>
+          <div class="field" style="margin-top:14px"><label>Comisión por afiliado (%)</label>
+            <div style="display:flex;gap:8px">
+              <input id="aff-pct" type="number" min="0" max="100" step="1" value="0">
+              <button class="btn sm ghost" id="aff-save">Guardar</button>
+            </div>
+          </div>
+          <div class="hint">Déjalo en 0 por ahora. Cuando definas cuánto se gana, aquí se calcula.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Personas que invitaste</h2><span id="aff-count" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody id="aff-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Cómo funciona</h2></div>
+      <div style="padding:16px;font-size:13px;line-height:1.6;color:var(--text-2)">
+        <div>1. Compartes tu link con quien quieras.</div>
+        <div>2. La persona se registra en ZoCo con ese link.</div>
+        <div>3. Queda guardado que tú la invitaste (nombre, correo y fecha).</div>
+        <div>4. Cuando actives comisiones, aquí verás cuánto generó cada afiliado.</div>
+        <div class="hint" style="margin-top:8px">Cada usuario de la app tiene su propio link y su propio código.</div>
+      </div>
+    </div>
+  </div>`);
+
+  const code = myAffCode();
+  const link = affiliateLink();
+  $('#aff-code', root).textContent = code;
+  $('#aff-link', root).value = link;
+  $('#aff-pct', root).value = state.user?.affCommissionPct || 0;
+  $('#aff-pct-show', root).textContent = (state.user?.affCommissionPct || 0) + '%';
+
+  const paint = () => {
+    const list = referralsOf(code);
+    $('#aff-total', root).textContent = list.length;
+    $('#aff-active', root).textContent = list.filter((r) => r.status === 'registrado' || r.status === 'activo').length;
+    $('#aff-count', root).textContent = list.length + ' persona(s)';
+    $('#aff-rows', root).innerHTML = list.length
+      ? list.map((r) => `<tr>
+          <td class="t-strong">${esc(r.name || '—')}</td>
+          <td>${esc(r.email || '—')}</td>
+          <td>${new Date(r.date).toLocaleDateString('es-MX')}</td>
+          <td><span class="badge ok">${esc(r.status || 'registrado')}</span></td>
+        </tr>`).join('')
+      : `<tr><td colspan="4"><div class="cart-empty">Todavía nadie se ha registrado con tu link.<br>Compártelo y aparecerán aquí.</div></td></tr>`;
+  };
+  paint();
+
+  $('#aff-copy', root).onclick = async () => {
+    const inp = $('#aff-link', root);
+    try { await navigator.clipboard.writeText(inp.value); toast('Link copiado ✓'); }
+    catch { inp.select(); document.execCommand('copy'); toast('Link copiado'); }
+  };
+  $('#aff-wa', root).onclick = () => {
+    const txt = 'Te invito a probar ZoCo POS, el punto de venta para tu negocio: ' + link;
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  };
+  $('#aff-share', root).onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'ZoCo POS', text: 'Te invito a probar ZoCo POS', url: link }); } catch {}
+    } else { toast('Copia el link y compártelo'); }
+  };
+  $('#aff-save', root).onclick = () => {
+    setAffiliateCommission($('#aff-pct', root).value);
+    $('#aff-pct-show', root).textContent = (state.user?.affCommissionPct || 0) + '%';
+    toast('Comisión guardada: ' + (state.user?.affCommissionPct || 0) + '%');
+  };
+
+  return { root, refresh: paint };
 }
