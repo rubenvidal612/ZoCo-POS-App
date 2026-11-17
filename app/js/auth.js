@@ -167,6 +167,20 @@ export async function ensureCompany(name) {
   const r = await bootstrapCompany(name || (s.user?.email || 'mi-negocio').split('@')[0]);
   return { ok: !!r.ok, company: r.companyId, existed: false };
 }
+
+/** Alinea el id de empresa local con el de la nube (evita escribir en una empresa inexistente). */
+export function alignCompany(res) {
+  if (!res?.ok || !res.company) return null;
+  try {
+    const raw = localStorage.getItem('zoco.pos.v1');
+    const st = raw ? JSON.parse(raw) : null;
+    if (st && st.currentCompany !== res.company) {
+      st.currentCompany = res.company;
+      localStorage.setItem('zoco.pos.v1', JSON.stringify(st));
+    }
+  } catch {}
+  return res.company;
+}
 /* ================= Enlace mágico por correo (sin contraseña) ================= */
 export async function sendMagicLink(email) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };

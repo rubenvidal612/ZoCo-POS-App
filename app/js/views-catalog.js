@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
-import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle } from './auth.js';
+import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle, alignCompany } from './auth.js';
 import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
@@ -1456,7 +1456,7 @@ export function settingsView(ctx) {
     const root2 = m.root;
     const msg = (t, bad) => { const e = root2.querySelector('#cl-msg'); e.textContent = t; e.style.color = bad ? 'var(--danger)' : 'var(--ok,#059669)'; };
     const finish = async () => {
-      try { await ensureCompany(state.company.name); } catch {}
+      try { alignCompany(await ensureCompany(state.company.name)); } catch {}
       const up = await pushCloud();
       paintSb();
       if (up.ok) { msg('✓ Conectado y datos subidos'); toast('Cuenta vinculada ✓'); setTimeout(() => m.close(), 900); }

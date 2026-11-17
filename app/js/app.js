@@ -11,7 +11,7 @@ import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
 import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
@@ -417,7 +417,7 @@ async function bootOAuth() {
   try {
     const r = await handleOAuthReturn();
     if (!r.ok) return false;
-    const c = await ensureCompany(r.user?.user_metadata?.name || (r.user?.email || '').split('@')[0]);
+    const c = alignCompany(await ensureCompany(r.user?.user_metadata?.name || (r.user?.email || '').split('@')[0]));
     const email = r.user?.email || state.users[0]?.email || 'owner@zoco.app';
     const local = login(email, '');
     if (!local.ok) {
@@ -448,7 +448,7 @@ bootOAuth().then((ok) => {
   hydrate().then(async () => {
     if (ok && sbReady()) {
       // al entrar con Google: asegura empresa/membresía y sube el estado local
-      try { await ensureCompany(state.company.name); } catch {}
+      try { alignCompany(await ensureCompany(state.company.name)); } catch {}
       try { await pullCloud(true); } catch {}
     }
     paintShell();
