@@ -818,6 +818,8 @@ export function emit() {
 let pushTimer = null;
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { console.warn('save fail', e); }
+  // avisa a la nube (sync.js) que hay cambios para subir
+  try { window.dispatchEvent(new CustomEvent('zoco:save')); } catch {}
   if (!pushTimer) pushTimer = setTimeout(() => { pushTimer = null; pushToServer(); }, 600);
 }
 

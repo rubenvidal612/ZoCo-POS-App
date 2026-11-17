@@ -1,9 +1,9 @@
 {
-    "version":  "2.31.0",
+    "version":  "2.32.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nueva pestaña Afiliados en el menu",
-                  "Link y codigo por persona con copiar y compartir",
-                  "Resumen de invitados y comision configurable"
+                  "Sincronizacion automatica a la nube al hacer cambios",
+                  "Usa el token del usuario (RLS) para leer/escribir",
+                  "Panel Nube muestra si hay sesion y permite vincular la cuenta"
               ]
 }

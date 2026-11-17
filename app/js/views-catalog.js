@@ -3,7 +3,8 @@ import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompresse
 import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
-import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty } from './sync.js';
+import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
+import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany } from './auth.js';
 import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
@@ -762,6 +763,14 @@ export function settingsView(ctx) {
             <button class="btn ghost sm" id="sb-sync">Sincronizar ahora</button>
           </div>
           <div class="hint" id="sb-state" style="margin-top:8px"></div>
+          <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+            <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:8px">CUENTA EN LA NUBE (para usar en varios dispositivos)</div>
+            <div id="sb-account" class="hint" style="margin-bottom:8px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn sm ghost" id="sb-link">Vincular esta cuenta a la nube</button>
+              <button class="btn sm ghost" id="sb-out">Cerrar sesión nube</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1339,13 +1348,46 @@ export function settingsView(ctx) {
 
   // Supabase (nube)
   const sbState = $('#sb-state', root);
+  const sbAccount = $('#sb-account', root);
   const paintSb = () => {
-    if (!sbState) return;
-    sbState.textContent = !sbReady() ? 'Sin configurar (opcional)'
-      : isDirty() ? 'Configurado · cambios pendientes de subir'
-      : 'Configurado ✓';
+    if (sbState) {
+      sbState.textContent = !sbReady() ? 'Sin configurar (opcional)'
+        : isDirty() ? 'Configurado · cambios pendientes de subir'
+        : 'Configurado ✓';
+    }
+    if (sbAccount) {
+      const ses = cloudSession();
+      if (ses?.user?.email) {
+        sbAccount.innerHTML = `Sesión nube: <b>${esc(ses.user.email)}</b> · sincroniza entre dispositivos`;
+      } else {
+        sbAccount.innerHTML = '<span style="color:var(--danger);font-weight:700">Sin sesión en la nube</span> · por eso no se ven tus datos en otro dispositivo. Vincúlala con el mismo correo y contraseña.';
+      }
+    }
   };
   paintSb();
+
+  $('#sb-link', root)?.addEventListener('click', async () => {
+    const u = state.user || {};
+    const email = (u.email || '').trim();
+    const pass = (u.pass || '').trim();
+    if (!email || !pass) { toast('Tu usuario no tiene correo o contraseña guardados'); return; }
+    if (pass.length < 6) { toast('La contraseña debe tener 6 caracteres o más'); return; }
+    toast('Vinculando con la nube…');
+    let r = await cloudSignIn(email, pass);
+    if (!r.ok) r = await cloudSignUp(email, pass, state.company.name);
+    if (!r.ok) { toast('No se pudo: ' + (r.error || 'revisa tu correo')); return; }
+    try { await ensureCompany(state.company.name); } catch {}
+    const up = await pushCloud();
+    paintSb();
+    toast(up.ok ? '✓ Cuenta vinculada y datos subidos' : 'Vinculado, pero no se pudo subir: ' + (up.error || ''));
+  });
+
+  $('#sb-out', root)?.addEventListener('click', () => {
+    cloudSignOut();
+    paintSb();
+    toast('Sesión nube cerrada');
+  });
+
   $('#sb-save', root)?.addEventListener('click', () => {
     setSbConfig($('#sb-url', root).value.trim(), $('#sb-key', root).value.trim());
     paintSb(); toast('Guardado');

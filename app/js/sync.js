@@ -24,11 +24,22 @@ export function sbReady() {
 
 const T = (ms = 9000) => { try { return { signal: AbortSignal.timeout(ms) }; } catch { return {}; } };
 
+// usa el token del usuario logueado (RLS lo necesita); si no hay sesión, cae a la anon key
+const authToken = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem('zoco.cloud.session') || 'null');
+    if (s && s.access_token) return s.access_token;
+  } catch {}
+  return '';
+};
+
 const headers = () => ({
   'Content-Type': 'application/json',
   apikey: sbConfig().key,
-  Authorization: 'Bearer ' + sbConfig().key,
+  Authorization: 'Bearer ' + (authToken() || sbConfig().key),
 });
+
+export const hasCloudSession = () => !!authToken();
 
 const company = () => state.currentCompany || 'default';
 const markDirty = (v) => { try { localStorage.setItem(DIRTY, v ? '1' : '0'); } catch {} };
@@ -101,10 +112,36 @@ export async function testConnection() {
   } catch (e) { return { ok: false, error: e.message }; }
 }
 
-/** Arranca: escucha online/offline y sincroniza cada 60 s si hay red. */
+let readyToPush = false;
+let pushTimer = null;
+
+function schedulePush() {
+  if (!readyToPush) return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    pushTimer = null;
+    if (navigator.onLine) pushCloud();
+  }, 1500);
+}
+
+/** Arranca: sube cambios, escucha online/offline y sincroniza cada 45 s. */
 export function startSync() {
   if (!sbReady()) return;
-  window.addEventListener('online', () => syncNow());
-  setInterval(() => { if (navigator.onLine && isDirty()) pushCloud(); }, 60000);
-  setTimeout(() => pullCloud(), 2500);
+
+  // cualquier cambio local marca pendiente y programa subida
+  window.addEventListener('zoco:save', () => { markDirty(true); schedulePush(); });
+  window.addEventListener('online', () => { if (isDirty()) pushCloud(); else pullCloud(true); });
+
+  // primera bajada: trae lo que haya en la nube antes de permitir subir
+  setTimeout(async () => {
+    try { await pullCloud(); } catch {}
+    readyToPush = true;
+    if (isDirty()) schedulePush();
+  }, 2500);
+
+  // red de seguridad: cada 45 s sube pendientes o baja cambios
+  setInterval(() => {
+    if (!navigator.onLine) return;
+    if (isDirty()) pushCloud(); else pullCloud(true);
+  }, 45000);
 }
