@@ -349,6 +349,83 @@ export function loadDemoForMode(mode, { replace = true } = {}) {
   return demo.length;
 }
 
+
+/* ================= Afiliados ================= */
+const REF_KEY = 'zoco.ref';
+
+function makeAffCode(name) {
+  const base = String(name || 'ZOCO').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 6) || 'ZOCO';
+  const rnd = Math.random().toString(36).slice(2, 5).toUpperCase();
+  return base + '-' + rnd;
+}
+
+/** Código de afiliado del usuario actual (se crea la primera vez). */
+export function myAffCode() {
+  const u = state.user;
+  if (!u) return '';
+  if (!u.affCode) {
+    let code = makeAffCode(u.name);
+    const taken = () => (state.users || []).some((x) => x.affCode === code && x.id !== u.id);
+    while (taken()) code = makeAffCode(u.name);
+    u.affCode = code;
+    emit();
+  }
+  return u.affCode;
+}
+
+export function affiliateLink() {
+  const code = myAffCode();
+  const base = location.origin + location.pathname.replace(/index\.html$/, '');
+  return base + '?ref=' + encodeURIComponent(code);
+}
+
+/** Guarda el ?ref= de la URL para usarlo cuando la persona se registre. */
+export function captureRef() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const ref = p.get('ref');
+    if (ref) {
+      localStorage.setItem(REF_KEY, ref.trim().toUpperCase());
+      // limpia la URL sin recargar
+      const clean = location.pathname + (location.hash || '');
+      history.replaceState(null, '', clean);
+    }
+  } catch {}
+}
+
+export const pendingRef = () => localStorage.getItem(REF_KEY) || '';
+
+/** Registra que alguien se registró con el link de un afiliado. */
+export function registerReferral({ code, email, name, companyId }) {
+  const c = String(code || '').trim().toUpperCase();
+  if (!c) return null;
+  if (!Array.isArray(state.referrals)) state.referrals = [];
+  if (state.referrals.some((r) => (r.email || '').toLowerCase() === String(email || '').toLowerCase())) return null;
+  const owner = (state.users || []).find((u) => u.affCode === c);
+  const rec = {
+    id: uid('ref'), date: new Date().toISOString(),
+    code: c, affiliateId: owner?.id || null, affiliateName: owner?.name || c,
+    email: email || '', name: name || '', companyId: companyId || state.currentCompany || null,
+    status: 'registrado', commissionPct: 0, earned: 0,
+  };
+  state.referrals.unshift(rec);
+  localStorage.removeItem(REF_KEY);
+  emit();
+  return rec;
+}
+
+export function referralsOf(code) {
+  const c = String(code || '').toUpperCase();
+  return (state.referrals || []).filter((r) => r.code === c);
+}
+
+export function setAffiliateCommission(pct) {
+  const u = state.user;
+  if (!u) return;
+  u.affCommissionPct = Math.max(0, Math.min(100, Number(pct) || 0));
+  emit();
+}
 /* ================= Sucursales ================= */
 export function addBranch(name) {
   const n = String(name || '').trim();
@@ -653,6 +730,7 @@ function migrate(s) {
   if (!Array.isArray(s.transfers)) s.transfers = [];
   if (!Array.isArray(s.consumptions)) s.consumptions = [];
   if (!Array.isArray(s.productions)) s.productions = [];
+  if (!Array.isArray(s.referrals)) s.referrals = [];
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -1062,6 +1140,7 @@ export function upsertCustomer(data) {
   emit();
 }
 export function customerById(id) { return state.customers.find((c) => c.id === id); }
+
 
 /* ================= Sucursales ================= */
 export function setBranch(id) {

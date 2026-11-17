@@ -13,6 +13,7 @@ import {
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch,
+  myAffCode, affiliateLink, referralsOf, setAffiliateCommission,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -587,6 +588,36 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Afiliados">
+        <div class="panel-head"><h2>Afiliados</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Comparte tu link: cada persona que se registre con él queda ligada a ti.
+            Más adelante podrás definir cuánto ganas por cada afiliado.
+          </div>
+          <div class="field"><label>Tu link de afiliado</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input id="aff-link" readonly style="flex:1;min-width:200px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:12.5px;background:var(--surface-2,#F8FAFC)">
+              <button class="btn sm" id="aff-copy">Copiar</button>
+              <button class="btn ghost sm" id="aff-wa">WhatsApp</button>
+            </div>
+          </div>
+          <div class="field"><label>Tu código</label>
+            <input id="aff-code" readonly style="height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px;font-weight:800;width:160px;background:var(--surface-2,#F8FAFC)">
+          </div>
+          <div class="row2">
+            <div class="field"><label>Comisión por afiliado (%)</label>
+              <input id="aff-pct" type="number" min="0" max="100" step="1" value="0"></div>
+            <div class="field" style="display:flex;align-items:flex-end">
+              <button class="btn sm ghost" id="aff-save" style="width:100%">Guardar comisión</button></div>
+          </div>
+          <div class="hint" style="margin-top:2px">Déjalo en 0 por ahora; cuando definas el plan lo ajustamos.</div>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+            <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:8px">PERSONAS QUE INVITASTE</div>
+            <div id="aff-list" class="cf-list"></div>
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Sucursales">
         <div class="panel-head"><h2>Sucursales</h2></div>
         <div style="padding:16px">
@@ -956,6 +987,36 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Afiliados =====
+  const affLink = $('#aff-link', root);
+  if (affLink) {
+    const code = myAffCode();
+    affLink.value = affiliateLink();
+    $('#aff-code', root).value = code;
+    $('#aff-pct', root).value = state.user?.affCommissionPct || 0;
+    const paintRefs = () => {
+      const list = referralsOf(code);
+      $('#aff-list', root).innerHTML = list.length
+        ? list.map((r) => `<div class="cf-row">
+            <span class="cf-name">${esc(r.name || r.email)}<br><span style="font-weight:500;color:var(--muted);font-size:11.5px">${esc(r.email)}</span></span>
+            <span class="cf-type">${new Date(r.date).toLocaleDateString('es-MX')}</span>
+          </div>`).join('')
+        : '<div class="hint">Aún nadie se ha registrado con tu link.</div>';
+    };
+    paintRefs();
+    $('#aff-copy', root).onclick = async () => {
+      try { await navigator.clipboard.writeText(affLink.value); toast('Link copiado ✓'); }
+      catch { affLink.select(); document.execCommand('copy'); toast('Link copiado'); }
+    };
+    $('#aff-wa', root).onclick = () => {
+      const txt = 'Te invito a probar ZoCo POS, el punto de venta para tu negocio: ' + affLink.value;
+      window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+    };
+    $('#aff-save', root).onclick = () => {
+      setAffiliateCommission($('#aff-pct', root).value);
+      toast('Comisión guardada: ' + (state.user?.affCommissionPct || 0) + '%');
+    };
+  }
   // ===== Sucursales =====
   const brList = $('#br-list', root);
   const paintBranches = () => {

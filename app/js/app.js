@@ -9,6 +9,7 @@ import { initInstallPrompt, showInstallCard, mountInstallButtons } from './insta
 import { subscribePush } from './notify.js';
 import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
+import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
 import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
 import { adminView } from './views-admin.js';
@@ -159,6 +160,8 @@ function paintLogin() {
       if (!(state.products || []).length) {
         try { loadDemoForMode(state.company.mode || 'shoe', { replace: true }); } catch {}
       }
+      const refCode = pendingRef();
+      if (refCode) { try { registerReferral({ code: refCode, email, name: $('#lg-name').value.trim() || email.split('@')[0] }); } catch {} }
       toast('Cuenta creada. ¡Bienvenido!');
       setTimeout(() => toast('Configuración → Datos de prueba: borra el catálogo de ejemplo'), 2000);
       route = 'inicio'; location.hash = '#/inicio'; paintShell();
@@ -425,6 +428,8 @@ async function bootOAuth() {
     return true;
   } catch { return false; }
 }
+
+captureRef();
 
 bootOAuth().then((ok) => {
   hydrate().then(async () => {
