@@ -1,8 +1,8 @@
 {
-    "version":  "2.36.0",
+    "version":  "2.36.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Conectado al nuevo proyecto Supabase (org RAMBER Tunes)",
-                  "La empresa local se alinea con el id de la nube al iniciar sesion"
+                  "Las funciones aceptan NEXT_PUBLIC_SUPABASE_URL como respaldo",
+                  "Aclaracion: ZoCo no es Next.js; las llaves secretas no llevan prefijo publico"
               ]
 }

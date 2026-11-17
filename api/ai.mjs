@@ -14,7 +14,14 @@ function upper(s) {
 
 
 /* ---------- Llave cifrada por empresa (Supabase, service role) ---------- */
-const env = (k) => (typeof process !== 'undefined' ? process.env?.[k] : '') || '';
+const env = (k) => {
+  if (typeof process === 'undefined') return '';
+  const v = process.env?.[k];
+  if (v) return v;
+  // respaldo: nombres estilo Next.js para la URL pública
+  if (k === 'SUPABASE_URL') return process.env?.NEXT_PUBLIC_SUPABASE_URL || '';
+  return '';
+};
 
 function b64ToBytes(b64) {
   const bin = atob(b64);
