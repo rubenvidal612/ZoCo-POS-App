@@ -244,7 +244,7 @@ export function productsView(ctx) {
       const content = style === 'visual'
         ? '<div class="cards">' + list.map(p => {
             const src = images.get(p.code);
-            const photo = src && (/^data:image\\//.test(src) || /^https:\\/\\//.test(src))
+            const photo = src && (String(src).startsWith('data:image/') || String(src).startsWith('https://'))
               ? '<img src="' + esc(src) + '" alt="">' : '';
             return '<article class="item">' + photo + '<div class="info"><h3>' + esc(p.name) +
               '</h3><p>' + esc(p.code) + ' · ' + esc(p.section) + '</p><p>' +
