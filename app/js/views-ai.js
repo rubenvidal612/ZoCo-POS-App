@@ -291,13 +291,14 @@ export function aiView() {
 
         <main class="ai-main">
           <div class="ai-head"><b>Asistente ZoCo</b><span class="badge info">beta</span>
+          <button type="button" class="btn ghost sm" id="ai-popout" title="Abrir conversación en otra pestaña">↗ <span class="ai-popout-label">Otra pestaña</span></button>
           <div class="sp"></div>
           <button type="button" class="btn ghost sm ai-gear" id="ai-gear" title="Configuración del agente">⚙</button>
             <button class="btn ghost sm" id="ai-clear" style="margin-left:auto;height:30px;font-size:12px">Limpiar</button>
           </div>
           <div class="ai-msgs" id="msgs">
             ${CHAT.length ? CHAT.map((m, i) => `
-              <div class="msg ${m.role}"><div class="bubble">${format(m.content)}${m.action ? actionCard(m, i) : ''}</div></div>`).join('')
+              <div class="msg ${m.role}"><div class="bubble">${format(m.content)}${csvDownloadButton(m, i)}${m.action ? actionCard(m, i) : ''}</div></div>`).join('')
               : `<div class="ai-empty">
                   <div class="big">✦</div>
                   <b>Pregúntame lo que sea de tu negocio</b>
@@ -461,6 +462,18 @@ export function aiView() {
         toast('Error: ' + (e.message || e));
       }
     };
+    root.querySelector('#ai-popout')?.addEventListener('click', () => {
+      window.open('/chat.html', '_blank', 'noopener,noreferrer');
+    });
+    root.querySelectorAll('[data-ai-csv]').forEach((b) => b.onclick = () => {
+      const msg = CHAT[Number(b.dataset.aiCsv)];
+      const csv = msg && extractCsv(msg.content);
+      if (!csv) return;
+      const url = URL.createObjectURL(new Blob(['\\uFEFF'.replace('\\uFEFF', '\uFEFF') + csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'zoco-inventario-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
     root.querySelector('#ai-gear')?.addEventListener('click', () => {
       root.querySelector('.ai-side')?.classList.toggle('open');
     });
@@ -471,7 +484,11 @@ export function aiView() {
     };
     bindActions();
     const msgs = root.querySelector('#msgs');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    if (msgs) {
+      const bottom = () => { msgs.scrollTop = msgs.scrollHeight; };
+      bottom();
+      requestAnimationFrame(bottom);
+    }
   }
 
   function actionCard(m, i) {
@@ -522,6 +539,22 @@ export function aiView() {
     localStorage.setItem('zoco.pos.v1', JSON.stringify(state));
   }
 
+  function extractCsv(content) {
+    const text = String(content || '');
+    const block = text.match(/```(?:csv|text|plaintext)?\\s*\\n([\\s\\S]*?)```/i);
+    const candidate = (block ? block[1] : text).trim();
+    const lines = candidate.split(/\\r?\\n/).filter(Boolean);
+    const first = lines[0] || '';
+    const delimiter = first.includes(';') ? ';' : ',';
+    return lines.length >= 2 && first.split(delimiter).length >= 2 &&
+      lines.slice(1, Math.min(lines.length, 5)).some(line => line.includes(delimiter))
+      ? candidate : '';
+  }
+  function csvDownloadButton(m, i) {
+    return m.role === 'assistant' && extractCsv(m.content)
+      ? '<div class="ai-download"><button type="button" class="btn sm" data-ai-csv="' + i + '">⬇ Descargar CSV</button></div>'
+      : '';
+  }
   function format(t) {
     return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
   }
