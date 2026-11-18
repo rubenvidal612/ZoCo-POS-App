@@ -318,8 +318,8 @@ export function aiView() {
           <form class="ai-input" id="ai-form">
             <button type="button" class="btn ghost sm" id="ai-file" title="Cargar inventario desde Excel/CSV" style="height:42px;padding:0 12px">📎</button>
             <button type="button" class="btn ghost sm" id="ai-img" title="Leer inventario de una foto" style="height:42px;padding:0 12px">📷</button>
-            <input id="ai-q" placeholder="Escribe tu pregunta…" autocomplete="off" ${busy ? 'disabled' : ''}>
-            <button class="btn sm" ${busy ? 'disabled' : ''}>${busy ? '…' : 'Enviar'}</button>
+            <textarea id="ai-q" rows="1" placeholder="Escribe tu pregunta…" autocomplete="off" enterkeyhint="enter" ${busy ? 'disabled' : ''}></textarea>
+            <button type="button" id="ai-send" class="btn sm" ${busy ? 'disabled' : ''}>${busy ? '…' : 'Enviar'}</button>
           </form>
         </main>
       </div>`;
@@ -477,9 +477,22 @@ export function aiView() {
     root.querySelector('#ai-gear')?.addEventListener('click', () => {
       root.querySelector('.ai-side')?.classList.toggle('open');
     });
-    root.querySelector('#ai-form').onsubmit = (e) => {
-      e.preventDefault();
-      const v = root.querySelector('#ai-q').value.trim();
+    const question = root.querySelector('#ai-q');
+    const resizeQuestion = () => {
+      question.style.height = 'auto';
+      question.style.height = Math.min(question.scrollHeight, 136) + 'px';
+    };
+    question.addEventListener('input', resizeQuestion);
+    question.addEventListener('keydown', (e) => {
+      // Enter always inserts a new line, including on mobile keyboards.
+      // Only the visible Enviar button submits the message.
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.stopPropagation();
+      }
+    });
+    root.querySelector('#ai-form').onsubmit = (e) => e.preventDefault();
+    root.querySelector('#ai-send').onclick = () => {
+      const v = question.value.trim();
       if (v) send(v);
     };
     bindActions();
