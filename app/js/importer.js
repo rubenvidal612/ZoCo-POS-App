@@ -96,13 +96,17 @@ export function buildProducts(table, mapping, opts = {}) {
 
   table.rows.forEach((r, idx) => {
     const get = (f) => (mapping[f] != null ? String(r[mapping[f]] ?? '').trim() : '');
-    const name = get('name');
+    const rawName = get('name');
     const price = num(get('price'));
-    if (!name) { errors.push('Fila ' + (idx + 2) + ': sin nombre'); return; }
-    if (!(price > 0)) { errors.push('Fila ' + (idx + 2) + ': sin precio (' + name + ')'); return; }
-
+    const hasPrice = price > 0;
+    const hasName = !!rawName;
+    const hasAnyData = r.some((cell) => String(cell ?? '').trim() !== '');
+    if (!hasAnyData) return; // Ignore truly empty rows; never create phantom products.
+    const name = rawName || 'Producto pendiente ' + String(idx + 1).padStart(3, '0');
     let cost = num(get('cost'));
-    if (!(cost > 0)) cost = Math.round(price * (1 - defaults.margin / 100));
+    // Never invent a purchase cost for an incomplete product.
+    if (!(cost > 0)) cost = 0;
+    const pending = !hasName || !hasPrice;
 
     const stock = {};
     if (sizeCols.length) {
@@ -141,8 +145,9 @@ export function buildProducts(table, mapping, opts = {}) {
       section,
       code: get('sku') || (name.slice(0, 3).toUpperCase().replace(/\s/g, '') + '-' + Math.floor(Math.random() * 900 + 100)),
       color: get('color'),
-      active: true,
-      catalog: true,
+      active: !pending,
+      catalog: !pending,
+      pendingReview: pending,
       branchStock: { [state.currentBranch]: stock },
     });
   });
@@ -311,7 +316,7 @@ export function openImportModal(onDone, seedText) {
     goBtn.textContent = products.length ? `Importar ${products.length} productos` : 'Importar';
     prevEl.innerHTML = `
       <div class="imp-prev-h">
-        <b>${products.length}</b> listos · <b style="color:${errors.length ? 'var(--danger)' : 'var(--ok)'}">${errors.length}</b> con problema
+        <b>${products.length}</b> listos (${products.filter(p => p.pendingReview).length} pendientes de completar, no vendibles) · <b style="color:${errors.length ? 'var(--danger)' : 'var(--ok)'}">${errors.length}</b> con problema
       </div>
       ${products.length ? `<div class="imp-table"><table>
         <thead><tr><th>Nombre</th><th>Precio</th><th>Costo</th><th>SKU</th><th>Categoría</th><th>Stock</th></tr></thead>
