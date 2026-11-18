@@ -69,10 +69,11 @@ export async function bootstrapCompany(name) {
   if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
   const id = 'co-' + (s.user?.id || Date.now()).slice(0, 8);
   try {
-    await safeFetch(`${sbConfig().url}/rest/v1/rpc/bootstrap_company`, {
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/rpc/bootstrap_company`, {
       method: 'POST', headers: headers(s.access_token),
       body: JSON.stringify({ company_name: name, company_id: id }),
     });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 200) || 'No se pudo crear la empresa' };
     return { ok: true, companyId: id };
   } catch (e) { return { ok: false, error: e.message }; }
 }
@@ -149,7 +150,9 @@ export async function handleOAuthReturn() {
     const r = await safeFetch(`${sbConfig().url}/auth/v1/user`, {
       headers: { apikey: sbConfig().key, Authorization: 'Bearer ' + access_token },
     });
+    if (!r.ok) return { ok: false, error: 'No se pudo verificar la identidad de Google' };
     const user = await r.json();
+    if (!user?.id || !user?.email) return { ok: false, error: 'La cuenta de Google no devolvió una identidad válida' };
     saveCloudSession({ access_token, refresh_token, expires_in, user, token_type: 'bearer' });
     history.replaceState(null, '', location.pathname + (location.search || ''));
     return { ok: true, user };
