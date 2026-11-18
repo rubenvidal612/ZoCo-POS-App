@@ -12,6 +12,9 @@ const spark = (color) => `
 export function homeView(ctx) {
   const root = el(`<div id="home" class="home-wrap"></div>`);
   let tab = 'global';
+  const THEME_KEY = 'zoco.home.mobile.theme';
+  let mobileTheme = localStorage.getItem(THEME_KEY) === 'visual' ? 'visual' : 'original';
+  const wave = (color, className) => `<svg class="${className}" viewBox="0 0 500 90" preserveAspectRatio="none" aria-hidden="true"><path d="M-50 45 C 40 2, 110 85, 200 45 S 360 2, 450 45 S 610 85, 700 45" stroke="${color}" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
 
   // Fiscal = pagado con tarjeta · Interno = pagado en efectivo · Global = todo
   const isCard = (s) => s.method === 'debit' || s.method === 'credit'
@@ -44,7 +47,16 @@ export function homeView(ctx) {
     const weekMax = Math.max(1, ...weekDays.map((d) => d.total));
     const weekPoints = weekDays.map((d, i) => (10 + i * 80) + ',' + (126 - d.total / weekMax * 105)).join(' ');
 
+    root.classList.toggle('home-theme-visual', mobileTheme === 'visual');
+    root.classList.toggle('home-theme-original', mobileTheme !== 'visual');
     root.innerHTML = `
+      <div class="home-theme-control">
+        <button type="button" class="home-theme-toggle" id="home-theme-toggle" aria-expanded="false" aria-label="Cambiar estilo de Inicio">◉ <span>Estilo</span></button>
+        <div class="home-theme-menu" id="home-theme-menu" hidden>
+          <button type="button" data-home-theme="original" class="${mobileTheme === 'original' ? 'selected' : ''}">Original</button>
+          <button type="button" data-home-theme="visual" class="${mobileTheme === 'visual' ? 'selected' : ''}">Visual</button>
+        </div>
+      </div>
       <div class="seg-wrap"><div class="seg" id="seg">
         <button class="${tab === 'global' ? 'on' : ''}" data-t="global">🌐 Global</button>
         <button class="${tab === 'fiscal' ? 'on' : ''}" data-t="fiscal">🧾 Fiscal</button>
@@ -63,6 +75,7 @@ export function homeView(ctx) {
           <div class="hh-amount">${money(sum(todays))}</div>
           <div class="hh-pill">↗ ${todays.length} ${todays.length === 1 ? 'venta' : 'ventas'}</div>
         </div>
+        <div class="home-hero-wave">${wave('#c084fc','wave-purple')}${wave('#6ee7b7','wave-green')}</div>
         <div class="hh-duo">
           <div class="hh-mini purple"><span>AYER</span><b>${money(sum(yest))}</b>${spark('#C4B5FD')}</div>
           <div class="hh-mini green"><span>ESTE MES</span><b>${money(sum(month))}</b>${spark('#6EE7B7')}</div>
@@ -91,6 +104,7 @@ export function homeView(ctx) {
         <div class="home-kpi blue"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10M7.5 4.5l9 5"/></svg></span><div class="home-kpi-text"><b>${state.products.length}</b><span>Productos</span></div></div>
         <div class="home-kpi purple"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M2 20v-2a7 7 0 0 1 14 0v2H2ZM17 5a3 3 0 0 1 0 6M18 14a6 6 0 0 1 4 6"/></svg></span><div class="home-kpi-text"><b>${state.customers?.length || 0}</b><span>Clientes</span></div></div>
       </div>
+      <div class="home-decor-waves">${wave('#6ee7b7','wave-green')}${wave('#c084fc','wave-purple')}</div>
       <div class="home-analytics">
         <div class="panel home-week"><div class="panel-head"><h2>▥ Ventas de la Semana</h2></div>
           <div class="home-chart"><svg viewBox="0 0 500 150" preserveAspectRatio="none" role="img" aria-label="Ventas de la semana">
@@ -161,6 +175,16 @@ export function homeView(ctx) {
         </div>
       </div>`;
 
+    root.querySelector('#home-theme-toggle').onclick = () => {
+      const menu = root.querySelector('#home-theme-menu');
+      menu.hidden = !menu.hidden;
+      root.querySelector('#home-theme-toggle').setAttribute('aria-expanded', String(!menu.hidden));
+    };
+    root.querySelectorAll('[data-home-theme]').forEach((button) => button.onclick = () => {
+      mobileTheme = button.dataset.homeTheme;
+      localStorage.setItem(THEME_KEY, mobileTheme);
+      render();
+    });
     root.querySelectorAll('#seg button').forEach((b) => b.onclick = () => {
       tab = b.dataset.t;
       render();
