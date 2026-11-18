@@ -1539,3 +1539,13 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .zoco-products-advanced input[type=number]{width:118px}
 .zoco-products-match-count{margin-left:auto;font-size:12px;color:var(--muted);padding-bottom:8px}
 @media(max-width:700px){.zoco-products-advanced{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px 12px;gap:9px}.zoco-products-advanced input,.zoco-products-advanced input[type=number]{width:100%}.zoco-products-match-count{margin-left:0;padding:0;align-self:center}.zoco-products-advanced .btn{width:100%}}
+
+
+/* Selector de estilo para reportes de existencias */
+.zoco-report-designs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.zoco-report-design{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:15px;padding:16px;cursor:pointer;background:var(--card,var(--surface,#fff))}
+.zoco-report-design:has(input:checked){border:2px solid var(--primary);padding:15px}
+.zoco-report-design input{accent-color:var(--primary);margin-top:3px}
+.zoco-report-design strong{display:block;font-size:14px;color:var(--text)}
+.zoco-report-design small{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+@media(max-width:600px){.zoco-report-designs{grid-template-columns:1fr}}
