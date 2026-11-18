@@ -74,8 +74,8 @@ export function homeView(ctx) {
       <div class="home-cash-card panel">
         <div class="panel-head"><h2 class="home-cash-heading"><span class="home-cash-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M6 8V4h12v4M3 12h18M16 16h2M7 4h10"/></svg></span>Caja</h2><span class="badge ${state.register?.open ? 'ok' : 'grey'}">${state.register?.open ? 'Abierta' : 'Cerrada'}</span></div>
         <div class="home-cash-body"><div class="home-stats">
-          <div><b>${money(state.register?.opening || 0)}</b><span>FONDO</span></div>
-          <div><b>${money(cashSummary.expected)}</b><span>ESPERADO</span></div>
+          <div><span class="home-cash-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M5 3h14M5 21h14"/><circle cx="12" cy="12" r="3"/><path d="M6 12h1m10 0h1"/></svg></span><b>${money(state.register?.opening || 0)}</b><span>FONDO</span></div>
+          <div><span class="home-cash-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="8" cy="6" rx="5.5" ry="2.5"/><path d="M2.5 6v5c0 1.4 2.5 2.5 5.5 2.5 1.2 0 2.4-.2 3.3-.6M2.5 11v5c0 1.4 2.5 2.5 5.5 2.5 1.2 0 2.4-.2 3.3-.6"/><ellipse cx="16" cy="13" rx="5.5" ry="2.5"/><path d="M10.5 13v5.5c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5V13M10.5 16c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5"/></svg></span><b>${money(cashSummary.expected)}</b><span>ESPERADO</span></div>
         </div>
         <div class="home-cash-actions">${state.register?.open ? '<button class="btn sm" id="cut-z">✂ Corte Z</button><button class="btn ghost sm" id="add-cash">+ Efectivo</button>' : '<button class="btn sm" id="open-reg">⏻ Abrir caja</button>'}</div></div>
       </div></div>
