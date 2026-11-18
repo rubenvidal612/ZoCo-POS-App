@@ -25,6 +25,7 @@ import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus,
 export function productsView(ctx) {
   let q = '';
   let statusFilter = 'all';
+  let dateFrom = '', dateTo = '', stockMin = '', stockMax = '';
   const root = el(`
     <div>
       <div class="panel zoco-products-panel">
@@ -54,6 +55,14 @@ export function productsView(ctx) {
           <button class="zoco-product-filter" data-product-filter="pending">Pendientes</button>
           <button class="zoco-product-filter" data-product-filter="empty">Sin stock</button>
           <button class="zoco-product-filter" data-product-filter="no-price">Sin precio</button>
+        </div>
+        <div class="zoco-products-advanced">
+          <label>📅 Desde <input type="date" id="product-date-from"></label>
+          <label>📅 Hasta <input type="date" id="product-date-to"></label>
+          <label>Stock mínimo <input type="number" id="product-stock-min" min="0" step="1" placeholder="Ej. 1"></label>
+          <label>Stock máximo <input type="number" id="product-stock-max" min="0" step="1" placeholder="Ej. 20"></label>
+          <button type="button" class="btn ghost sm" id="product-reset-filters">Limpiar filtros</button>
+          <span class="zoco-products-match-count" id="product-match-count" aria-live="polite"></span>
         </div>
         <div class="bulkbar" id="bulk" style="display:none">
           <b id="bulk-n">0</b> seleccionados
@@ -119,7 +128,7 @@ export function productsView(ctx) {
     sel.clear(); render();
   };
   $('#sel-all', root).onchange = (e) => {
-    const items = state.products.filter((p) => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
+    const items = state.products.filter(productMatches);
     if (e.target.checked) items.forEach((p) => sel.add(p.id)); else sel.clear();
     render();
   };
@@ -128,11 +137,36 @@ export function productsView(ctx) {
     const term = (String(p.name || '') + ' ' + String(p.code || '') + ' ' +
       Object.keys(p.branchStock?.[state.currentBranch] || {}).join(' ')).toLowerCase();
     if (q && !term.includes(q)) return false;
+    const stock = totalStock(p);
+    if (stockMin !== '' && stock < Number(stockMin)) return false;
+    if (stockMax !== '' && stock > Number(stockMax)) return false;
+    if (dateFrom || dateTo) {
+      const timestamp = p.createdAt || p.created_at;
+      if (!timestamp || Number.isNaN(Date.parse(timestamp))) return false;
+      const created = new Date(timestamp).getTime();
+      if (dateFrom && created < new Date(dateFrom + 'T00:00:00').getTime()) return false;
+      if (dateTo && created > new Date(dateTo + 'T23:59:59.999').getTime()) return false;
+    }
     if (statusFilter === 'active') return p.active !== false && !p.pendingReview;
     if (statusFilter === 'pending') return !!p.pendingReview;
     if (statusFilter === 'empty') return totalStock(p) <= 0;
     if (statusFilter === 'no-price') return !(Number(p.price) > 0);
     return true;
+  };
+  const bindAdvanced = (id, assign) => {
+    root.querySelector(id).addEventListener('change', e => {
+      assign(e.target.value); sel.clear(); render();
+    });
+  };
+  bindAdvanced('#product-date-from', v => { dateFrom = v; });
+  bindAdvanced('#product-date-to', v => { dateTo = v; });
+  bindAdvanced('#product-stock-min', v => { stockMin = v; });
+  bindAdvanced('#product-stock-max', v => { stockMax = v; });
+  root.querySelector('#product-reset-filters').onclick = () => {
+    q = ''; statusFilter = 'all'; dateFrom = ''; dateTo = ''; stockMin = ''; stockMax = '';
+    pq.value = '';
+    for (const id of ['product-date-from','product-date-to','product-stock-min','product-stock-max']) root.querySelector('#' + id).value = '';
+    sel.clear(); render();
   };
   root.querySelectorAll('[data-product-filter]').forEach(b => b.onclick = () => {
     statusFilter = b.dataset.productFilter;
@@ -142,6 +176,7 @@ export function productsView(ctx) {
 
   function render() {
     const items = state.products.filter(productMatches);
+    root.querySelector('#product-match-count').textContent = items.length + ' de ' + state.products.length + ' productos';
     const all = state.products;
     const stats = [
       ['Productos', all.length, '▦'],
