@@ -172,8 +172,8 @@ export function homeView(ctx) {
     root.querySelector('#go-low-stock').onclick = () => ctx.go('productos');
     root.querySelector('#go-new').onclick = () => ctx.go('productos', { create: true });
     root.querySelector('#go-stock').onclick = () => ctx.go('productos');
-    root.querySelector('#cut-z')?.addEventListener('click', () => openCutZ(render));
-    root.querySelector('#open-reg')?.addEventListener('click', () => {
+    root.querySelectorAll('#cut-z').forEach((button) => button.addEventListener('click', () => openCutZ(render)));
+    root.querySelectorAll('#open-reg').forEach((button) => button.addEventListener('click', () => {
       const m = modal({
         title: 'Abrir caja',
         body: `<div class="field"><label>Fondo inicial en efectivo</label>
@@ -190,8 +190,8 @@ export function homeView(ctx) {
         toast('Caja abierta con ' + money(v));
         render();
       };
-    });
-    root.querySelector('#add-cash')?.addEventListener('click', () => {
+    }));
+    root.querySelectorAll('#add-cash').forEach((button) => button.addEventListener('click', () => {
       const m = modal({
         title: 'Entrada de efectivo',
         body: `<div class="field"><label>Monto</label>
@@ -211,7 +211,7 @@ export function homeView(ctx) {
         });
         emit(); m.close(); toast('Entrada registrada'); render();
       };
-    });
+    }));
   }
 
   render();
