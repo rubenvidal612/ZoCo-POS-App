@@ -1,5 +1,5 @@
 // Vista Inicio (home) — estilo ZoCo Classic
-import { el, money, esc } from './ui.js';
+import { el, money, esc, modal, toast } from './ui.js';
 import { state, totalStock, cashBreakdown, openRegister } from './store.js';
 import { openCutZ } from './views-inventory.js';
 
@@ -34,6 +34,15 @@ export function homeView(ctx) {
     const sum = (a) => a.reduce((x, s) => x + s.total, 0);
     const lowStock = state.products.filter((p) => totalStock(p) <= 3).length;
     const cashSummary = cashBreakdown();
+    const year = done.filter((sale) => new Date(sale.date).getFullYear() === now.getFullYear());
+    const lowProducts = state.products.filter((p) => p.active !== false && totalStock(p) <= 3).slice(0, 5);
+    const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(monday); day.setDate(day.getDate() + i);
+      return { label: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][i], total: sum(done.filter((sale) => new Date(sale.date).toDateString() === day.toDateString())) };
+    });
+    const weekMax = Math.max(1, ...weekDays.map((d) => d.total));
+    const weekPoints = weekDays.map((d, i) => (10 + i * 80) + ',' + (126 - d.total / weekMax * 105)).join(' ');
 
     root.innerHTML = `
       <div class="seg-wrap"><div class="seg" id="seg">
@@ -41,7 +50,7 @@ export function homeView(ctx) {
         <button class="${tab === 'fiscal' ? 'on' : ''}" data-t="fiscal">🧾 Fiscal</button>
         <button class="${tab === 'interno' ? 'on' : ''}" data-t="interno">🏢 Interno</button>
       </div></div>
-      <div class="home-hero">
+      <div class="home-feature-grid"><div class="home-feature-main"><div class="home-hero">
         <div class="hh-head">
           <div class="hh-ico">$</div>
           <div class="hh-head-txt">
@@ -57,12 +66,45 @@ export function homeView(ctx) {
         <div class="hh-duo">
           <div class="hh-mini purple"><span>AYER</span><b>${money(sum(yest))}</b>${spark('#C4B5FD')}</div>
           <div class="hh-mini green"><span>ESTE MES</span><b>${money(sum(month))}</b>${spark('#6EE7B7')}</div>
+          <div class="hh-mini blue"><span>ESTE AÑO</span><b>${money(sum(year))}</b>${spark('#60A5FA')}</div>
         </div>
       </div>
 
-      <button class="hh-btn" id="go-sell" style="width:100%;margin-top:14px">＋ Registrar Nueva Venta</button>
+      </div>
+      <div class="home-cash-card panel">
+        <div class="panel-head"><h2>Caja</h2><span class="badge ${state.register?.open ? 'ok' : 'grey'}">${state.register?.open ? 'Abierta' : 'Cerrada'}</span></div>
+        <div class="home-cash-body"><div class="home-stats">
+          <div><b>${money(state.register?.opening || 0)}</b><span>FONDO</span></div>
+          <div><b>${money(cashSummary.expected)}</b><span>ESPERADO</span></div>
+        </div>
+        <div class="home-cash-actions">${state.register?.open ? '<button class="btn sm" id="cut-z">✂ Corte Z</button><button class="btn ghost sm" id="add-cash">+ Efectivo</button>' : '<button class="btn sm" id="open-reg">⏻ Abrir caja</button>'}</div></div>
+      </div></div>
+      <div class="home-actions">
+        <button class="hh-btn" id="go-sell">＋ Registrar Nueva Venta</button>
+        <button class="btn ghost" id="go-quick-product">▣ Nuevo Producto</button>
+        <button class="btn ghost" id="go-quick-customer">♙ Nuevo Cliente</button>
+        <button class="btn ghost" id="go-quick-report">▥ Ver Reportes</button>
+      </div>
+      <div class="home-overview">
+        <div class="panel home-payables"><div class="panel-head"><h2>Cuentas por pagar</h2><span class="badge grey">$0.00</span></div><p>Saldo actual considerando altas de stock, ventas y pagos.</p></div>
+        <div class="home-kpi green"><b>${todays.length}</b><span>Ventas Hoy</span></div>
+        <div class="home-kpi blue"><b>${state.products.length}</b><span>Productos</span></div>
+        <div class="home-kpi purple"><b>${state.customers?.length || 0}</b><span>Clientes</span></div>
+      </div>
+      <div class="home-analytics">
+        <div class="panel home-week"><div class="panel-head"><h2>▥ Ventas de la Semana</h2></div>
+          <div class="home-chart"><svg viewBox="0 0 500 150" preserveAspectRatio="none" role="img" aria-label="Ventas de la semana">
+            <path d="M10 126 H490 M10 90 H490 M10 54 H490 M10 18 H490" stroke="#e5eaf2" stroke-dasharray="4 4" fill="none"/>
+            <polyline points="${weekPoints}" stroke="#7c3aed" stroke-width="3" fill="none"/>
+            ${weekDays.map((d,i) => '<circle cx="' + (10+i*80) + '" cy="' + (126-d.total/weekMax*105) + '" r="4" fill="#7c3aed"><title>' + d.label + ': ' + money(d.total) + '</title></circle>').join('')}
+          </svg><div class="home-week-labels">${weekDays.map((d) => '<span>' + d.label + '</span>').join('')}</div></div>
+        </div>
+        <div class="panel home-low"><div class="panel-head"><h2>⚠ Productos con Stock Bajo</h2><button class="btn ghost sm" id="go-low-stock">Ver todos</button></div>
+          <div class="home-low-list">${lowProducts.length ? lowProducts.map((p) => '<div class="home-low-item"><span>' + esc(p.name) + '</span><b>Stock: ' + totalStock(p) + '</b></div>').join('') : '<p class="home-empty">No hay productos con stock bajo.</p>'}</div>
+        </div>
+      </div>
 
-      <div class="home-grid">
+      <div class="home-grid home-secondary-grid">
         <div class="panel">
           <div class="panel-head"><h2>Cuentas por pagar</h2>
             <span class="badge grey" style="margin-left:auto">$0.00</span></div>
@@ -124,6 +166,10 @@ export function homeView(ctx) {
       render();
     });
     root.querySelector('#go-sell').onclick = () => ctx.go('vender');
+    root.querySelector('#go-quick-product').onclick = () => ctx.go('productos', { create: true });
+    root.querySelector('#go-quick-customer').onclick = () => ctx.go('clientes');
+    root.querySelector('#go-quick-report').onclick = () => ctx.go('reportes');
+    root.querySelector('#go-low-stock').onclick = () => ctx.go('productos');
     root.querySelector('#go-new').onclick = () => ctx.go('productos', { create: true });
     root.querySelector('#go-stock').onclick = () => ctx.go('productos');
     root.querySelector('#cut-z')?.addEventListener('click', () => openCutZ(render));
