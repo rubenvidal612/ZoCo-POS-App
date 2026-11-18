@@ -1315,3 +1315,56 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .home-cash-card .home-stats>div{display:flex;flex-direction:column;align-items:center;gap:7px}
 .home-cash-stat-icon{display:grid;place-items:center;width:42px;height:42px;color:#405678}
 .home-cash-stat-icon svg{width:32px;height:32px;display:block}
+
+
+/* Selector de dos estilos de Inicio (sin modificar datos ni otras vistas) */
+.home-wrap{position:relative}
+.home-theme-control{display:flex;justify-content:flex-end;position:relative;z-index:5;margin:-2px 0 10px}
+.home-theme-toggle{border:1px solid #dbe2ee;border-radius:999px;background:#fff;color:#15223d;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.06)}
+.home-theme-menu{position:absolute;top:42px;right:0;padding:7px;min-width:160px;border-radius:14px;background:#fff;box-shadow:0 12px 36px rgba(15,23,42,.18);border:1px solid #e4eaf2;z-index:20}
+.home-theme-menu[hidden]{display:none}
+.home-theme-menu button{width:100%;display:block;border:0;background:transparent;text-align:left;padding:11px;border-radius:9px;font-weight:700;color:#15223d;cursor:pointer}
+.home-theme-menu button.selected,.home-theme-menu button:hover{background:#e9efff}
+.home-hero-wave,.home-decor-waves{display:none}
+@keyframes zoco-wave-drift{0%{transform:translateX(-8%) scaleX(1.12)}50%{transform:translateX(8%) scaleX(1.12)}100%{transform:translateX(-8%) scaleX(1.12)}}
+@keyframes zoco-wave-breathe{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}
+.home-hero-wave svg,.home-decor-waves svg{position:absolute;width:110%;height:100%;left:-5%;top:0;animation:zoco-wave-drift 10s ease-in-out infinite;will-change:transform}
+.home-hero-wave .wave-green,.home-decor-waves .wave-purple{animation-delay:-5s}
+.home-wrap .hh-mini svg{animation:zoco-wave-breathe 10s ease-in-out infinite;will-change:transform}
+@media(max-width:900px){
+ .home-theme-visual .home-feature-grid{display:contents}
+ .home-theme-visual .home-feature-main{display:contents}
+ .home-theme-visual .home-hero{order:0;position:relative;min-height:0;padding:18px 16px;border-radius:22px;margin:0}
+ .home-theme-visual{display:flex;flex-direction:column;gap:12px}
+ .home-theme-visual .seg-wrap{order:-1;margin:0}
+ .home-theme-visual .home-theme-control{order:-2;margin:0}
+ .home-theme-visual .hh-head{position:relative;z-index:1}
+ .home-theme-visual .hh-center{position:relative;z-index:1;margin:6px 0 10px}
+ .home-theme-visual .hh-amount{font-size:clamp(36px,9vw,48px)}
+ .home-theme-visual .hh-duo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 0;position:relative;z-index:1}
+ .home-theme-visual .hh-mini.blue{grid-column:auto}
+ .home-theme-visual .hh-mini{padding:10px 7px;min-width:0}
+ .home-theme-visual .hh-mini span{font-size:clamp(8px,2.2vw,10px);letter-spacing:0}
+ .home-theme-visual .hh-mini b{font-size:clamp(12px,3.3vw,18px);white-space:nowrap}
+ .home-theme-visual .home-hero-wave{display:block;position:absolute;top:38%;left:0;width:100%;height:75px;overflow:hidden;pointer-events:none;opacity:.6}
+ .home-theme-visual .home-cash-card{display:flex;order:1;border-radius:20px}
+ .home-theme-visual .home-cash-body{padding:12px 15px;gap:12px}
+ .home-theme-visual .home-cash-body .home-stats b{font-size:22px}
+ .home-theme-visual .home-cash-actions .btn{min-height:43px}
+ .home-theme-visual .home-overview{order:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .home-theme-visual .home-payables{display:none}
+ .home-theme-visual .home-kpi{flex-direction:column;gap:4px;padding:10px 4px;border-radius:15px;text-align:center}
+ .home-theme-visual .home-kpi-icon{width:38px;height:38px;flex-basis:38px;border-radius:11px}
+ .home-theme-visual .home-kpi-icon svg{width:23px;height:23px}
+ .home-theme-visual .home-kpi b{font-size:23px}
+ .home-theme-visual .home-kpi span{font-size:11px}
+ .home-theme-visual .home-actions{order:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+ .home-theme-visual .home-actions .hh-btn{grid-column:1/-1;height:50px}
+ .home-theme-visual .home-actions .btn{font-size:11px;padding:8px 3px}
+ .home-theme-visual .home-actions .btn:last-child{grid-column:auto}
+ .home-theme-visual .home-decor-waves{display:block;order:4;position:relative;height:50px;overflow:hidden;pointer-events:none}
+ .home-theme-visual .home-analytics{order:5;margin:0;display:grid;grid-template-columns:1fr;gap:12px}
+ .home-theme-visual .home-secondary-grid{order:6;display:none}
+}
+@media(min-width:901px){.home-theme-control{display:none}}
+@media(prefers-reduced-motion:reduce){.home-wrap .hh-mini svg,.home-hero-wave svg,.home-decor-waves svg{animation:none!important}}
