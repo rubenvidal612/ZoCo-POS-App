@@ -469,7 +469,7 @@ export function aiView() {
       const msg = CHAT[Number(b.dataset.aiCsv)];
       const csv = msg && extractCsv(msg.content);
       if (!csv) return;
-      const url = URL.createObjectURL(new Blob(['\\uFEFF'.replace('\\uFEFF', '\uFEFF') + csv], { type: 'text/csv;charset=utf-8' }));
+      const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
       const a = document.createElement('a'); a.href = url; a.download = 'zoco-inventario-' + new Date().toISOString().slice(0, 10) + '.csv';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
