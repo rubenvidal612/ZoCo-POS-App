@@ -52,7 +52,7 @@ export function homeView(ctx) {
       </div></div>
       <div class="home-feature-grid"><div class="home-feature-main"><div class="home-hero">
         <div class="hh-head">
-          <div class="hh-ico">$</div>
+          <div class="hh-ico home-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M6 8V4h12v4M3 12h18M16 16h2M7 4h10"/></svg></div>
           <div class="hh-head-txt">
             <span class="hh-lbl">RESUMEN</span>
             <span class="hh-title">Ventas de Hoy</span>
@@ -72,7 +72,7 @@ export function homeView(ctx) {
 
       </div>
       <div class="home-cash-card panel">
-        <div class="panel-head"><h2>Caja</h2><span class="badge ${state.register?.open ? 'ok' : 'grey'}">${state.register?.open ? 'Abierta' : 'Cerrada'}</span></div>
+        <div class="panel-head"><h2 class="home-cash-heading"><span class="home-cash-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M6 8V4h12v4M3 12h18M16 16h2M7 4h10"/></svg></span>Caja</h2><span class="badge ${state.register?.open ? 'ok' : 'grey'}">${state.register?.open ? 'Abierta' : 'Cerrada'}</span></div>
         <div class="home-cash-body"><div class="home-stats">
           <div><b>${money(state.register?.opening || 0)}</b><span>FONDO</span></div>
           <div><b>${money(cashSummary.expected)}</b><span>ESPERADO</span></div>
@@ -87,9 +87,9 @@ export function homeView(ctx) {
       </div>
       <div class="home-overview">
         <div class="panel home-payables"><div class="panel-head"><h2>Cuentas por pagar</h2><span class="badge grey">$0.00</span></div><p>Saldo actual considerando altas de stock, ventas y pagos.</p></div>
-        <div class="home-kpi green"><b>${todays.length}</b><span>Ventas Hoy</span></div>
-        <div class="home-kpi blue"><b>${state.products.length}</b><span>Productos</span></div>
-        <div class="home-kpi purple"><b>${state.customers?.length || 0}</b><span>Clientes</span></div>
+        <div class="home-kpi green"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="19" cy="20" r="1.5"/><path d="M2 3h3l3 13h12l2-9H6"/></svg></span><div class="home-kpi-text"><b>${todays.length}</b><span>Ventas Hoy</span></div></div>
+        <div class="home-kpi blue"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10M7.5 4.5l9 5"/></svg></span><div class="home-kpi-text"><b>${state.products.length}</b><span>Productos</span></div></div>
+        <div class="home-kpi purple"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M2 20v-2a7 7 0 0 1 14 0v2H2ZM17 5a3 3 0 0 1 0 6M18 14a6 6 0 0 1 4 6"/></svg></span><div class="home-kpi-text"><b>${state.customers?.length || 0}</b><span>Clientes</span></div></div>
       </div>
       <div class="home-analytics">
         <div class="panel home-week"><div class="panel-head"><h2>▥ Ventas de la Semana</h2></div>
