@@ -1507,3 +1507,26 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .ai-input textarea#ai-q:focus{border-color:var(--primary,#ff7a15)}
 .ai-input{align-items:flex-end}
 @media(max-width:900px){.ai-input textarea#ai-q{font-size:16px;min-height:42px;height:42px}}
+
+
+/* Productos ZoCo: nuevo diseño, exclusivamente con variables del tema existente */
+.zoco-products-panel{overflow:hidden}
+.zoco-products-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:18px 18px 4px}
+.zoco-products-stat{display:flex;align-items:center;gap:13px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--card,var(--surface,#fff))}
+.zoco-products-stat>span{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border-radius:12px;background:var(--bg);color:var(--primary);font-size:23px}
+.zoco-products-stat strong{display:block;font-size:25px;line-height:1.1;color:var(--text);font-weight:800}
+.zoco-products-stat small{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.zoco-products-head{gap:12px;flex-wrap:wrap;padding-top:18px}
+.zoco-products-head .ph-tools{display:flex;flex-wrap:wrap;gap:7px;width:100%;margin-top:3px}
+.zoco-products-head .ph-tools .btn{white-space:nowrap}
+.zoco-product-filters{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 16px}
+.zoco-product-filter{font:inherit;font-size:12px;font-weight:700;padding:9px 13px;border-radius:999px;background:var(--card,var(--surface,#fff));color:var(--text);border:1px solid var(--line);cursor:pointer}
+.zoco-product-filter.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.zoco-products-table-scroll{overflow-x:auto}
+.zoco-products-table{width:100%;border-collapse:collapse}
+.zoco-products-table th{white-space:nowrap}
+.zoco-products-table td{padding-top:12px!important;padding-bottom:12px!important;vertical-align:middle}
+.zoco-products-table .zoco-products-actions{white-space:nowrap;text-align:right}
+.zoco-products-table .zoco-products-actions .btn{display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;margin:2px;min-width:34px}
+.zoco-stock-pill{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:5px 9px;border-radius:9px;background:var(--bg);font-weight:800}
+@media(max-width:950px){.zoco-products-stats{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px 12px 4px}.zoco-product-filters{padding:0 12px 12px;flex-wrap:nowrap;overflow-x:auto}.zoco-product-filter{flex-shrink:0}.zoco-products-head{padding:14px 12px}.zoco-products-head .search{max-width:none!important;flex:1 1 100%}.zoco-products-head .ph-tools{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.zoco-products-stat{padding:12px;gap:8px}.zoco-products-stat>span{width:36px;height:36px;font-size:19px}.zoco-products-stat strong{font-size:21px}.zoco-products-table td{padding:10px 8px!important}}
