@@ -587,8 +587,9 @@ export function aiView() {
     } catch (e) {
       CHAT.push({
         role: 'assistant',
-        content: 'No pude conectar con el proveedor: ' + (e.message || e) +
-          '\n\nRevisa la API key y que el proveedor permita llamadas desde el navegador (CORS).',
+        content: /authentication fails|api key.*invalid|invalid api key|incorrect api key|401|unauthorized/i.test(String(e.message || e))
+          ? 'La clave API fue rechazada por el proveedor. Revisa en ⚙ Configuración que elegiste el proveedor correcto y vuelve a guardar una clave vigente. No compartas tu clave por chat. Detalle: ' + String(e.message || e).slice(0, 240)
+          : 'No pude conectar con el proveedor: ' + (e.message || e) + '\n\nRevisa la configuración del proveedor y vuelve a probar la conexión.',
       });
     } finally {
       busy = false; render();
