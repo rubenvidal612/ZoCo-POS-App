@@ -24,17 +24,19 @@ import { printTicket, connectUsbPrinter, connectBluetoothPrinter, printerStatus,
 /* ================= PRODUCTOS ================= */
 export function productsView(ctx) {
   let q = '';
+  let statusFilter = 'all';
   const root = el(`
     <div>
-      <div class="panel">
-        <div class="panel-head">
+      <div class="panel zoco-products-panel">
+        <div class="zoco-products-stats" id="product-stats"></div>
+        <div class="panel-head zoco-products-head">
           <h2>Productos</h2>
           <span style="font-size:12.5px;color:var(--muted)">${state.products.length} artículos</span>
           <div class="sp"></div>
           <button class="btn sm" id="new">+ Producto</button>
           <div class="sp"></div>
           <div class="search" style="max-width:280px"><span>🔍</span>
-            <input id="pq" placeholder="Artículo o código…"><span class="k">F3</span></div>
+            <input id="pq" placeholder="Artículo, código o talla…"><span class="k">F3</span></div>
           <div class="ph-tools">
             <button class="btn ghost sm" id="imp">⬆ Importar</button>
             <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
@@ -46,6 +48,13 @@ export function productsView(ctx) {
             <button class="btn ghost sm" id="exp">⬇ Excel</button>
           </div>
         </div>
+        <div class="zoco-product-filters" id="product-filters">
+          <button class="zoco-product-filter active" data-product-filter="all">Todos</button>
+          <button class="zoco-product-filter" data-product-filter="active">Activos</button>
+          <button class="zoco-product-filter" data-product-filter="pending">Pendientes</button>
+          <button class="zoco-product-filter" data-product-filter="empty">Sin stock</button>
+          <button class="zoco-product-filter" data-product-filter="no-price">Sin precio</button>
+        </div>
         <div class="bulkbar" id="bulk" style="display:none">
           <b id="bulk-n">0</b> seleccionados
           <div class="sp"></div>
@@ -54,8 +63,8 @@ export function productsView(ctx) {
           <button class="btn ghost sm" id="bulk-del" style="color:var(--danger)">🗑 Eliminar</button>
           <button class="btn ghost sm" id="bulk-clear">Cancelar</button>
         </div>
-        <div style="overflow:auto">
-          <table>
+        <div class="zoco-products-table-scroll">
+          <table class="zoco-products-table">
             <thead><tr>
               <th style="width:38px"><input type="checkbox" id="sel-all" title="Seleccionar todo"></th>
               <th>Producto</th><th>Sección</th><th>Tallas</th><th>Stock</th><th>Precio</th><th>Catálogo</th><th style="width:120px"></th>
@@ -115,8 +124,45 @@ export function productsView(ctx) {
     render();
   };
 
+  const productMatches = (p) => {
+    const term = (String(p.name || '') + ' ' + String(p.code || '') + ' ' +
+      Object.keys(p.branchStock?.[state.currentBranch] || {}).join(' ')).toLowerCase();
+    if (q && !term.includes(q)) return false;
+    if (statusFilter === 'active') return p.active !== false && !p.pendingReview;
+    if (statusFilter === 'pending') return !!p.pendingReview;
+    if (statusFilter === 'empty') return totalStock(p) <= 0;
+    if (statusFilter === 'no-price') return !(Number(p.price) > 0);
+    return true;
+  };
+  root.querySelectorAll('[data-product-filter]').forEach(b => b.onclick = () => {
+    statusFilter = b.dataset.productFilter;
+    sel.clear();
+    render();
+  });
+
   function render() {
-    const items = state.products.filter((p) => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
+    const items = state.products.filter(productMatches);
+    const all = state.products;
+    const stats = [
+      ['Productos', all.length, '▦'],
+      ['Con stock', all.filter(p => totalStock(p) > 0).length, '◈'],
+      ['Stock bajo', all.filter(p => totalStock(p) > 0 && totalStock(p) <= 3).length, '⚠'],
+      ['Sin precio', all.filter(p => !(Number(p.price) > 0)).length, '◇'],
+    ];
+    root.querySelector('#product-stats').innerHTML = stats.map(([label, count, icon]) =>
+      '<div class="zoco-products-stat"><span>' + icon + '</span><div><strong>' + count +
+      '</strong><small>' + label + '</small></div></div>').join('');
+    const counts = {
+      all: all.length, active: all.filter(p => p.active !== false && !p.pendingReview).length,
+      pending: all.filter(p => p.pendingReview).length,
+      empty: all.filter(p => totalStock(p) <= 0).length,
+      'no-price': all.filter(p => !(Number(p.price) > 0)).length,
+    };
+    root.querySelectorAll('[data-product-filter]').forEach(b => {
+      b.classList.toggle('active', b.dataset.productFilter === statusFilter);
+      const label = {all:'Todos',active:'Activos',pending:'Pendientes',empty:'Sin stock','no-price':'Sin precio'}[b.dataset.productFilter];
+      b.textContent = label + ' (' + counts[b.dataset.productFilter] + ')';
+    });
     rows.innerHTML = items.map((p) => {
       const sizes = sizesFor(p.section);
       const withStock = sizes.filter((s) => stockOf(p, s) > 0).length;
@@ -133,10 +179,10 @@ export function productsView(ctx) {
         </td>
         <td>${esc(sectionOf(p).label)}</td>
         <td>${withStock}/${sizes.length}</td>
-        <td class="mono">${totalStock(p)}</td>
-        <td class="mono t-strong">${money(p.price)}</td>
+        <td class="mono"><span class="zoco-stock-pill">${totalStock(p)}</span></td>
+        <td class="mono t-strong">${Number(p.price) > 0 ? money(p.price) : '<span class="badge grey">Pendiente</span>'}</td>
         <td>${p.catalog ? '<span class="badge ok">Sí</span>' : '<span class="badge grey">No</span>'}</td>
-        <td style="text-align:right">
+        <td class="zoco-products-actions">
           <button class="btn ghost sm" data-kdx="${p.id}" style="height:30px" title="Kardex">📋</button>
           <button class="btn ghost sm" data-edit="${p.id}" style="height:30px">Editar</button>
           <button class="btn ghost sm" data-del="${p.id}" style="height:30px;color:var(--danger)">✕</button>
