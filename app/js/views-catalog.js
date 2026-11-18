@@ -48,6 +48,7 @@ export function productsView(ctx) {
             <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
             <button class="btn ghost sm" id="exp">⬇ Excel</button>
             <button class="btn ghost sm" id="print-stock">🖨 Imprimir existencias</button>
+            <button class="btn ghost sm" id="download-stock">⬇ PDF</button>
             <button class="btn ghost sm" id="email-stock">✉ Enviar por correo</button>
           </div>
         </div>
@@ -185,42 +186,86 @@ export function productsView(ctx) {
   }));
   const reportTitle = () => 'Existencias ZoCo · ' + new Date().toLocaleDateString('es-MX') +
     (dateFrom || dateTo ? ' · Altas ' + (dateFrom || 'inicio') + ' a ' + (dateTo || 'hoy') : '');
-  $('#print-stock', root).onclick = () => {
+  function openStockReportChooser(action) {
     const list = stockReport();
     if (!list.length) { toast('No hay productos con esos filtros'); return; }
-    const win = window.open('', '_blank');
-    if (!win) { toast('Permite ventanas emergentes para imprimir'); return; }
-    const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Existencias ZoCo</title>' +
-      '<style>body{font:13px Arial,sans-serif;color:#152038;padding:22px}h1{font-size:22px}p{color:#5d6677}' +
-      'table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;text-align:left;border-bottom:1px solid #ddd}' +
-      'th{background:#f1f3f6}td:nth-child(5),td:nth-child(6){text-align:right}thead{display:table-header-group}' +
-      '@media print{body{padding:0}tr{break-inside:avoid}}</style></head><body>' +
-      '<h1>' + esc(reportTitle()) + '</h1><p>' + list.length + ' productos · ' +
-      list.reduce((sum, p) => sum + p.qty, 0) + ' piezas · Sucursal: ' +
-      esc(state.branches.find(b => b.id === state.currentBranch)?.name || '') + '</p>' +
-      '<table><thead><tr><th>Producto</th><th>Código</th><th>Sección</th><th>Tallas / existencias</th><th>Piezas</th><th>Precio</th></tr></thead><tbody>' +
-      list.map(p => '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.code) + '</td><td>' +
-        esc(p.section) + '</td><td>' + esc(p.sizes) + '</td><td>' + p.qty +
-        '</td><td>' + money(p.price) + '</td></tr>').join('') +
-      '</tbody></table></body></html>';
-    win.document.open(); win.document.write(html); win.document.close();
-    win.focus(); win.print();
-  };
-  $('#email-stock', root).onclick = () => {
-    const list = stockReport();
-    if (!list.length) { toast('No hay productos con esos filtros'); return; }
-    const lines = list.map(p => p.name + ' (' + p.code + ') | ' + p.qty + ' pzas | ' +
-      (p.sizes || 'Sin tallas') + ' | ' + money(p.price));
-    const header = reportTitle() + '\\nSucursal: ' +
-      (state.branches.find(b => b.id === state.currentBranch)?.name || '') +
-      '\\n' + list.length + ' productos, ' + list.reduce((sum, p) => sum + p.qty, 0) + ' piezas\\n\\n';
-    const body = header + lines.join('\\n');
-    const uri = 'mailto:?subject=' + encodeURIComponent(reportTitle()) +
-      '&body=' + encodeURIComponent(body.length > 14000
-        ? header + lines.slice(0, 50).join('\\n') + '\\n\\nReporte resumido: aplica menos filtros para enviar menos productos.'
-        : body);
-    window.location.href = uri;
-  };
+    const m = modal({
+      title: 'Reporte de existencias',
+      body: `<p class="hint">Elige el diseño para ${action === 'print' ? 'imprimir' : action === 'download' ? 'guardar como PDF' : 'compartir'} tu reporte de ${list.length} productos.</p>
+        <div class="zoco-report-designs">
+          <label class="zoco-report-design"><input type="radio" name="stock-report-style" value="executive" checked>
+            <span><strong>📄 Ejecutivo</strong><small>Tabla compacta, ideal para imprimir y revisar existencias.</small></span></label>
+          <label class="zoco-report-design"><input type="radio" name="stock-report-style" value="visual">
+            <span><strong>🖼 Visual con fotografías</strong><small>Tarjetas de productos y fotos disponibles; ideal para compartir.</small></span></label>
+        </div>
+        <p class="hint">Se respetan los filtros actuales. Los productos sin fotografía muestran sus datos sin imagen.</p>`,
+      foot: `<button type="button" class="btn ghost sm" data-close>Cancelar</button>
+        <button type="button" class="btn sm" id="stock-report-go">${action === 'print' ? 'Imprimir' : action === 'download' ? 'Abrir para guardar PDF' : 'Preparar para compartir'}</button>`,
+    });
+    m.root.querySelector('#stock-report-go').onclick = () => {
+      const style = m.root.querySelector('input[name="stock-report-style"]:checked')?.value || 'executive';
+      m.close();
+      if (action === 'share') {
+        const summary = reportTitle() + '\\n' + list.length + ' productos · ' +
+          list.reduce((n, p) => n + p.qty, 0) + ' piezas';
+        if (navigator.share) {
+          navigator.share({ title: 'Reporte de existencias ZoCo', text: summary }).catch(() => {});
+        } else {
+          window.location.href = 'mailto:?subject=' + encodeURIComponent(reportTitle()) +
+            '&body=' + encodeURIComponent(summary + '\\n\\nAbre ZoCo para generar el reporte completo en PDF.');
+        }
+        toast('Para adjuntar el PDF, primero guárdalo con la opción Descargar PDF.');
+        return;
+      }
+      const win = window.open('', '_blank');
+      if (!win) { toast('Permite ventanas emergentes para abrir el reporte'); return; }
+      const company = esc(state.company?.name || 'Mi negocio');
+      const branch = esc(state.branches.find(b => b.id === state.currentBranch)?.name || '');
+      const totalQty = list.reduce((n, p) => n + p.qty, 0);
+      const totalValue = list.reduce((n, p) => n + p.qty * p.price, 0);
+      const images = new Map(state.products.map(p => [String(p.code || ''), p.image || '']));
+      const common = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Existencias ZoCo</title>
+        <style>@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#14213b;margin:0;background:#fff}
+        header{background:#101d35;color:white;padding:20px 24px;border-bottom:6px solid #ff781b;display:flex;justify-content:space-between;align-items:center}
+        header b{font-size:27px}header b span{color:#ff781b}header strong{font-size:19px}
+        main{padding:18px 10px}h2{font-size:17px;margin:0 0 7px}.meta{color:#687389;margin-bottom:16px}
+        .stats{display:flex;gap:9px;margin-bottom:18px}.stat{flex:1;background:#f1f4f9;border-radius:12px;padding:13px}
+        .stat strong{font-size:22px;display:block}.stat small{color:#69768a}
+        table{width:100%;border-collapse:collapse}th{background:#14213b;color:#fff;text-align:left}th,td{padding:10px 8px;border-bottom:1px solid #e4e8ef}tr{break-inside:avoid}
+        .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.item{display:flex;gap:12px;padding:12px;border:1px solid #e0e5ee;border-radius:12px;break-inside:avoid}
+        .item img{width:76px;height:76px;object-fit:cover;border-radius:10px}.item .info{min-width:0;flex:1}.item h3{margin:0 0 5px;font-size:13px}.item p{margin:4px 0;color:#566276}
+        .qty{color:#14834c;font-weight:800}footer{margin-top:18px;padding:13px;border-top:2px solid #ff781b;color:#566276}
+        @media print{header{-webkit-print-color-adjust:exact;print-color-adjust:exact}th,.stat{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+        </style></head><body><header><b>ZoCo <span>POS</span></b><strong>Reporte de existencias</strong></header><main>
+        <h2>${company}</h2><div class="meta">Sucursal: ${branch} · ${esc(reportTitle())} · Generado: ${new Date().toLocaleString('es-MX')}</div>
+        <div class="stats"><div class="stat"><strong>${list.length}</strong><small>Productos</small></div>
+        <div class="stat"><strong>${totalQty}</strong><small>Piezas en stock</small></div>
+        <div class="stat"><strong>${money(totalValue)}</strong><small>Valor a precio de venta</small></div></div>`;
+      const content = style === 'visual'
+        ? '<div class="cards">' + list.map(p => {
+            const src = images.get(p.code);
+            const photo = src && (/^data:image\\//.test(src) || /^https:\\/\\//.test(src))
+              ? '<img src="' + esc(src) + '" alt="">' : '';
+            return '<article class="item">' + photo + '<div class="info"><h3>' + esc(p.name) +
+              '</h3><p>' + esc(p.code) + ' · ' + esc(p.section) + '</p><p>' +
+              esc(p.sizes || 'Sin tallas') + '</p><p class="qty">' + p.qty +
+              ' piezas · ' + money(p.price) + '</p></div></article>';
+          }).join('') + '</div>'
+        : '<table><thead><tr><th>Producto</th><th>Código</th><th>Sección</th><th>Tallas / existencias</th><th>Piezas</th><th>Precio</th></tr></thead><tbody>' +
+          list.map(p => '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.code) + '</td><td>' +
+            esc(p.section) + '</td><td>' + esc(p.sizes) + '</td><td>' + p.qty +
+            '</td><td>' + money(p.price) + '</td></tr>').join('') + '</tbody></table>';
+      win.document.open();
+      win.document.write(common + content + '<footer>ZoCo POS · Reporte generado con los filtros seleccionados</footer></main></body></html>');
+      win.document.close();
+      win.focus();
+      if (action === 'print') setTimeout(() => win.print(), 350);
+      else toast('En la pestaña del reporte usa Imprimir → Guardar como PDF.');
+    };
+  }
+  $('#print-stock', root).onclick = () => openStockReportChooser('print');
+  $('#email-stock', root).onclick = () => openStockReportChooser('share');
+  $('#download-stock', root).onclick = () => openStockReportChooser('download');
 
   function render() {
     const items = state.products.filter(productMatches);
