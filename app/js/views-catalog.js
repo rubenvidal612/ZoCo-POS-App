@@ -47,6 +47,8 @@ export function productsView(ctx) {
               <button class="btn ghost sm" id="produce">🍶 Preparar</button>` : ''}
             <button class="btn ghost sm" id="trf">⇄ Traspaso</button>
             <button class="btn ghost sm" id="exp">⬇ Excel</button>
+            <button class="btn ghost sm" id="print-stock">🖨 Imprimir existencias</button>
+            <button class="btn ghost sm" id="email-stock">✉ Enviar por correo</button>
           </div>
         </div>
         <div class="zoco-product-filters" id="product-filters">
@@ -173,6 +175,52 @@ export function productsView(ctx) {
     sel.clear();
     render();
   });
+
+  const stockReport = () => state.products.filter(productMatches).map(p => ({
+    name: String(p.name || ''), code: String(p.code || ''), section: sectionOf(p).label,
+    sizes: Object.entries(p.branchStock?.[state.currentBranch] || {}).filter(([, n]) => Number(n) > 0)
+      .map(([size, n]) => size + ': ' + n).join(' · '),
+    qty: Object.values(p.branchStock?.[state.currentBranch] || {}).reduce((sum, n) => sum + (Number(n) || 0), 0),
+    price: Number(p.price) || 0,
+  }));
+  const reportTitle = () => 'Existencias ZoCo · ' + new Date().toLocaleDateString('es-MX') +
+    (dateFrom || dateTo ? ' · Altas ' + (dateFrom || 'inicio') + ' a ' + (dateTo || 'hoy') : '');
+  $('#print-stock', root).onclick = () => {
+    const list = stockReport();
+    if (!list.length) { toast('No hay productos con esos filtros'); return; }
+    const win = window.open('', '_blank');
+    if (!win) { toast('Permite ventanas emergentes para imprimir'); return; }
+    const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Existencias ZoCo</title>' +
+      '<style>body{font:13px Arial,sans-serif;color:#152038;padding:22px}h1{font-size:22px}p{color:#5d6677}' +
+      'table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;text-align:left;border-bottom:1px solid #ddd}' +
+      'th{background:#f1f3f6}td:nth-child(5),td:nth-child(6){text-align:right}thead{display:table-header-group}' +
+      '@media print{body{padding:0}tr{break-inside:avoid}}</style></head><body>' +
+      '<h1>' + esc(reportTitle()) + '</h1><p>' + list.length + ' productos · ' +
+      list.reduce((sum, p) => sum + p.qty, 0) + ' piezas · Sucursal: ' +
+      esc(state.branches.find(b => b.id === state.currentBranch)?.name || '') + '</p>' +
+      '<table><thead><tr><th>Producto</th><th>Código</th><th>Sección</th><th>Tallas / existencias</th><th>Piezas</th><th>Precio</th></tr></thead><tbody>' +
+      list.map(p => '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.code) + '</td><td>' +
+        esc(p.section) + '</td><td>' + esc(p.sizes) + '</td><td>' + p.qty +
+        '</td><td>' + money(p.price) + '</td></tr>').join('') +
+      '</tbody></table></body></html>';
+    win.document.open(); win.document.write(html); win.document.close();
+    win.focus(); win.print();
+  };
+  $('#email-stock', root).onclick = () => {
+    const list = stockReport();
+    if (!list.length) { toast('No hay productos con esos filtros'); return; }
+    const lines = list.map(p => p.name + ' (' + p.code + ') | ' + p.qty + ' pzas | ' +
+      (p.sizes || 'Sin tallas') + ' | ' + money(p.price));
+    const header = reportTitle() + '\\nSucursal: ' +
+      (state.branches.find(b => b.id === state.currentBranch)?.name || '') +
+      '\\n' + list.length + ' productos, ' + list.reduce((sum, p) => sum + p.qty, 0) + ' piezas\\n\\n';
+    const body = header + lines.join('\\n');
+    const uri = 'mailto:?subject=' + encodeURIComponent(reportTitle()) +
+      '&body=' + encodeURIComponent(body.length > 14000
+        ? header + lines.slice(0, 50).join('\\n') + '\\n\\nReporte resumido: aplica menos filtros para enviar menos productos.'
+        : body);
+    window.location.href = uri;
+  };
 
   function render() {
     const items = state.products.filter(productMatches);
