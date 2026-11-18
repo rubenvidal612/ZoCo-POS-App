@@ -97,7 +97,7 @@ function paintLogin() {
         <div class="login-err" id="lg-err"></div>
         <button class="btn orange" type="submit" id="lg-main">Entrar</button>
         <button class="btn ghost" type="button" id="lg-register" style="margin-top:8px;width:100%">Crear cuenta nueva</button>
-        <button class="btn ghost" type="button" id="lg-google" style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px" aria-label="Continuar con Google"><span aria-hidden="true" style="font-weight:900;font-size:19px;color:#4285f4">G</span> Continuar con Google</button>
+        <button class="btn ghost" type="button" id="lg-google" style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px" aria-label="Continuar con Google"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.25 5.48-4.76 7.18l7.73 6C44.42 38.03 46.98 31.88 46.98 24.55z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.88 23.88 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.9-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.17 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continuar con Google</button>
         <div class="login-links">
           <button type="button" id="lg-forgot">¿Olvidaste tu contraseña?</button>
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
@@ -417,17 +417,9 @@ async function bootOAuth() {
   try {
     const r = await handleOAuthReturn();
     if (!r.ok) return false;
-    const c = alignCompany(await ensureCompany(r.user?.user_metadata?.name || (r.user?.email || '').split('@')[0]));
-    const email = r.user?.email || state.users[0]?.email || 'owner@zoco.app';
-    const local = login(email, '');
-    if (!local.ok) {
-      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
-      if (u) state.user = u;
-    }
-    state.superadmin = await amISuperadmin();
-    toast(c.existed ? 'Bienvenido de nuevo' : 'Cuenta creada con Google. ¡Bienvenido!');
-    route = 'inicio'; location.hash = '#/inicio';
-    return true;
+    // La sesión de Supabase ya está validada; la sesión local se establece
+    // después de hydrate(), que puede reemplazar los usuarios locales.
+    return { user: r.user };
   } catch { return false; }
 }
 
@@ -444,14 +436,27 @@ captureRef();
       if (j.ok) { state.settings.aiKey = ''; state.settings.aiKeySaved = true; emit(); }
     } catch {}
   }
-bootOAuth().then((ok) => {
-  hydrate().then(async () => {
-    if (ok && sbReady()) {
-      // al entrar con Google: asegura empresa/membresía y sube el estado local
-      try { alignCompany(await ensureCompany(state.company.name)); } catch {}
-      try { await pullCloud(true); } catch {}
-    }
-    paintShell();
+bootOAuth().then(async (oauth) => {
+  await hydrate();
+  if (oauth?.user && sbReady()) {
+    try {
+      const email = (oauth.user.email || '').toLowerCase();
+      const user = state.users.find((u) => u.active && u.email?.toLowerCase() === email);
+      if (!user) {
+        // Nunca conceder el rol del dueño local a una cuenta Google diferente.
+        toast('Google autenticado, pero este correo no tiene usuario en ZoCo.');
+      } else {
+        // currentUser() lee zoco.session, no state.user: es necesario persistirla.
+        localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() }));
+        state.user = user;
+        try { alignCompany(await ensureCompany(oauth.user.user_metadata?.name || email.split('@')[0])); } catch (e) { console.warn('No se pudo vincular empresa', e); }
+        state.superadmin = await amISuperadmin();
+        route = 'inicio'; location.hash = '#/inicio';
+        toast('Bienvenido con Google');
+      }
+    } catch (e) { console.error('Error de acceso con Google', e); toast('No se pudo completar el acceso con Google'); }
+  }
+  paintShell();
     setTimeout(() => initInstallPrompt(), 1200);
     setTimeout(() => maybeDailyNotice(), 2500);
     setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
@@ -459,7 +464,6 @@ bootOAuth().then((ok) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       setTimeout(() => subscribePush(), 3000);
     }
-  });
 });
 
 /* Aviso diario de presupuesto personal (opcional) */
