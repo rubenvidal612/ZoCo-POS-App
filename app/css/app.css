@@ -1454,3 +1454,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
     animation:none!important;transform:none!important;
   }
 }
+
+
+/* Ondas originales: la curva cambia de forma, no se desplaza horizontalmente */
+.home-theme-original .hh-mini svg{animation:none!important;transform:none!important}
+@media(prefers-reduced-motion:reduce){.home-theme-original .hh-mini svg animate{display:none}}
