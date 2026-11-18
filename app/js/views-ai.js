@@ -348,7 +348,7 @@ export function aiView() {
       modelSel.onchange = () => { modelTxt.style.display = modelSel.value === '__custom' ? '' : 'none'; };
     }
     root.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => send(b.dataset.q));
-    root.querySelector('#ai-clear').onclick = () => { CHAT.length = 0; saveChat(); render(); };
+    root.querySelector('#ai-clear').onclick = () => { if (!CHAT.length) return; if (!window.confirm('¿Eliminar toda la conversación del Asistente IA? Esta acción no se puede deshacer.')) return; CHAT.length = 0; saveChat(); render(); toast('Conversación eliminada'); };
     root.querySelector('#ai-file').onclick = () => {
       const inp = document.createElement('input');
       inp.id = 'ai-fileselect';
