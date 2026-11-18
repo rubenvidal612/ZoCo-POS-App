@@ -97,7 +97,7 @@ function paintLogin() {
         <div class="login-err" id="lg-err"></div>
         <button class="btn orange" type="submit" id="lg-main">Entrar</button>
         <button class="btn ghost" type="button" id="lg-register" style="margin-top:8px;width:100%">Crear cuenta nueva</button>
-        <button class="btn ghost" type="button" id="lg-google" style="margin-top:6px;width:100%;display:none">🟦 Continuar con Google</button>
+        <button class="btn ghost" type="button" id="lg-google" style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px" aria-label="Continuar con Google"><span aria-hidden="true" style="font-weight:900;font-size:19px;color:#4285f4">G</span> Continuar con Google</button>
         <div class="login-links">
           <button type="button" id="lg-forgot">¿Olvidaste tu contraseña?</button>
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
