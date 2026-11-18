@@ -6,7 +6,13 @@ import { openCutZ } from './views-inventory.js';
 const spark = (color) => `
   <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
     <path d="M0 26 C 20 24, 34 30, 52 22 S 80 10, 104 18 S 140 26, 160 16 S 186 8, 200 14"
-      stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      stroke="${color}" stroke-width="2" stroke-linecap="round">
+      <animate attributeName="d" dur="10s" repeatCount="indefinite" calcMode="spline"
+        keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+        values="M0 26 C 20 24, 34 30, 52 22 S 80 10, 104 18 S 140 26, 160 16 S 186 8, 200 14;
+                M0 17 C 20 31, 34 12, 52 19 S 80 30, 104 14 S 140 10, 160 24 S 186 28, 200 18;
+                M0 26 C 20 24, 34 30, 52 22 S 80 10, 104 18 S 140 26, 160 16 S 186 8, 200 14"/>
+    </path>
   </svg>`;
 
 export function homeView(ctx) {
