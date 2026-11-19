@@ -1,5 +1,5 @@
 {
-    "version":  "2.59.1",
+    "version":  "2.59.2",
     "date":  "2026-11-10",
     "notes":  [
                   "Arreglado: mermas, traspasos y devoluciones se perdian al recargar",

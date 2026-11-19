@@ -893,6 +893,15 @@ function load() {
     const s = JSON.parse(raw);
     if (!s.products) return seed();
     const migrated = migrate(s);
+    // Diagnóstico temporal (se puede quitar): deja ver qué pasa al arrancar
+    try {
+      window.__storeDebug = {
+        guardo: (s.adjustments || []).length,
+        migro: (migrated.adjustments || []).length,
+        guardoTrf: (s.transfers || []).length,
+        migroTrf: (migrated.transfers || []).length,
+      };
+    } catch {}
     // Red de seguridad: si la migración devolvió una colección vacía pero lo
     // guardado sí tenía registros, se conservan (nunca perder movimientos).
     ['sales', 'returns', 'adjustments', 'transfers', 'purchases', 'expenses',
