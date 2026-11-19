@@ -1,5 +1,5 @@
 // Service worker: cache del shell para usar ZoCo sin internet
-const CACHE = 'zoco-shell-v98';
+const CACHE = 'zoco-shell-v99';
 const SHELL = [
   '/',
   '/index.html',

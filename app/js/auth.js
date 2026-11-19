@@ -171,6 +171,8 @@ export function signInWithGoogle() {
   // Así funciona tanto si el proyecto usa PKCE como si usa implicit.
   const verifier = randomVerifier();
   try { sessionStorage.setItem('zoco.oauth.verifier', verifier); } catch {}
+  // Respaldo: si el navegador abre otra pestaña o descarta sessionStorage
+  try { localStorage.setItem('zoco.oauth.verifier', verifier); } catch {}
   sha256B64(verifier).then((challenge) => {
     const p = new URLSearchParams({ provider: 'google', redirect_to: redirect });
     if (challenge) {
@@ -197,7 +199,14 @@ export async function handleOAuthReturn() {
   if (code) {
     logOauth('pkce', 'code recibido');
     try {
-      const verifier = (() => { try { return sessionStorage.getItem('zoco.oauth.verifier') || ''; } catch { return ''; } })();
+      const verifier = (() => {
+        try {
+          return sessionStorage.getItem('zoco.oauth.verifier')
+            || localStorage.getItem('zoco.oauth.verifier')
+            || '';
+        } catch { return ''; }
+      })();
+      logOauth('pkce-verifier', verifier ? 'encontrado (' + verifier.length + ' chars)' : 'FALTA');
       const r = await safeFetch(`${sbConfig().url}/auth/v1/token?grant_type=pkce`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
@@ -220,6 +229,7 @@ export async function handleOAuthReturn() {
       logOauth('pkce-ok', 'id=' + user.id + ' | email=' + (user.email || '(sin correo)'));
       saveCloudSession({ access_token: j.access_token, refresh_token: j.refresh_token, expires_in: j.expires_in || 3600, user, token_type: 'bearer' });
       try { sessionStorage.removeItem('zoco.oauth.verifier'); } catch {}
+      try { localStorage.removeItem('zoco.oauth.verifier'); } catch {}
       history.replaceState(null, '', location.pathname);
       return { ok: true, user };
     } catch (e) {

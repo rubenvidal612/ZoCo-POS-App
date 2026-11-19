@@ -163,15 +163,17 @@ function paintLogin() {
   try {
     const raw = localStorage.getItem('zoco.oauth.log');
     const log = raw ? JSON.parse(raw) : [];
+    document.documentElement.dataset.diag = 'n=' + log.length;
     if (log.length) {
       const box = document.querySelector('#lg-diag');
       if (box) {
         box.style.display = 'block';
         box.innerHTML = '<b>Último intento con Google</b><br>' +
           log.slice(-6).map((x) => `${esc(x.t)} · ${esc(x.step)}: ${esc(x.detail)}`).join('<br>');
+        document.documentElement.dataset.diag = 'shown';
       }
     }
-  } catch {}
+  } catch (e) { document.documentElement.dataset.diag = 'err:' + e.message; }
 
   const hardBtn = document.querySelector('#lg-hard');
   if (hardBtn) {

@@ -1,5 +1,5 @@
 {
-    "version":  "2.48.0",
+    "version":  "2.48.1",
     "date":  "2026-11-10",
     "notes":  [
                   "Google: soporte del flujo PKCE (?code=) ademas del implicito",
