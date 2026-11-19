@@ -1,6 +1,6 @@
 // Panel de super-admin (solo para el dueño del sistema)
 import { el, money, esc, toast } from './ui.js';
-import { adminCompanies, adminSetPlan, amISuperadmin, isCloudLogged, cloudUser } from './auth.js';
+import { adminCompanies, adminSetPlan, amISuperadmin, isCloudLogged, cloudUser, adminCommissions, adminSetCommission } from './auth.js';
 import { sbReady } from './sync.js';
 
 export function adminView() {
@@ -9,6 +9,7 @@ export function adminView() {
   let loading = true;
   let error = '';
   let isSuper = false;
+  let totalComs = [];
 
   async function load() {
     loading = true;
@@ -64,9 +65,78 @@ export function adminView() {
               </tr>`).join('')
             : '<tr><td colspan="7"><div class="cart-empty">Aún no hay empresas.</div></td></tr>'}</tbody>
         </table></div>`}
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><h2>Comisiones de afiliados</h2>
+          <div class="sp"></div>
+          <button class="btn ghost sm" id="ad-com-refresh">⟳ Actualizar</button>
+        </div>
+        <div style="overflow:auto"><table>
+          <thead><tr><th>Periodo</th><th>Empresa</th><th>Plan</th><th>Afiliado</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="ad-com-rows"><tr><td colspan="7"><div class="cart-empty">Cargando comisiones…</div></td></tr></tbody>
+        </table></div>
       </div>`;
 
+    const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
+    const paintComs = (list) => {
+      const body = root.querySelector('#ad-com-rows');
+      if (!body) return;
+      const flat = [];
+      (list || []).forEach((row) => {
+        let arr = row.commissions;
+        if (typeof arr === 'string') { try { arr = JSON.parse(arr); } catch { arr = []; } }
+        (Array.isArray(arr) ? arr : []).forEach((c) => flat.push({ ...c, companyId: row.company_id, companyName: row.company_name }));
+      });
+      totalComs = flat;
+      body.innerHTML = flat.length
+        ? flat.slice(0, 60).map((c) => `<tr>
+            <td class="mono">${esc(c.period || '—')}</td>
+            <td>${esc(c.companyName || c.companyId || '—')}</td>
+            <td>${esc(c.planName || c.planCode || '—')}</td>
+            <td>${esc(c.affiliateCode || '—')}</td>
+            <td class="mono">${money2(c.amount)}</td>
+            <td><span class="badge ${c.status === 'paid' ? 'ok' : c.status === 'refunded' ? 'warn' : c.status === 'approved' ? 'info' : 'grey'}">${esc(c.status || 'pending')}</span></td>
+            <td style="white-space:nowrap">
+              ${c.status === 'pending' ? `<button class="btn ghost sm" data-com-ok data-com-id="${esc(c.id)}|${esc(c.companyId)}">Aprobar</button>` : ''}
+              ${c.status === 'approved' ? `<button class="btn sm" data-com-pay data-com-id="${esc(c.id)}|${esc(c.companyId)}">Pagar</button>` : ''}
+              ${c.status !== 'refunded' && c.status !== 'paid' ? `<button class="btn ghost sm" data-com-ref data-com-id="${esc(c.id)}|${esc(c.companyId)}" style="color:var(--danger)">Devolver</button>` : ''}
+            </td>
+          </tr>`).join('')
+        : `<tr><td colspan="7"><div class="cart-empty">Sin comisiones registradas.</div></td></tr>`;
+
+      const wire = (selector, status, msg) => {
+        root.querySelectorAll(selector).forEach((b) => {
+          b.onclick = async () => {
+            const [id, companyId] = String(b.dataset.comId).split('|');
+            const r = await adminSetCommission(companyId, id, status);
+            if (!r.ok) { toast(r.error || 'No se pudo actualizar'); return; }
+            toast(msg);
+            loadComs();
+          };
+        });
+      };
+      wire('[data-com-ok]', 'approved', 'Comisión aprobada');
+      wire('[data-com-pay]', 'paid', 'Comisión marcada como pagada');
+      wire('[data-com-ref]', 'refunded', 'Comisión devuelta');
+    };
+
+    const loadComs = async () => {
+      if (!isSuper) return;
+      const list = await adminCommissions();
+      paintComs(list);
+    };
+
     root.querySelector('#ad-refresh').onclick = load;
+    root.querySelector('#ad-com-refresh').onclick = loadComs;
+    if (isSuper) {
+      loadComs();
+    } else {
+      const body = root.querySelector('#ad-com-rows');
+      if (body) {
+        body.innerHTML = '<tr><td colspan="7"><div class="cart-empty">Entra con una cuenta super-admin para ver y administrar comisiones.</div></td></tr>';
+      }
+    }
     root.querySelectorAll('[data-plan-save]').forEach((b) => b.onclick = async () => {
       const id = b.dataset.planSave;
       const sel = root.querySelector(`[data-sel="${id}"]`);

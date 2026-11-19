@@ -236,3 +236,28 @@ export function isRecoveryReturn() {
 export function clearRecoveryFlag() {
   try { sessionStorage.removeItem('zoco.recovery'); } catch {}
 }
+/* ================= Comisiones (superadmin) ================= */
+export async function adminCommissions() {
+  const s = cloudSession();
+  if (!s?.access_token) return [];
+  try {
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/rpc/admin_company_commissions`, {
+      method: 'POST', headers: headers(s.access_token), body: '{}',
+    });
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch { return []; }
+}
+
+export async function adminSetCommission(companyId, commissionId, status) {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
+  try {
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/rpc/admin_set_commission`, {
+      method: 'POST', headers: headers(s.access_token),
+      body: JSON.stringify({ p_company: companyId, p_commission: commissionId, p_status: status }),
+    });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 160) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
