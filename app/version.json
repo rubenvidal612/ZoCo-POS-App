@@ -1,8 +1,8 @@
 {
-    "version":  "2.48.2",
+    "version":  "2.49.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Google: soporte del flujo PKCE (?code=) ademas del implicito",
-                  "Diagnostico de Google ahora visible arriba del login"
+                  "Corregido error critico: variable oauthNotice sin declarar rompia el login a la mitad",
+                  "Con esto funcionan Entrar, recuperar contrasena y el acceso con Google"
               ]
 }

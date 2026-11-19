@@ -16,6 +16,9 @@ import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money, esc } from './ui.js';
 
+// Aviso persistente del último intento de Google (se pinta en el login)
+let oauthNotice = '';
+
 const NAV_GROUPS = [
   {
     label: 'OPERACIÓN',
