@@ -1,7 +1,8 @@
 {
-    "version":  "2.59.3",
+    "version":  "2.60.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "CRITICO: si la migracion falla ya NO se arranca con negocio vacio; se conserva el estado guardado"
+                  "ARREGLADO DE RAIZ: los planes se declaran antes de cargar, la app ya carga TUS datos guardados",
+                  "Antes cada arranque caia en negocio de demostracion y se perdian mermas/traspasos"
               ]
 }

@@ -796,6 +796,41 @@ function seed() {
   };
 }
 
+/* ================= Planes =================
+   OJO: estas constantes deben estar ANTES de load()/migrate(), porque
+   migrate() las usa al arrancar (si se declaran después, el arranque falla). */
+export const PLANS = {
+  esencial: {
+    code: 'esencial', name: 'ZoCo Esencial', price: 199, affiliate: 75, zoco: 124,
+    limits: { branches: 1 },
+    hint: '1 sucursal · usuarios ilimitados',
+  },
+  pro: {
+    code: 'pro', name: 'ZoCo Pro', price: 349, affiliate: 150, zoco: 199,
+    limits: { branches: 2 },
+    hint: 'Hasta 2 sucursales · usuarios ilimitados',
+  },
+  empresarial: {
+    code: 'empresarial', name: 'ZoCo Empresarial', price: 599, affiliate: 250, zoco: 349,
+    limits: { branches: 10 },
+    hint: 'Hasta 10 sucursales · usuarios ilimitados',
+  },
+};
+
+export const PLAN_ORDER = ['esencial', 'pro', 'empresarial'];
+
+/** Equivalencia segura de planes anteriores (no se pierde nada). */
+export const LEGACY_PLAN_MAP = {
+  tiendita: 'esencial',
+  negocio: 'pro',
+  profesional: 'pro',
+  premium: 'empresarial',
+  cadenas: 'empresarial',
+  esencial: 'esencial',
+  pro: 'pro',
+  empresarial: 'empresarial',
+};
+
 /* ================= Carga / migración ================= */
 function migrate(s) {
   if (!Array.isArray(s.branches)) s.branches = [{ id: 'b1', name: 'Centro' }];
@@ -1534,38 +1569,6 @@ export function registerSummary() {
  * La única diferencia es la cantidad de SUCURSALES.
  * Montos brutos en MXN, antes de comisión del procesador e impuestos.
  */
-export const PLANS = {
-  esencial: {
-    code: 'esencial', name: 'ZoCo Esencial', price: 199, affiliate: 75, zoco: 124,
-    limits: { branches: 1 },
-    hint: '1 sucursal · usuarios ilimitados',
-  },
-  pro: {
-    code: 'pro', name: 'ZoCo Pro', price: 349, affiliate: 150, zoco: 199,
-    limits: { branches: 2 },
-    hint: 'Hasta 2 sucursales · usuarios ilimitados',
-  },
-  empresarial: {
-    code: 'empresarial', name: 'ZoCo Empresarial', price: 599, affiliate: 250, zoco: 349,
-    limits: { branches: 10 },
-    hint: 'Hasta 10 sucursales · usuarios ilimitados',
-  },
-};
-
-export const PLAN_ORDER = ['esencial', 'pro', 'empresarial'];
-
-/** Equivalencia segura de planes anteriores (no se pierde nada). */
-export const LEGACY_PLAN_MAP = {
-  tiendita: 'esencial',
-  negocio: 'pro',
-  profesional: 'pro',
-  premium: 'empresarial',
-  cadenas: 'empresarial',
-  esencial: 'esencial',
-  pro: 'pro',
-  empresarial: 'empresarial',
-};
-
 /** Plan actual de la empresa, migrando nombres anteriores. */
 export function currentPlan() {
   const raw = String(state.company?.plan || 'pro').toLowerCase();
