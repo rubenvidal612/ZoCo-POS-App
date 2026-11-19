@@ -49,14 +49,17 @@ export function adminView() {
             : rows.length ? rows.map((r) => `
               <tr>
                 <td class="t-strong">${esc(r.name || r.id)}<div style="font-size:11px;color:var(--muted)">${esc(r.id)}</div></td>
-                <td><span class="badge ${r.plan === 'suspended' ? 'warn' : 'ok'}">${esc(r.plan || 'pro')}</span></td>
+                <td>
+                  <select data-sel="${esc(r.id)}" style="height:30px;border:1px solid var(--line);border-radius:8px;font-size:12px">
+                    ${['tiendita', 'negocio', 'profesional', 'premium', 'cadenas', 'suspended'].map((pl) => `<option value="${pl}" ${(r.plan || 'pro') === pl ? 'selected' : ''}>${pl}</option>`).join('')}
+                  </select>
+                </td>
                 <td>${r.usuarios}</td>
                 <td class="mono">${r.rev}</td>
                 <td class="mono">${((Number(r.tamano) || 0) / 1024).toFixed(0)} KB</td>
                 <td>${r.updated_at ? new Date(r.updated_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
                 <td style="white-space:nowrap">
-                  <button class="btn ghost sm" data-plan="${esc(r.id)}|pro">Activar</button>
-                  <button class="btn ghost sm" data-plan="${esc(r.id)}|suspended" style="color:var(--danger)">Suspender</button>
+                  <button class="btn ghost sm" data-plan-save="${esc(r.id)}">Guardar</button>
                 </td>
               </tr>`).join('')
             : '<tr><td colspan="7"><div class="cart-empty">Aún no hay empresas.</div></td></tr>'}</tbody>
@@ -64,10 +67,12 @@ export function adminView() {
       </div>`;
 
     root.querySelector('#ad-refresh').onclick = load;
-    root.querySelectorAll('[data-plan]').forEach((b) => b.onclick = async () => {
-      const [id, plan] = b.dataset.plan.split('|');
+    root.querySelectorAll('[data-plan-save]').forEach((b) => b.onclick = async () => {
+      const id = b.dataset.planSave;
+      const sel = root.querySelector(`[data-sel="${id}"]`);
+      const plan = sel ? sel.value : 'negocio';
       await adminSetPlan(id, plan);
-      toast(plan === 'suspended' ? 'Empresa suspendida' : 'Empresa activada');
+      toast('Plan de la empresa: ' + plan);
       load();
     });
   }

@@ -1,9 +1,10 @@
 {
-    "version":  "2.37.0",
+    "version":  "2.38.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "P5: tarjeta de Caja en Inicio con abrir caja, entradas de efectivo y Corte Z",
-                  "P5: corte Z con desglose por metodo, devoluciones, gastos, esperado vs contado y diferencia",
-                  "P5: folio Z-0001, historial de cortes y ticket imprimible"
+                  "P7: catalogo de 5 planes con precios y comision de afiliado",
+                  "P7: panel Plan y limites con uso y comparador",
+                  "P7: limites aplicados a usuarios y sucursales",
+                  "P7: superadmin asigna plan por empresa"
               ]
 }

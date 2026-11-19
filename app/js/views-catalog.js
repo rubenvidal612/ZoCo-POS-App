@@ -14,6 +14,7 @@ import {
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
+  PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan,
   myAffCode, affiliateLink, referralsOf, setAffiliateCommission,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
@@ -808,6 +809,19 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Plan y límites">
+        <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
+        <div style="padding:16px">
+          <div id="pl-current" class="pl-current"></div>
+          <div id="pl-usage" class="pl-usage"></div>
+          <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
+          <div id="pl-grid" class="pl-grid"></div>
+          <div class="hint" style="margin-top:12px">
+            Todos los planes incluyen inventario, caja, reportes, catálogo, afiliados y agente IA
+            (con tu propia llave). Solo cambia la capacidad. Precios preliminares en MXN, sin cobro automático por ahora.
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Sucursales">
         <div class="panel-head"><h2>Sucursales</h2></div>
         <div style="padding:16px">
@@ -1206,6 +1220,64 @@ export function settingsView(ctx) {
   };
 
   // Impresora
+  // ===== Plan y límites =====
+  const plCur = $('#pl-current', root);
+  const paintPlan = () => {
+    if (!plCur) return;
+    const u = planUsage();
+    const p = u.plan;
+    $('#pl-badge', root).textContent = p.name;
+    plCur.innerHTML = `
+      <div class="pl-hero">
+        <div>
+          <div class="pl-name">Plan ${esc(p.name)}</div>
+          <div class="pl-hint">${esc(p.hint)}</div>
+        </div>
+        <div class="pl-price">$${p.price}<span>/mes</span></div>
+      </div>`;
+    const bar = (label, item, unit) => `
+      <div class="pl-bar">
+        <div class="pl-bar-top"><span>${label}</span><b>${item.used}${item.limit === Infinity ? '' : ' / ' + item.limit} ${unit || ''}</b></div>
+        <div class="pl-track"><i style="width:${item.limit === Infinity ? 8 : item.pct}%;${item.pct >= 100 ? 'background:#DC2626' : item.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>`;
+    $('#pl-usage', root).innerHTML =
+      bar('Usuarios', u.users) + bar('Sucursales', u.branches) + bar('Productos', u.products);
+
+    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
+      const pl = PLANS[code];
+      const cur = code === p.code;
+      const lim = (v) => (v === Infinity ? '∞' : v);
+      return `<div class="pl-card ${cur ? 'on' : ''}">
+        <div class="pl-card-name">${esc(pl.name)}</div>
+        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
+        <div class="pl-card-list">
+          <div>${lim(pl.limits.users)} usuarios</div>
+          <div>${lim(pl.limits.branches)} sucursal(es)</div>
+          <div>${lim(pl.limits.products)} productos</div>
+          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}</div>
+        </div>
+        ${cur ? '<div class="pl-card-on">Plan actual</div>'
+              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
+      </div>`;
+    }).join('');
+
+    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
+      const code = b.dataset.pl;
+      const pl = PLANS[code];
+      const ok = await confirmDialog({
+        title: 'Cambiar de plan',
+        message: `¿Pasar al plan ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        okText: 'Sí, cambiar',
+      });
+      if (!ok) return;
+      const r = setPlan(code);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Plan actualizado a ' + pl.name);
+      paintPlan();
+      ctx.refreshShell?.();
+    });
+  };
+  paintPlan();
   // ===== Sucursales =====
   const brList = $('#br-list', root);
   const paintBranches = () => {
@@ -2055,6 +2127,8 @@ export function usersView() {
           photoUrl: pendingPhoto,
         });
       } else {
+        const lim = canAdd('user');
+        if (!lim.ok) { toast(lim.msg); return; }
         state.users.push({
           id: 'u' + Date.now(), name, email, pass, role: sel.value, active: true,
           pin: m.root.querySelector('#u-pin').value.trim(),

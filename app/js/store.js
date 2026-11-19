@@ -480,6 +480,8 @@ export function setAffiliateCommission(pct) {
 }
 /* ================= Sucursales ================= */
 export function addBranch(name) {
+  const lim = canAdd('branch');
+  if (!lim.ok) return { ok: false, msg: lim.msg };
   const n = String(name || '').trim();
   if (!n) return { ok: false, msg: 'Escribe el nombre de la sucursal' };
   if ((state.branches || []).some((b) => b.name.toLowerCase() === n.toLowerCase())) {
@@ -784,6 +786,7 @@ function migrate(s) {
   if (!Array.isArray(s.productions)) s.productions = [];
   if (!Array.isArray(s.referrals)) s.referrals = [];
   if (!Array.isArray(s.cuts)) s.cuts = [];
+  if (!s.company.plan) s.company.plan = 'negocio';
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -1304,6 +1307,95 @@ export function registerSummary() {
 }
 
 
+
+/* ================= Planes y límites (P7) ================= */
+/**
+ * Catálogo de planes. TODOS incluyen inventario, caja, reportes, catálogo,
+ * afiliados, sucursales y agente IA (con la llave del cliente).
+ * Solo cambia la CAPACIDAD.
+ * Los montos son brutos: antes de comisión del procesador, impuestos y costos.
+ */
+export const PLANS = {
+  tiendita: {
+    code: 'tiendita', name: 'Tiendita', price: 150, affiliate: 50, zoco: 100,
+    limits: { users: 2, branches: 1, products: 500, cashRegisters: 1 },
+    hint: 'Para un solo mostrador',
+  },
+  negocio: {
+    code: 'negocio', name: 'Negocio', price: 250, affiliate: 75, zoco: 175,
+    limits: { users: 4, branches: 3, products: 2000, cashRegisters: 2 },
+    hint: 'Hasta 3 sucursales',
+  },
+  profesional: {
+    code: 'profesional', name: 'Profesional', price: 399, affiliate: 125, zoco: 274,
+    limits: { users: 8, branches: 5, products: 10000, cashRegisters: 4 },
+    hint: 'Varios vendedores y sucursales',
+  },
+  premium: {
+    code: 'premium', name: 'Premium', price: 599, affiliate: 175, zoco: 424,
+    limits: { users: 15, branches: 10, products: 50000, cashRegisters: 8 },
+    hint: 'Operación grande',
+  },
+  cadenas: {
+    code: 'cadenas', name: 'Cadenas', price: 999, affiliate: 250, zoco: 749,
+    limits: { users: 40, branches: Infinity, products: Infinity, cashRegisters: 20 },
+    hint: 'Sucursales ilimitadas',
+  },
+};
+
+export const PLAN_ORDER = ['tiendita', 'negocio', 'profesional', 'premium', 'cadenas'];
+
+/** Plan actual de la empresa (por defecto 'negocio'). */
+export function currentPlan() {
+  const code = state.company?.plan || 'negocio';
+  return PLANS[code] || PLANS.negocio;
+}
+
+export function planLimits() {
+  return currentPlan().limits;
+}
+
+/** Uso actual vs límites. */
+export function planUsage() {
+  const lim = planLimits();
+  const users = (state.users || []).filter((u) => u.active !== false).length;
+  const branches = (state.branches || []).length;
+  const products = (state.products || []).length;
+  const pct = (a, b) => (b === Infinity ? 0 : Math.min(100, Math.round((a / Math.max(1, b)) * 100)));
+  return {
+    plan: currentPlan(),
+    users: { used: users, limit: lim.users, pct: pct(users, lim.users) },
+    branches: { used: branches, limit: lim.branches, pct: pct(branches, lim.branches) },
+    products: { used: products, limit: lim.products, pct: pct(products, lim.products) },
+  };
+}
+
+/** ¿Se puede agregar uno más de este tipo? */
+export function canAdd(kind) {
+  const lim = planLimits();
+  const u = planUsage();
+  const map = { user: u.users, branch: u.branches, product: u.products };
+  const item = map[kind];
+  if (!item) return { ok: true };
+  if (item.limit === Infinity) return { ok: true };
+  if (item.used >= item.limit) {
+    return {
+      ok: false,
+      msg: `Tu plan ${currentPlan().name} permite ${item.limit}. Mejora tu plan para agregar más.`,
+      plan: currentPlan(),
+    };
+  }
+  return { ok: true };
+}
+
+/** Cambia el plan de la empresa (local). */
+export function setPlan(code) {
+  if (!PLANS[code]) return { ok: false, msg: 'Plan no válido' };
+  state.company.plan = code;
+  state.company.planSince = new Date().toISOString();
+  emit();
+  return { ok: true, plan: PLANS[code] };
+}
 /* ================= Corte de caja Z ================= */
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 

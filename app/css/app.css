@@ -1549,3 +1549,28 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .zoco-report-design strong{display:block;font-size:14px;color:var(--text)}
 .zoco-report-design small{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
 @media(max-width:600px){.zoco-report-designs{grid-template-columns:1fr}}
+
+/* ===== Planes ===== */
+.pl-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;border-radius:16px;padding:16px 18px}
+.pl-name{font-size:18px;font-weight:800}
+.pl-hint{font-size:12.5px;color:#CBD5E1;margin-top:2px}
+.pl-price{font-size:26px;font-weight:800;color:#FDBA74}
+.pl-price span{font-size:12px;color:#CBD5E1;font-weight:600}
+.pl-usage{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.pl-bar-top{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px}
+.pl-bar-top span{color:var(--muted)}
+.pl-track{height:8px;border-radius:999px;background:var(--line-2,#E2E8F0);overflow:hidden}
+.pl-track i{display:block;height:100%;background:#10B981;border-radius:999px;transition:width .25s}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.pl-card{border:1.5px solid var(--line);border-radius:14px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.pl-card.on{border-color:var(--brand);background:var(--brand-50,#FFF7ED)}
+.pl-card-name{font-weight:800;font-size:14px}
+.pl-card-price{font-size:20px;font-weight:800}
+.pl-card-price span{font-size:11px;color:var(--muted);font-weight:600}
+.pl-card-list{font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:2px;flex:1}
+.pl-card-on{margin-top:auto;text-align:center;font-size:11.5px;font-weight:800;color:var(--brand-700);padding:8px;
+  border-radius:9px;background:rgba(249,115,22,.12)}
+@media (max-width:600px){ .pl-grid{grid-template-columns:1fr 1fr} }
+/* El panel de plan ocupa todo el ancho */
+.settings-grid .panel[data-sec="Plan y límites"]{grid-column:1/-1}
