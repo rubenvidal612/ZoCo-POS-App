@@ -1221,74 +1221,7 @@ export function settingsView(ctx) {
   };
 
   // Impresora
-  // ===== Plan y límites =====
-  const plCur = $('#pl-current', root);
-  const paintPlan = () => {
-    if (!plCur) return;
-    const u = planUsage();
-    const p = u.plan;
-    $('#pl-badge', root).textContent = p.name.replace('ZoCo ', '');
-    plCur.innerHTML = `
-      <div class="pl-hero">
-        <div>
-          <div class="pl-name">${esc(p.name)}</div>
-          <div class="pl-hint">${esc(p.hint)}</div>
-        </div>
-        <div class="pl-price">$${p.price}<span>/mes</span></div>
-      </div>`;
-    const over = u.overLimit;
-    $('#pl-usage', root).innerHTML = `
-      <div class="pl-bar">
-        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used} / ${u.branches.limit}</b></div>
-        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
-      </div>
-      <div class="pl-unlimited">
-        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
-        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
-      </div>
-      ${over ? `<div class="pl-warn">
-        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
-        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
-      </div>` : ''}`;
-
-    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
-      const pl = PLANS[code];
-      const cur = code === p.code;
-      return `<div class="pl-card ${cur ? 'on' : ''}">
-        <div class="pl-card-name">${esc(pl.name)}</div>
-        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
-        <div class="pl-card-list">
-          <div>${pl.limits.branches} sucursal(es)</div>
-          <div>Usuarios ilimitados</div>
-          <div>Todo incluido</div>
-          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}/mes</div>
-        </div>
-        ${cur ? '<div class="pl-card-on">Plan actual</div>'
-              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
-      </div>`;
-    }).join('');
-
-    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
-      const code = b.dataset.pl;
-      const pl = PLANS[code];
-      const baja = pl.limits.branches < u.branches.used;
-      const ok = await confirmDialog({
-        title: 'Cambiar de plan',
-        message: baja
-          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
-          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
-        okText: 'Sí, cambiar',
-      });
-      if (!ok) return;
-      const r = setPlan(code);
-      if (!r.ok) { toast(r.msg); return; }
-      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
-      paintPlan();
-  const offPlan = subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
-    });
-  };
-  paintPlan();
-  const offPlan = subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
+  bindPlanPanel(root);
   // ===== Sucursales =====
   const brList = $('#br-list', root);
   const paintBranches = () => {
@@ -2900,4 +2833,106 @@ export function affiliatesView(ctx) {
   };
 
   return { root, refresh: paint };
+}
+/* ================= Panel de plan reutilizable ================= */
+export function planPanelMarkup(withSec = true) {
+  return `
+    <div class="panel" ${withSec ? 'data-sec="Plan y límites"' : ''}>
+      <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
+      <div style="padding:16px">
+        <div id="pl-current"></div>
+        <div id="pl-usage" class="pl-usage"></div>
+        <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
+        <div id="pl-grid" class="pl-grid"></div>
+        <div class="hint" style="margin-top:12px">
+          Todos los planes incluyen inventario, caja, reportes, catálogo, afiliados y agente IA
+          (con tu propia llave). Solo cambia la cantidad de sucursales.
+          Usuarios y productos son ilimitados en los tres planes.
+        </div>
+      </div>
+    </div>`;
+}
+
+export function bindPlanPanel(root) {
+  const plCur = $('#pl-current', root);
+  if (!plCur) return;
+
+  const paintPlan = () => {
+    const u = planUsage();
+    const p = u.plan;
+    const badge = $('#pl-badge', root);
+    if (badge) badge.textContent = p.name.replace('ZoCo ', '');
+
+    plCur.innerHTML = `
+      <div class="pl-hero">
+        <div>
+          <div class="pl-name">${esc(p.name)}</div>
+          <div class="pl-hint">${esc(p.hint)}</div>
+        </div>
+        <div class="pl-price">$${p.price}<span>/mes</span></div>
+      </div>`;
+
+    const over = u.overLimit;
+    $('#pl-usage', root).innerHTML = `
+      <div class="pl-bar">
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used} / ${u.branches.limit}</b></div>
+        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>
+      <div class="pl-unlimited">
+        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
+        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
+      </div>
+      ${over ? `<div class="pl-warn">
+        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
+        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
+      </div>` : ''}`;
+
+    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
+      const pl = PLANS[code];
+      const cur = code === p.code;
+      return `<div class="pl-card ${cur ? 'on' : ''}">
+        <div class="pl-card-name">${esc(pl.name)}</div>
+        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
+        <div class="pl-card-list">
+          <div>${pl.limits.branches} sucursal(es)</div>
+          <div>Usuarios ilimitados</div>
+          <div>Todo incluido</div>
+          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}/mes</div>
+        </div>
+        ${cur ? '<div class="pl-card-on">Plan actual</div>'
+              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
+      </div>`;
+    }).join('');
+
+    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
+      const code = b.dataset.pl;
+      const pl = PLANS[code];
+      const baja = pl.limits.branches < u.branches.used;
+      const ok = await confirmDialog({
+        title: 'Cambiar de plan',
+        message: baja
+          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
+          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        okText: 'Sí, cambiar',
+      });
+      if (!ok) return;
+      const r = setPlan(code);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
+      paintPlan();
+    });
+  };
+
+  paintPlan();
+  if (!root.dataset.planSub) {
+    root.dataset.planSub = '1';
+    subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
+  }
+}
+
+/** Vista independiente: "Mi plan" del menú */
+export function plansView() {
+  const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
+  bindPlanPanel(root);
+  return { root, refresh: () => bindPlanPanel(root) };
 }

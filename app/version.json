@@ -1,9 +1,8 @@
 {
-    "version":  "2.41.0",
+    "version":  "2.42.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Google: una cuenta nueva ya obtiene acceso (rol segun su empresa en la nube)",
-                  "Google: se muestran los errores de autenticacion en el login",
-                  "Login con logo, titulo y boton de Google centrados en escritorio y movil"
+                  "Nueva seccion \"Mi plan\" en el menu (Gestion) con los 3 planes y el uso de sucursales",
+                  "El panel de plan sigue tambien en Configuracion"
               ]
 }
