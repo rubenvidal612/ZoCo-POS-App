@@ -786,7 +786,11 @@ function migrate(s) {
   if (!Array.isArray(s.productions)) s.productions = [];
   if (!Array.isArray(s.referrals)) s.referrals = [];
   if (!Array.isArray(s.cuts)) s.cuts = [];
-  if (!s.company.plan) s.company.plan = 'negocio';
+  if (!Array.isArray(s.commissions)) s.commissions = [];
+  // Plan: normaliza nombres anteriores sin tocar sucursales ni datos
+  const rawPlan = String(s.company?.plan || 'pro').toLowerCase();
+  s.company.plan = LEGACY_PLAN_MAP[rawPlan] || 'pro';
+  if (rawPlan !== s.company.plan) s.company.planMigratedFrom = rawPlan;
   if (!s.register) s.register = { open: false, opening: 0 };
   if (!Array.isArray(s.cashMovements)) s.cashMovements = [];
   if (!Array.isArray(s.timeRecords)) s.timeRecords = [];
@@ -1308,93 +1312,189 @@ export function registerSummary() {
 
 
 
-/* ================= Planes y límites (P7) ================= */
+/* ================= Planes y límites (3 planes) ================= */
 /**
- * Catálogo de planes. TODOS incluyen inventario, caja, reportes, catálogo,
- * afiliados, sucursales y agente IA (con la llave del cliente).
- * Solo cambia la CAPACIDAD.
- * Los montos son brutos: antes de comisión del procesador, impuestos y costos.
+ * Tres planes comerciales. TODOS incluyen lo mismo: punto de venta, inventario,
+ * catálogo, reportes, empleados, agente IA y demás. Usuarios ILIMITADOS en todos.
+ * La única diferencia es la cantidad de SUCURSALES.
+ * Montos brutos en MXN, antes de comisión del procesador e impuestos.
  */
 export const PLANS = {
-  tiendita: {
-    code: 'tiendita', name: 'Tiendita', price: 150, affiliate: 50, zoco: 100,
-    limits: { users: 2, branches: 1, products: 500, cashRegisters: 1 },
-    hint: 'Para un solo mostrador',
+  esencial: {
+    code: 'esencial', name: 'ZoCo Esencial', price: 199, affiliate: 75, zoco: 124,
+    limits: { branches: 1 },
+    hint: '1 sucursal · usuarios ilimitados',
   },
-  negocio: {
-    code: 'negocio', name: 'Negocio', price: 250, affiliate: 75, zoco: 175,
-    limits: { users: 4, branches: 3, products: 2000, cashRegisters: 2 },
-    hint: 'Hasta 3 sucursales',
+  pro: {
+    code: 'pro', name: 'ZoCo Pro', price: 349, affiliate: 150, zoco: 199,
+    limits: { branches: 3 },
+    hint: 'Hasta 3 sucursales · usuarios ilimitados',
   },
-  profesional: {
-    code: 'profesional', name: 'Profesional', price: 399, affiliate: 125, zoco: 274,
-    limits: { users: 8, branches: 5, products: 10000, cashRegisters: 4 },
-    hint: 'Varios vendedores y sucursales',
-  },
-  premium: {
-    code: 'premium', name: 'Premium', price: 599, affiliate: 175, zoco: 424,
-    limits: { users: 15, branches: 10, products: 50000, cashRegisters: 8 },
-    hint: 'Operación grande',
-  },
-  cadenas: {
-    code: 'cadenas', name: 'Cadenas', price: 999, affiliate: 250, zoco: 749,
-    limits: { users: 40, branches: Infinity, products: Infinity, cashRegisters: 20 },
-    hint: 'Sucursales ilimitadas',
+  empresarial: {
+    code: 'empresarial', name: 'ZoCo Empresarial', price: 599, affiliate: 250, zoco: 349,
+    limits: { branches: 10 },
+    hint: 'Hasta 10 sucursales · usuarios ilimitados',
   },
 };
 
-export const PLAN_ORDER = ['tiendita', 'negocio', 'profesional', 'premium', 'cadenas'];
+export const PLAN_ORDER = ['esencial', 'pro', 'empresarial'];
 
-/** Plan actual de la empresa (por defecto 'negocio'). */
+/** Equivalencia segura de planes anteriores (no se pierde nada). */
+export const LEGACY_PLAN_MAP = {
+  tiendita: 'esencial',
+  negocio: 'pro',
+  profesional: 'pro',
+  premium: 'empresarial',
+  cadenas: 'empresarial',
+  esencial: 'esencial',
+  pro: 'pro',
+  empresarial: 'empresarial',
+};
+
+/** Plan actual de la empresa, migrando nombres anteriores. */
 export function currentPlan() {
-  const code = state.company?.plan || 'negocio';
-  return PLANS[code] || PLANS.negocio;
+  const raw = String(state.company?.plan || 'pro').toLowerCase();
+  const code = LEGACY_PLAN_MAP[raw] || 'pro';
+  return PLANS[code] || PLANS.pro;
 }
 
 export function planLimits() {
   return currentPlan().limits;
 }
 
-/** Uso actual vs límites. */
+/** Uso actual. Solo las sucursales tienen límite comercial. */
 export function planUsage() {
-  const lim = planLimits();
+  const plan = currentPlan();
+  const limit = plan.limits.branches;
+  const used = (state.branches || []).length;
   const users = (state.users || []).filter((u) => u.active !== false).length;
-  const branches = (state.branches || []).length;
-  const products = (state.products || []).length;
-  const pct = (a, b) => (b === Infinity ? 0 : Math.min(100, Math.round((a / Math.max(1, b)) * 100)));
+  const pct = limit === Infinity ? 0 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   return {
-    plan: currentPlan(),
-    users: { used: users, limit: lim.users, pct: pct(users, lim.users) },
-    branches: { used: branches, limit: lim.branches, pct: pct(branches, lim.branches) },
-    products: { used: products, limit: lim.products, pct: pct(products, lim.products) },
+    plan,
+    branches: { used, limit, pct },
+    users: { used: users, limit: Infinity },
+    products: { used: (state.products || []).length, limit: Infinity },
+    overLimit: limit !== Infinity && used > limit,
   };
 }
 
-/** ¿Se puede agregar uno más de este tipo? */
+/** ¿Se puede agregar uno más de este tipo? Solo las sucursales se limitan. */
 export function canAdd(kind) {
-  const lim = planLimits();
+  if (kind !== 'branch') return { ok: true };
   const u = planUsage();
-  const map = { user: u.users, branch: u.branches, product: u.products };
-  const item = map[kind];
-  if (!item) return { ok: true };
-  if (item.limit === Infinity) return { ok: true };
-  if (item.used >= item.limit) {
+  if (u.branches.limit === Infinity) return { ok: true };
+  if (u.branches.used >= u.branches.limit) {
     return {
       ok: false,
-      msg: `Tu plan ${currentPlan().name} permite ${item.limit}. Mejora tu plan para agregar más.`,
-      plan: currentPlan(),
+      msg: `Tu plan ${u.plan.name} incluye ${u.branches.limit} sucursal(es). Cambia a un plan con más sucursales para agregar otra.`,
+      plan: u.plan,
     };
   }
   return { ok: true };
 }
 
-/** Cambia el plan de la empresa (local). */
+/** Cambia el plan de la empresa (local). No borra sucursales aunque exceda el límite. */
 export function setPlan(code) {
-  if (!PLANS[code]) return { ok: false, msg: 'Plan no válido' };
-  state.company.plan = code;
+  const key = LEGACY_PLAN_MAP[String(code || '').toLowerCase()] || code;
+  if (!PLANS[key]) return { ok: false, msg: 'Plan no válido' };
+  state.company.plan = key;
   state.company.planSince = new Date().toISOString();
+  const over = (state.branches || []).length > PLANS[key].limits.branches;
+  state.company.planOverLimit = over;
   emit();
-  return { ok: true, plan: PLANS[code] };
+  return { ok: true, plan: PLANS[key], overLimit: over };
+}
+
+/** Migración: normaliza el plan guardado y marca excesos sin restringir nada. */
+export function migratePlan() {
+  const raw = String(state.company?.plan || 'pro').toLowerCase();
+  const code = LEGACY_PLAN_MAP[raw] || 'pro';
+  if (state.company.plan !== code) {
+    state.company.plan = code;
+    if (raw !== code) state.company.planMigratedFrom = raw;
+  }
+  const limit = PLANS[code].limits.branches;
+  const used = (state.branches || []).length;
+  state.company.planOverLimit = used > limit;
+  if (state.company.planOverLimit) {
+    state.company.planOverLimitSince = state.company.planOverLimitSince || new Date().toISOString();
+    state.company.planOverLimitBranches = used;
+  }
+  return { plan: PLANS[code], used, limit, overLimit: state.company.planOverLimit };
+}
+
+/* ================= Comisiones de afiliados ================= */
+/**
+ * Libro de comisiones. Cada registro es UNA mensualidad pagada de UN referido.
+ * Idempotente por (suscripción + periodo): no se duplica si llega dos veces el mismo pago.
+ */
+export function commissionsOf(affiliateCode) {
+  const c = String(affiliateCode || '').toUpperCase();
+  return (state.commissions || []).filter((x) => x.affiliateCode === c);
+}
+
+export function commissionSummary(affiliateCode) {
+  const list = commissionsOf(affiliateCode);
+  const sum = (arr) => Math.round(arr.reduce((a, x) => a + (Number(x.amount) || 0), 0) * 100) / 100;
+  const pending = list.filter((x) => x.status === 'pending');
+  const approved = list.filter((x) => x.status === 'approved');
+  const paid = list.filter((x) => x.status === 'paid');
+  const refunded = list.filter((x) => x.status === 'refunded');
+  return {
+    count: list.length,
+    pending: sum(pending), pendingCount: pending.length,
+    approved: sum(approved), approvedCount: approved.length,
+    paid: sum(paid), paidCount: paid.length,
+    refunded: sum(refunded), refundedCount: refunded.length,
+  };
+}
+
+/**
+ * Registra la comisión de una mensualidad pagada.
+ * Requiere: affiliateCode, companyId, planCode, period (YYYY-MM), paymentId.
+ * Devuelve { ok:false, duplicate:true } si ya existía ese pago/periodo.
+ */
+export function recordCommission({ affiliateCode, companyId, planCode, period, paymentId, note = '' }) {
+  const code = String(affiliateCode || '').toUpperCase();
+  const plan = PLANS[LEGACY_PLAN_MAP[String(planCode || '').toLowerCase()] || planCode];
+  if (!code || !plan) return { ok: false, msg: 'Datos incompletos' };
+  const p = String(period || '').slice(0, 7);
+  const pid = String(paymentId || '');
+  if (!p || !pid) return { ok: false, msg: 'Falta periodo o identificador de pago' };
+  if (!Array.isArray(state.commissions)) state.commissions = [];
+  const dup = state.commissions.find((x) => x.paymentId === pid || (x.companyId === companyId && x.period === p && x.status !== 'refunded'));
+  if (dup) return { ok: false, duplicate: true, existing: dup };
+  const rec = {
+    id: uid('com'), date: new Date().toISOString(),
+    affiliateCode: code, companyId, planCode: plan.code, planName: plan.name,
+    period: p, amount: plan.affiliate, currency: 'MXN',
+    status: 'pending', paymentId: pid, note,
+  };
+  state.commissions.unshift(rec);
+  emit();
+  return { ok: true, commission: rec };
+}
+
+/** Reembolso o contracargo: marca la comisión como devuelta (no la borra). */
+export function voidCommission(paymentId, reason = 'Reembolso') {
+  const rec = (state.commissions || []).find((x) => x.paymentId === paymentId && x.status !== 'refunded');
+  if (!rec) return { ok: false, msg: 'Comisión no encontrada' };
+  rec.status = 'refunded';
+  rec.refundedAt = new Date().toISOString();
+  rec.refundReason = reason;
+  emit();
+  return { ok: true };
+}
+
+export function setCommissionStatus(id, status) {
+  if (!['pending', 'approved', 'paid', 'refunded'].includes(status)) return { ok: false, msg: 'Estado no válido' };
+  const rec = (state.commissions || []).find((x) => x.id === id);
+  if (!rec) return { ok: false, msg: 'No encontrada' };
+  rec.status = status;
+  if (status === 'paid') rec.paidAt = new Date().toISOString();
+  if (status === 'approved') rec.approvedAt = new Date().toISOString();
+  emit();
+  return { ok: true, commission: rec };
 }
 /* ================= Corte de caja Z ================= */
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;

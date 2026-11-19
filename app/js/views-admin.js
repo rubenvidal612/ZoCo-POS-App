@@ -51,7 +51,7 @@ export function adminView() {
                 <td class="t-strong">${esc(r.name || r.id)}<div style="font-size:11px;color:var(--muted)">${esc(r.id)}</div></td>
                 <td>
                   <select data-sel="${esc(r.id)}" style="height:30px;border:1px solid var(--line);border-radius:8px;font-size:12px">
-                    ${['tiendita', 'negocio', 'profesional', 'premium', 'cadenas', 'suspended'].map((pl) => `<option value="${pl}" ${(r.plan || 'pro') === pl ? 'selected' : ''}>${pl}</option>`).join('')}
+                    ${['esencial', 'pro', 'empresarial', 'suspended'].map((pl) => `<option value="${pl}" ${(r.plan || 'pro') === pl ? 'selected' : ''}>${pl}</option>`).join('')}
                   </select>
                 </td>
                 <td>${r.usuarios}</td>
@@ -70,7 +70,7 @@ export function adminView() {
     root.querySelectorAll('[data-plan-save]').forEach((b) => b.onclick = async () => {
       const id = b.dataset.planSave;
       const sel = root.querySelector(`[data-sel="${id}"]`);
-      const plan = sel ? sel.value : 'negocio';
+      const plan = sel ? sel.value : 'pro';
       await adminSetPlan(id, plan);
       toast('Plan de la empresa: ' + plan);
       load();

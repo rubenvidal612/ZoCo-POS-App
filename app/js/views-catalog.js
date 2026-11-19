@@ -14,8 +14,9 @@ import {
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
-  PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan,
-  myAffCode, affiliateLink, referralsOf, setAffiliateCommission,
+  PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
+  commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
+  myAffCode, affiliateLink, referralsOf,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -1226,35 +1227,41 @@ export function settingsView(ctx) {
     if (!plCur) return;
     const u = planUsage();
     const p = u.plan;
-    $('#pl-badge', root).textContent = p.name;
+    $('#pl-badge', root).textContent = p.name.replace('ZoCo ', '');
     plCur.innerHTML = `
       <div class="pl-hero">
         <div>
-          <div class="pl-name">Plan ${esc(p.name)}</div>
+          <div class="pl-name">${esc(p.name)}</div>
           <div class="pl-hint">${esc(p.hint)}</div>
         </div>
         <div class="pl-price">$${p.price}<span>/mes</span></div>
       </div>`;
-    const bar = (label, item, unit) => `
+    const over = u.overLimit;
+    $('#pl-usage', root).innerHTML = `
       <div class="pl-bar">
-        <div class="pl-bar-top"><span>${label}</span><b>${item.used}${item.limit === Infinity ? '' : ' / ' + item.limit} ${unit || ''}</b></div>
-        <div class="pl-track"><i style="width:${item.limit === Infinity ? 8 : item.pct}%;${item.pct >= 100 ? 'background:#DC2626' : item.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
-      </div>`;
-    $('#pl-usage', root).innerHTML =
-      bar('Usuarios', u.users) + bar('Sucursales', u.branches) + bar('Productos', u.products);
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used} / ${u.branches.limit}</b></div>
+        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>
+      <div class="pl-unlimited">
+        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
+        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
+      </div>
+      ${over ? `<div class="pl-warn">
+        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
+        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
+      </div>` : ''}`;
 
     $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
       const pl = PLANS[code];
       const cur = code === p.code;
-      const lim = (v) => (v === Infinity ? '∞' : v);
       return `<div class="pl-card ${cur ? 'on' : ''}">
         <div class="pl-card-name">${esc(pl.name)}</div>
         <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
         <div class="pl-card-list">
-          <div>${lim(pl.limits.users)} usuarios</div>
-          <div>${lim(pl.limits.branches)} sucursal(es)</div>
-          <div>${lim(pl.limits.products)} productos</div>
-          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}</div>
+          <div>${pl.limits.branches} sucursal(es)</div>
+          <div>Usuarios ilimitados</div>
+          <div>Todo incluido</div>
+          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}/mes</div>
         </div>
         ${cur ? '<div class="pl-card-on">Plan actual</div>'
               : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
@@ -1264,20 +1271,24 @@ export function settingsView(ctx) {
     $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
       const code = b.dataset.pl;
       const pl = PLANS[code];
+      const baja = pl.limits.branches < u.branches.used;
       const ok = await confirmDialog({
         title: 'Cambiar de plan',
-        message: `¿Pasar al plan ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        message: baja
+          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
+          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
         okText: 'Sí, cambiar',
       });
       if (!ok) return;
       const r = setPlan(code);
       if (!r.ok) { toast(r.msg); return; }
-      toast('Plan actualizado a ' + pl.name);
+      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
       paintPlan();
-      ctx.refreshShell?.();
+  const offPlan = subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
     });
   };
   paintPlan();
+  const offPlan = subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
   // ===== Sucursales =====
   const brList = $('#br-list', root);
   const paintBranches = () => {
@@ -2127,8 +2138,6 @@ export function usersView() {
           photoUrl: pendingPhoto,
         });
       } else {
-        const lim = canAdd('user');
-        if (!lim.ok) { toast(lim.msg); return; }
         state.users.push({
           id: 'u' + Date.now(), name, email, pass, role: sel.value, active: true,
           pin: m.root.querySelector('#u-pin').value.trim(),
@@ -2779,26 +2788,40 @@ export function affiliatesView(ctx) {
         <div style="padding:16px">
           <div class="aff-stats">
             <div><span>Invitados</span><b id="aff-total">0</b></div>
-            <div><span>Registrados</span><b id="aff-active">0</b></div>
-            <div><span>Comisión</span><b id="aff-pct-show">0%</b></div>
+            <div><span>Activos</span><b id="aff-active">0</b></div>
+            <div><span>Por pagar</span><b id="aff-pending">$0</b></div>
           </div>
-          <div class="field" style="margin-top:14px"><label>Comisión por afiliado (%)</label>
-            <div style="display:flex;gap:8px">
-              <input id="aff-pct" type="number" min="0" max="100" step="1" value="0">
-              <button class="btn sm ghost" id="aff-save">Guardar</button>
-            </div>
+          <div class="aff-stats" style="margin-top:10px">
+            <div><span>Aprobadas</span><b id="aff-approved">$0</b></div>
+            <div><span>Pagadas</span><b id="aff-paid">$0</b></div>
+            <div><span>Devueltas</span><b id="aff-refunded">$0</b></div>
           </div>
-          <div class="hint">Déjalo en 0 por ahora. Cuando definas cuánto se gana, aquí se calcula.</div>
+          <div class="pl-unlimited" style="margin-top:14px">
+            ${PLAN_ORDER.map((c) => `<div><b>${esc(PLANS[c].name)}</b><span>$${PLANS[c].affiliate} MXN / mes</span></div>`).join('')}
+          </div>
+          <div class="hint" style="margin-top:10px">
+            La comisión se genera cuando el referido paga su mensualidad, y se repite cada mes mientras siga activo.
+            Si hay reembolso o contracargo, se registra la devolución del mes.
+          </div>
         </div>
       </div>
     </div>
-
     <div class="panel" style="margin-top:14px">
       <div class="panel-head"><h2>Personas que invitaste</h2><span id="aff-count" style="font-size:12.5px;color:var(--muted)"></span></div>
       <div style="overflow:auto">
         <table>
           <thead><tr><th>Nombre</th><th>Correo</th><th>Fecha</th><th>Estado</th></tr></thead>
           <tbody id="aff-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Comisiones por mensualidad</h2></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Periodo</th><th>Cliente</th><th>Plan</th><th>Monto</th><th>Estado</th></tr></thead>
+          <tbody id="aff-coms"></tbody>
         </table>
       </div>
     </div>
@@ -2819,22 +2842,45 @@ export function affiliatesView(ctx) {
   const link = affiliateLink();
   $('#aff-code', root).textContent = code;
   $('#aff-link', root).value = link;
-  $('#aff-pct', root).value = state.user?.affCommissionPct || 0;
-  $('#aff-pct-show', root).textContent = (state.user?.affCommissionPct || 0) + '%';
 
+  const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
   const paint = () => {
     const list = referralsOf(code);
+    const resumen = commissionSummary(code);
     $('#aff-total', root).textContent = list.length;
     $('#aff-active', root).textContent = list.filter((r) => r.status === 'registrado' || r.status === 'activo').length;
+    if ($('#aff-pending', root)) $('#aff-pending', root).textContent = money2(resumen.pending);
+    if ($('#aff-approved', root)) $('#aff-approved', root).textContent = money2(resumen.approved);
+    if ($('#aff-paid', root)) $('#aff-paid', root).textContent = money2(resumen.paid);
+    if ($('#aff-refunded', root)) $('#aff-refunded', root).textContent = money2(resumen.refunded);
     $('#aff-count', root).textContent = list.length + ' persona(s)';
+    const coms = commissionsOf(code);
     $('#aff-rows', root).innerHTML = list.length
-      ? list.map((r) => `<tr>
+      ? list.map((r) => {
+          const mine = coms.filter((c) => c.companyId === r.companyId || (r.email && c.companyId === r.email));
+          const total = mine.filter((c) => c.status !== 'refunded').reduce((a, c) => a + (Number(c.amount) || 0), 0);
+          return `<tr>
           <td class="t-strong">${esc(r.name || '—')}</td>
           <td>${esc(r.email || '—')}</td>
           <td>${new Date(r.date).toLocaleDateString('es-MX')}</td>
-          <td><span class="badge ok">${esc(r.status || 'registrado')}</span></td>
-        </tr>`).join('')
-      : `<tr><td colspan="4"><div class="cart-empty">Todavía nadie se ha registrado con tu link.<br>Compártelo y aparecerán aquí.</div></td></tr>`;
+          <td><span class="badge ${r.status === 'activo' ? 'ok' : 'grey'}">${esc(r.status || 'registrado')}</span></td>
+          <td class="mono">${total ? money2(total) : '—'}</td>
+        </tr>`;
+        }).join('')
+      : `<tr><td colspan="5"><div class="cart-empty">Todavía nadie se ha registrado con tu link.<br>Compártelo y aparecerán aquí.</div></td></tr>`;
+
+    const box = $('#aff-coms', root);
+    if (box) {
+      box.innerHTML = coms.length
+        ? coms.slice(0, 15).map((c) => `<tr>
+            <td>${esc(c.period || '')}</td>
+            <td>${esc(c.companyId || '—')}</td>
+            <td>${esc(c.planName || '')}</td>
+            <td class="mono">${money2(c.amount)}</td>
+            <td><span class="badge ${c.status === 'paid' ? 'ok' : c.status === 'refunded' ? 'warn' : c.status === 'approved' ? 'info' : 'grey'}">${esc(c.status)}</span></td>
+          </tr>`).join('')
+        : `<tr><td colspan="5"><div class="cart-empty">Sin comisiones registradas todavía.<br>Se generan cuando un referido paga su mensualidad.</div></td></tr>`;
+    }
   };
   paint();
 
@@ -2851,11 +2897,6 @@ export function affiliatesView(ctx) {
     if (navigator.share) {
       try { await navigator.share({ title: 'ZoCo POS', text: 'Te invito a probar ZoCo POS', url: link }); } catch {}
     } else { toast('Copia el link y compártelo'); }
-  };
-  $('#aff-save', root).onclick = () => {
-    setAffiliateCommission($('#aff-pct', root).value);
-    $('#aff-pct-show', root).textContent = (state.user?.affCommissionPct || 0) + '%';
-    toast('Comisión guardada: ' + (state.user?.affCommissionPct || 0) + '%');
   };
 
   return { root, refresh: paint };

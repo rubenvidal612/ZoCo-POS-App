@@ -257,6 +257,28 @@ const server = http.createServer(async (req, res) => {
         const body = await readBody(req);
         if (!body || typeof body !== 'object') return json(res, 400, { ok: false, error: 'payload inválido' });
         const current = readDb(company) || {};
+
+        // Límite de sucursales por plan (solo bloquea sucursales NUEVAS)
+        const PLAN_BRANCHES = { esencial: 1, pro: 3, empresarial: 10 };
+        const LEGACY = { tiendita: 'esencial', negocio: 'pro', profesional: 'pro', premium: 'empresarial', cadenas: 'empresarial' };
+        const pick = (o) => o?.data || o || {};
+        const planRaw = String(pick(body)?.company?.plan || pick(current)?.company?.plan || 'pro').toLowerCase();
+        const plan = LEGACY[planRaw] || planRaw;
+        const limit = PLAN_BRANCHES[plan];
+        if (limit) {
+          const prev = pick(current).branches || [];
+          const nextB = pick(body).branches || [];
+          const prevIds = new Set(prev.map((b) => b.id));
+          const added = nextB.filter((b) => !prevIds.has(b.id));
+          if (added.length && prev.length + added.length > limit) {
+            return json(res, 409, {
+              ok: false,
+              error: `Tu plan permite ${limit} sucursal(es). No se guardó la sucursal nueva: "${added.map((b) => b.name).join(', ')}".`,
+              plan, limit, branches: prev.length,
+            });
+          }
+        }
+
         const next = {
           ...current, ...body,
           updatedAt: new Date().toISOString(),

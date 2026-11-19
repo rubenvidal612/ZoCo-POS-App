@@ -1,10 +1,11 @@
 {
-    "version":  "2.38.0",
+    "version":  "2.39.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "P7: catalogo de 5 planes con precios y comision de afiliado",
-                  "P7: panel Plan y limites con uso y comparador",
-                  "P7: limites aplicados a usuarios y sucursales",
-                  "P7: superadmin asigna plan por empresa"
+                  "Planes simplificados a 3: ZoCo Esencial $199, ZoCo Pro $349, ZoCo Empresarial $599",
+                  "Usuarios y productos ilimitados en todos los planes; solo cambian las sucursales",
+                  "Comisiones de afiliado: $75, $150 y $250 MXN mensuales con libro de comisiones",
+                  "Migracion automatica de planes anteriores sin borrar sucursales ni datos",
+                  "Limite de sucursales aplicado en la interfaz y en el servidor"
               ]
 }

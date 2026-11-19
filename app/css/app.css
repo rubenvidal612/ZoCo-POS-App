@@ -1574,3 +1574,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 @media (max-width:600px){ .pl-grid{grid-template-columns:1fr 1fr} }
 /* El panel de plan ocupa todo el ancho */
 .settings-grid .panel[data-sec="Plan y límites"]{grid-column:1/-1}
+
+/* Planes: usuarios/productos ilimitados y aviso de exceso */
+.pl-unlimited{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pl-unlimited div{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.pl-unlimited b{display:block;font-size:13px;color:var(--text)}
+.pl-unlimited span{font-size:11.5px;color:var(--muted)}
+.pl-warn{margin-top:12px;padding:10px 12px;border-radius:12px;background:#FFFBEB;border:1px solid #FDE68A;
+  color:#92400E;font-size:12.5px;line-height:1.45}
+@media (max-width:640px){ .pl-unlimited{grid-template-columns:1fr} }
