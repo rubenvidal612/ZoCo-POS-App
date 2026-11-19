@@ -1,10 +1,9 @@
 {
-    "version":  "2.44.0",
+    "version":  "2.44.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login sin correo precargado ni credenciales demo visibles",
-                  "Entrar con correo y contrasena usa TU cuenta (no la del equipo)",
-                  "Mensajes claros: cuenta creada con Google, correo sin confirmar, contrasena incorrecta",
-                  "Registro con correo entra con la cuenta nueva"
+                  "El login no muestra ningun correo ni contrasena",
+                  "Datos de ejemplo usan dueno@zoco.app (ya no el correo del propietario)",
+                  "La contrasena del usuario se oculta con boton de ojo"
               ]
 }

@@ -1952,7 +1952,12 @@ export function usersView() {
           <div class="field"><label>Correo</label><input id="u-e" type="email" value="${esc(u?.email || '')}"></div>
         </div>
         <div class="row2">
-          <div class="field"><label>Contraseña</label><input id="u-p" value="${esc(u?.pass || '')}"></div>
+          <div class="field"><label>Contraseña</label>
+            <div style="display:flex;gap:6px">
+              <input id="u-p" type="password" value="${esc(u?.pass || '')}" autocomplete="new-password">
+              <button class="btn ghost sm" type="button" id="u-p-eye" aria-label="Mostrar contraseña">👁</button>
+            </div>
+          </div>
           <div class="field"><label>PIN checador</label><input id="u-pin" value="${esc(u?.pin || '')}" placeholder="4 dígitos"></div>
         </div>
         <div class="row2">
@@ -2050,6 +2055,12 @@ export function usersView() {
         : 'Permisos: ' + p.map((k) => PERMS[k] || k).join(' · ');
     };
     sel.onchange = showPerms; showPerms();
+
+    const eye = m.root.querySelector('#u-p-eye');
+    if (eye) eye.onclick = () => {
+      const inp = m.root.querySelector('#u-p');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    };
 
     m.root.querySelector('#ok').onclick = () => {
       const name = m.root.querySelector('#u-n').value.trim();

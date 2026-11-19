@@ -747,10 +747,10 @@ function seed() {
     branches,
     currentBranch: 'b1',
     users: [
-      { id: 'u1', name: 'Ramber Américas', email: 'ramberamericasefectivo@gmail.com', pass: '1234', role: 'OWNER', active: true, pin: '1234', jobTitle: 'Propietario', payType: 'HOURLY', payRate: 150 },
+      { id: 'u1', name: 'Propietario', email: 'dueno@zoco.app', pass: '1234', role: 'OWNER', active: true, pin: '1234', jobTitle: 'Propietario', payType: 'HOURLY', payRate: 150 },
       { id: 'u2', name: 'Cajero Mostrador', email: 'cajero@zoco.app', pass: '1234', role: 'CASHIER', active: true, pin: '1111', jobTitle: 'Vendedor', payType: 'HOURLY', payRate: 60 },
     ],
-    user: { name: 'Ramber Américas', role: 'OWNER' },
+    user: { name: 'Propietario', role: 'OWNER' },
     customers: [],
     coupons: [],
     layaways: [],
@@ -821,7 +821,7 @@ function migrate(s) {
     s.users = [{
       id: 'u-owner',
       name: s.company?.name || 'Dueño',
-      email: 'ramberamericasefectivo@gmail.com',
+      email: 'dueno@zoco.app',
       pass: '1234',
       role: 'OWNER',
       pin: '1234',
