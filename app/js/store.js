@@ -1328,8 +1328,8 @@ export const PLANS = {
   },
   pro: {
     code: 'pro', name: 'ZoCo Pro', price: 349, affiliate: 150, zoco: 199,
-    limits: { branches: 3 },
-    hint: 'Hasta 3 sucursales · usuarios ilimitados',
+    limits: { branches: 2 },
+    hint: 'Hasta 2 sucursales · usuarios ilimitados',
   },
   empresarial: {
     code: 'empresarial', name: 'ZoCo Empresarial', price: 599, affiliate: 250, zoco: 349,

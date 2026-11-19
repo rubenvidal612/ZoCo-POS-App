@@ -259,7 +259,7 @@ const server = http.createServer(async (req, res) => {
         const current = readDb(company) || {};
 
         // Límite de sucursales por plan (solo bloquea sucursales NUEVAS)
-        const PLAN_BRANCHES = { esencial: 1, pro: 3, empresarial: 10 };
+        const PLAN_BRANCHES = { esencial: 1, pro: 2, empresarial: 10 };
         const LEGACY = { tiendita: 'esencial', negocio: 'pro', profesional: 'pro', premium: 'empresarial', cadenas: 'empresarial' };
         const pick = (o) => o?.data || o || {};
         const planRaw = String(pick(body)?.company?.plan || pick(current)?.company?.plan || 'pro').toLowerCase();

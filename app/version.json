@@ -1,9 +1,8 @@
 {
-    "version":  "2.43.0",
+    "version":  "2.43.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Modo gratuito de prueba activado: sin cobros y sin limites",
-                  "Interruptor en Mi plan para activar cobro y limites cuando quieras",
-                  "El servidor y Supabase respetan el modo gratuito"
+                  "ZoCo Pro $349 incluye 2 sucursales (antes 3)",
+                  "Limite actualizado en la app, el servidor y la funcion de Supabase"
               ]
 }
