@@ -1,8 +1,7 @@
 {
-    "version":  "2.50.0",
+    "version":  "2.51.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "La sesion se guarda ANTES de sincronizar: si la nube falla, igual entras",
-                  "Registro detallado del acceso con Google en el diagnostico"
+                  "Nuevo panel \"Mi cuenta y contrasena\" en Configuracion para crear/cambiar tu contrasena en la nube"
               ]
 }

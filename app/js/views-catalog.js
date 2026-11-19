@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
-import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle, alignCompany } from './auth.js';
+import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle, alignCompany, updatePassword } from './auth.js';
 import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
@@ -875,6 +875,26 @@ export function settingsView(ctx) {
           </div>
         </div>
       </div>
+      <div class="panel" data-sec="Mi cuenta">
+        <div class="panel-head"><h2>Mi cuenta y contraseña</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Con esto puedes entrar con tu correo y contraseña, sin depender de Google.
+          </div>
+          <div class="field"><label>Correo de tu cuenta</label>
+            <input id="ac-email" value="${esc(state.user?.email || '')}" readonly style="background:var(--surface-2)"></div>
+          <div class="row2">
+            <div class="field"><label>Contraseña nueva</label>
+              <input id="ac-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+            <div class="field"><label>Repite la contraseña</label>
+              <input id="ac-pass2" type="password" placeholder="Otra vez" autocomplete="new-password"></div>
+          </div>
+          <button class="btn sm" id="ac-save">Guardar contraseña</button>
+          <div class="hint" style="margin-top:10px">
+            Se guarda en tu cuenta en la nube. Después podrás entrar con correo y contraseña desde cualquier dispositivo.
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Ticket">
         <div class="panel-head"><h2>Ticket</h2></div>
         <div style="padding:16px">
@@ -1414,6 +1434,30 @@ export function settingsView(ctx) {
     emit(); paintCF();
     toast(added ? added + ' campos sugeridos agregados' : 'Ya tienes esos campos');
   });
+  // ===== Mi cuenta: crear / cambiar contraseña en la nube =====
+  const acSave = $('#ac-save', root);
+  if (acSave) {
+    acSave.onclick = async () => {
+      const p1 = $('#ac-pass', root).value;
+      const p2 = $('#ac-pass2', root).value;
+      if (p1.length < 6) { toast('La contraseña debe tener 6 caracteres o más'); return; }
+      if (p1 !== p2) { toast('Las contraseñas no coinciden'); return; }
+      if (!cloudSession()?.access_token) {
+        toast('Primero entra con Google para poder crear tu contraseña');
+        return;
+      }
+      acSave.disabled = true;
+      acSave.textContent = 'Guardando…';
+      const r = await updatePassword(p1);
+      acSave.disabled = false;
+      acSave.textContent = 'Guardar contraseña';
+      if (!r.ok) { toast('No se pudo guardar: ' + (r.error || '')); return; }
+      $('#ac-pass', root).value = '';
+      $('#ac-pass2', root).value = '';
+      toast('Contraseña guardada ✓ Ya puedes entrar con tu correo y contraseña');
+    };
+  }
+
   // ===== Ticket editable =====
   const tkSave = $('#tk-save', root);
   if (tkSave) {
