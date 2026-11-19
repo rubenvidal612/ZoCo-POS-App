@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de acceso · ZoCo</title>
+<style>
+  :root{--brand:#F97316;--navy:#0F172A;--line:#E2E8F0;--muted:#64748B}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--navy);color:#0F172A;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{width:100%;max-width:680px;background:#fff;border-radius:20px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+  h1{margin:0 0 4px;font-size:21px}
+  p.sub{margin:0 0 18px;color:var(--muted);font-size:13px}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .row b{word-break:break-all;text-align:right}
+  .ok{color:#059669;font-weight:800}
+  .bad{color:#DC2626;font-weight:800}
+  .warn{color:#B45309;font-weight:800}
+  pre{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12px;
+      white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto}
+  button{margin-top:14px;width:100%;height:48px;border:0;border-radius:12px;background:var(--brand);color:#fff;
+         font-weight:800;font-size:15px;cursor:pointer}
+  ol{margin:14px 0 0 18px;padding:0;font-size:13px;line-height:1.7;color:#334155}
+  code{background:#F1F5F9;padding:1px 5px;border-radius:5px;font-size:12px}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Diagnóstico de acceso con Google</h1>
+  <p class="sub">Esta página dice exactamente qué está fallando al volver de Google.</p>
+
+  <div class="row"><span>Página actual</span><b id="d-url">—</b></div>
+  <div class="row"><span>¿Trae tokens? (access_token)</span><b id="d-token">—</b></div>
+  <div class="row"><span>¿Trae error?</span><b id="d-err">—</b></div>
+  <div class="row"><span>Supabase configurado</span><b id="d-sb">—</b></div>
+
+  <div style="margin-top:14px" id="d-box"></div>
+  <pre id="d-raw" style="margin-top:14px"></pre>
+
+  <button id="d-go">Probar Google desde aquí</button>
+  <div class="hint">Después de volver de Google, esta página mostrará el resultado.</div>
+
+  <ol>
+    <li>Supabase → <b>Authentication → URL Configuration</b>:<br>
+      Site URL = <code id="c-site">https://zoco-pos.vercel.app</code><br>
+      Redirect URLs: <code>https://zoco-pos.vercel.app/**</code> y <code>http://localhost:4321/**</code></li>
+    <li>Google Cloud → <b>APIs &amp; Services → Credentials</b> → tu OAuth Client:<br>
+      Authorized redirect URI = <code>https://ecaqkluvelojdofcokik.supabase.co/auth/v1/callback</code></li>
+    <li>Supabase → <b>Authentication → Providers → Google</b>: habilitado con Client ID y Secret.</li>
+  </ol>
+</div>
+
+<script src="./js/config.js"></script>
+<script>
+  const $ = (s) => document.querySelector(s);
+  const hash = location.hash || '';
+  const search = location.search || '';
+  const params = new URLSearchParams((hash || search).replace(/^#/, ''));
+  const token = params.get('access_token');
+  const err = params.get('error_description') || params.get('error');
+
+  $('#d-url').textContent = location.href.slice(0, 90);
+  $('#d-token').innerHTML = token ? '<span class="ok">SÍ ✓</span>' : '<span class="bad">NO</span>';
+  $('#d-err').innerHTML = err ? '<span class="bad">' + err + '</span>' : '<span class="ok">ninguno</span>';
+  const cfg = window.ZOCO_CONFIG || {};
+  $('#d-sb').innerHTML = cfg.supabaseUrl
+    ? '<span class="ok">' + cfg.supabaseUrl.replace('https://', '') + '</span>'
+    : '<span class="bad">sin config</span>';
+
+  $('#d-raw').textContent =
+    'origin: ' + location.origin + '\n' +
+    'pathname: ' + location.pathname + '\n' +
+    'search: ' + (search || '(vacío)') + '\n' +
+    'hash: ' + (hash ? hash.slice(0, 160) + '…' : '(vacío)');
+
+  if (token) {
+    $('#d-box').innerHTML = '<div class="row"><span>Resultado</span><b class="ok">Google respondió bien</b></div>' +
+      '<div class="hint">Los tokens llegaron a esta página. Si la app no te deja entrar, el problema está en el login, no en Google.</div>';
+  } else if (err) {
+    $('#d-box').innerHTML = '<div class="row"><span>Resultado</span><b class="bad">Google/Supabase rechazó el acceso</b></div>' +
+      '<div class="hint">Revisa el mensaje de arriba: casi siempre es la redirect URI en Google Cloud o la URL en Supabase.</div>';
+  } else {
+    $('#d-box').innerHTML = '<div class="row"><span>Resultado</span><b class="warn">Sin respuesta de Google todavía</b></div>' +
+      '<div class="hint">Si al darle al botón vuelves aquí sin tokens ni error, Supabase está redirigiendo a otra URL (Site URL mal configurada).</div>';
+  }
+
+  $('#d-go').onclick = () => {
+    const base = (window.ZOCO_CONFIG && window.ZOCO_CONFIG.supabaseUrl) || 'https://ecaqkluvelojdofcokik.supabase.co';
+    const url = base + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + '/auth-debug.html');
+    location.href = url;
+  };
+</script>
+</body>
+</html>

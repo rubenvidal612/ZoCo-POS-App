@@ -130,7 +130,7 @@ export function cloudSignOut() {
 /* ================= Google (OAuth) ================= */
 export function signInWithGoogle() {
   if (!sbReady()) return false;
-  const redirect = location.origin + location.pathname;
+  // redirect limpio: solo el origen (más fácil de autorizar en Supabase)\n  const redirect = location.origin + '/';
   const url = `${sbConfig().url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
   location.href = url;
   return true;
@@ -201,7 +201,7 @@ export function alignCompany(res) {
 export async function sendMagicLink(email) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
-    const redirect = location.origin + location.pathname;
+    // redirect limpio: solo el origen (más fácil de autorizar en Supabase)\n  const redirect = location.origin + '/';
     const r = await safeFetch(`${sbConfig().url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
@@ -218,7 +218,7 @@ export async function sendMagicLink(email) {
 export async function sendRecovery(email) {
   if (!sbReady()) return { ok: false, error: 'Configura Supabase primero' };
   try {
-    const redirect = location.origin + location.pathname;
+    // redirect limpio: solo el origen (más fácil de autorizar en Supabase)\n  const redirect = location.origin + '/';
     const r = await safeFetch(`${sbConfig().url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },

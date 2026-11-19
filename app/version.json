@@ -1,9 +1,8 @@
 {
-    "version":  "2.45.0",
+    "version":  "2.45.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "El boton de Google cambia a \"Crear cuenta con Google\" al registrarse",
-                  "Si el correo no tiene contrasena, aparece boton para crear/cambiar contrasena",
-                  "Sin botones duplicados en el login"
+                  "Pagina de diagnostico: /auth-debug.html para ver el error exacto de Google",
+                  "Google usa redirect limpio (solo el dominio)"
               ]
 }
