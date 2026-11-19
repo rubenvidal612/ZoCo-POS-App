@@ -19,9 +19,23 @@
     window.__bip = e;
     window.dispatchEvent(new Event('zoco:installable'));
   });
+  // Diagnóstico: cualquier error de JavaScript queda visible en <html data-err="...">
+  window.__errs = [];
+  window.addEventListener('error', function (e) {
+    try {
+      window.__errs.push((e.message || 'error') + ' @' + (e.filename || '').split('/').pop() + ':' + (e.lineno || ''));
+      document.documentElement.dataset.err = window.__errs.join(' | ').slice(0, 400);
+    } catch (_) {}
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    try {
+      window.__errs.push('rechazo: ' + ((e.reason && e.reason.message) || e.reason));
+      document.documentElement.dataset.err = window.__errs.join(' | ').slice(0, 400);
+    } catch (_) {}
+  });
 </script>
 <link rel="stylesheet" href="./css/tokens.css?v=8">
-<link rel="stylesheet" href="./css/app.css?v=38">
+<link rel="stylesheet" href="./css/app.css?v=39">
 </head>
 <body>
 <div id="app"></div>
