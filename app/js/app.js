@@ -11,7 +11,7 @@ import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
 import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth, claimInvites } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money, esc } from './ui.js';
@@ -583,6 +583,12 @@ bootOAuth().then(async (oauth) => {
         route = 'inicio';
 
         // 2) Enriquecimiento (no bloquea el acceso si falla)
+        // Primero acepta invitaciones pendientes a mi correo: si me invitaron
+        // como empleado, debo entrar a ESA empresa y no crear una nueva.
+        try {
+          const inv = await claimInvites();
+          if (inv?.claimed) toast('Te uniste a la empresa de tu invitación');
+        } catch (e) { logOauth('invitacion', 'error: ' + e.message); }
         try { alignCompany(await ensureCompany(gname)); } catch (e) { logOauth('empresa', 'no se pudo: ' + e.message); }
         try {
           if (res.created && res.cloudCompany && !state.products.length) {

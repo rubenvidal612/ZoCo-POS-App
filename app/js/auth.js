@@ -88,6 +88,80 @@ export async function myCompanies() {
   } catch { return []; }
 }
 
+/* ================= Equipo: invitaciones por correo ================= */
+
+/** Reclama invitaciones pendientes dirigidas a mi correo. */
+export async function claimInvites() {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false, claimed: 0 };
+  const email = String(s.user?.email || '').toLowerCase();
+  if (!email) return { ok: true, claimed: 0 };
+  try {
+    const r = await safeFetch(
+      `${sbConfig().url}/rest/v1/members?user_id=is.null&email=eq.${encodeURIComponent(email)}`,
+      {
+        method: 'PATCH',
+        headers: { ...headers(s.access_token), Prefer: 'return=representation' },
+        body: JSON.stringify({ user_id: s.user.id }),
+      },
+    );
+    if (!r.ok) return { ok: false, claimed: 0, error: (await r.text()).slice(0, 160) };
+    const rows = await r.json();
+    const claimed = Array.isArray(rows) ? rows.length : 0;
+    if (claimed) logOauth('invitacion', 'aceptadas: ' + claimed);
+    return { ok: true, claimed };
+  } catch (e) { return { ok: false, claimed: 0, error: e.message }; }
+}
+
+/** Lista el equipo (miembros) de una empresa. */
+export async function listTeam(companyId) {
+  const s = cloudSession();
+  if (!s?.access_token) return [];
+  try {
+    const r = await safeFetch(
+      `${sbConfig().url}/rest/v1/members?company_id=eq.${encodeURIComponent(companyId)}&select=id,email,role,user_id,created_at&order=created_at.asc`,
+      { headers: headers(s.access_token) },
+    );
+    const j = await r.json();
+    return Array.isArray(j) ? j : [];
+  } catch { return []; }
+}
+
+/** Invita a un empleado por correo. */
+export async function inviteMember(companyId, email, role = 'CASHIER') {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false, error: 'Entra con tu cuenta primero' };
+  const mail = String(email || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return { ok: false, error: 'Correo inválido' };
+  try {
+    const team = await listTeam(companyId);
+    if (team.some((m) => String(m.email || '').toLowerCase() === mail)) {
+      return { ok: false, error: 'Ese correo ya está en el equipo' };
+    }
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/members`, {
+      method: 'POST',
+      headers: { ...headers(s.access_token), Prefer: 'return=minimal' },
+      body: JSON.stringify({ company_id: companyId, email: mail, role, user_id: null }),
+    });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 180) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
+/** Quita a un miembro (no permite quitar al último dueño). */
+export async function removeMember(companyId, memberId) {
+  const s = cloudSession();
+  if (!s?.access_token) return { ok: false, error: 'Sin sesión' };
+  try {
+    const r = await safeFetch(`${sbConfig().url}/rest/v1/members?id=eq.${encodeURIComponent(memberId)}`, {
+      method: 'DELETE',
+      headers: headers(s.access_token),
+    });
+    if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 180) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
 export async function amISuperadmin() {
   const s = cloudSession();
   if (!s?.access_token) return false;

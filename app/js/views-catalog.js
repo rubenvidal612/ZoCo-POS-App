@@ -4,7 +4,7 @@ import { requestNotifyPermission, subscribePush } from './notify.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
-import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle, alignCompany, updatePassword } from './auth.js';
+import { cloudSession, cloudSignIn, cloudSignUp, cloudSignOut, ensureCompany, signInWithGoogle, alignCompany, updatePassword, listTeam, inviteMember, removeMember } from './auth.js';
 import { openReturnModal, openAdjustmentModal, openTransferModal, openMixCalculator, openProduceModal, openKardex } from './views-inventory.js';
 import {
   state, emit, sectionsForMode, sizesFor, stockOf, totalStock, upsertProduct, deleteProduct,
@@ -942,6 +942,32 @@ export function settingsView(ctx) {
           </div>
         </div>
       </div>
+      <div class="panel" data-sec="Equipo">
+        <div class="panel-head"><h2>Equipo (empleados)</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Invita a tus empleados con su correo. Entran desde su propio celular a <b>esta misma empresa</b>
+            (no se les crea un negocio aparte).
+          </div>
+          <div class="row2">
+            <div class="field"><label>Correo del empleado</label>
+              <input id="eq-email" type="email" placeholder="empleado@gmail.com" autocomplete="off"></div>
+            <div class="field"><label>Rol</label>
+              <select id="eq-role">
+                <option value="CASHIER">Cajero / Vendedor</option>
+                <option value="ADMIN">Administrador</option>
+                <option value="STOCK">Almacén</option>
+                <option value="ACCOUNT">Contabilidad</option>
+              </select></div>
+          </div>
+          <button class="btn sm" id="eq-invite">Invitar por correo</button>
+          <div class="hint" id="eq-msg" style="margin-top:8px"></div>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+            <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:8px">MIEMBROS DE TU EMPRESA</div>
+            <div id="eq-list"><div class="hint">Entra con tu cuenta para ver el equipo.</div></div>
+          </div>
+        </div>
+      </div>
       <div class="panel" data-sec="Ticket">
         <div class="panel-head"><h2>Ticket</h2></div>
         <div style="padding:16px">
@@ -1503,6 +1529,62 @@ export function settingsView(ctx) {
       $('#ac-pass2', root).value = '';
       toast('Contraseña guardada ✓ Ya puedes entrar con tu correo y contraseña');
     };
+  }
+
+  // ===== Equipo: invitar empleados por correo =====
+  const eqList = $('#eq-list', root);
+  if (eqList) {
+    const roleLabel = { OWNER: 'Dueño', ADMIN: 'Administrador', CASHIER: 'Cajero/Vendedor', STOCK: 'Almacén', ACCOUNT: 'Contabilidad' };
+    const paintTeam = async () => {
+      if (!cloudSession()?.access_token) {
+        eqList.innerHTML = '<div class="hint">Entra con tu cuenta (Google o correo) para ver tu equipo.</div>';
+        return;
+      }
+      eqList.innerHTML = '<div class="hint">Cargando…</div>';
+      const team = await listTeam(state.currentCompany);
+      if (!team.length) { eqList.innerHTML = '<div class="hint">Aún no hay empleados invitados.</div>'; return; }
+      eqList.innerHTML = team.map((mm) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis">${esc(mm.email)}</div>
+            <div style="font-size:11px;color:var(--muted)">${esc(roleLabel[String(mm.role).toUpperCase()] || mm.role)}${mm.user_id ? '' : ' · invitación pendiente'}</div>
+          </div>
+          ${String(mm.role).toUpperCase() === 'OWNER' ? '' : `<button class="btn ghost sm" data-rm="${esc(mm.id)}">Quitar</button>`}
+        </div>`).join('');
+      eqList.querySelectorAll('[data-rm]').forEach((b) => {
+        b.onclick = async () => {
+          const ok = await confirmDialog({ title: 'Quitar del equipo', message: 'Dejará de tener acceso a esta empresa.', okText: 'Quitar', danger: true });
+          if (!ok) return;
+          const r = await removeMember(state.currentCompany, b.dataset.rm);
+          toast(r.ok ? 'Miembro quitado' : 'No se pudo: ' + (r.error || ''));
+          paintTeam();
+        };
+      });
+    };
+    const eqMsg = (t, bad) => {
+      const e = $('#eq-msg', root);
+      if (!e) return;
+      e.textContent = t;
+      e.style.color = bad ? 'var(--danger)' : 'var(--ok,#059669)';
+    };
+    const inviteBtn = $('#eq-invite', root);
+    if (inviteBtn) {
+      inviteBtn.onclick = async () => {
+        const email = ($('#eq-email', root).value || '').trim();
+        const role = ($('#eq-role', root).value || 'CASHIER');
+        if (!email) { eqMsg('Escribe el correo del empleado', true); return; }
+        inviteBtn.disabled = true;
+        inviteBtn.textContent = 'Invitando…';
+        const r = await inviteMember(state.currentCompany, email, role);
+        inviteBtn.disabled = false;
+        inviteBtn.textContent = 'Invitar por correo';
+        if (!r.ok) { eqMsg(r.error || 'No se pudo invitar', true); return; }
+        $('#eq-email', root).value = '';
+        eqMsg('✓ Invitación lista. Que entre con ESE correo (Google o contraseña) y verá tu empresa.');
+        paintTeam();
+      };
+    }
+    paintTeam();
   }
 
   // ===== Ticket editable =====
