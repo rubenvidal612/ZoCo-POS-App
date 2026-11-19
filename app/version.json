@@ -1,9 +1,9 @@
 {
-    "version":  "2.40.0",
+    "version":  "2.41.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Limite de sucursales aplicado en Supabase con trigger (solo bloquea sucursales nuevas)",
-                  "Admin: panel de comisiones con aprobar, pagar y devolver",
-                  "RPC admin_company_commissions y admin_set_commission para superadmin"
+                  "Google: una cuenta nueva ya obtiene acceso (rol segun su empresa en la nube)",
+                  "Google: se muestran los errores de autenticacion en el login",
+                  "Login con logo, titulo y boton de Google centrados en escritorio y movil"
               ]
 }

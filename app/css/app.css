@@ -1583,3 +1583,15 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .pl-warn{margin-top:12px;padding:10px 12px;border-radius:12px;background:#FFFBEB;border:1px solid #FDE68A;
   color:#92400E;font-size:12.5px;line-height:1.45}
 @media (max-width:640px){ .pl-unlimited{grid-template-columns:1fr} }
+/* ===== Login: logo e identidad centrados (los campos siguen a la izquierda) ===== */
+.login-card{text-align:center}
+.login-logo{margin-left:auto;margin-right:auto}
+.login-card h1,.login-card p{text-align:center}
+.login-card .field,.login-card .field label{text-align:left}
+.login-links{justify-content:center}
+.login-hint{text-align:center}
+#lg-google{justify-content:center}
+@media (max-width:420px){
+  .login-card{padding:22px 18px}
+  .login-logo{width:48px;height:48px;font-size:21px}
+}

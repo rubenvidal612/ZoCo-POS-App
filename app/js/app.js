@@ -11,7 +11,7 @@ import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
 import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money } from './ui.js';
@@ -438,18 +438,34 @@ captureRef();
   }
 bootOAuth().then(async (oauth) => {
   await hydrate();
+  if (oauth && oauth.ok === false && oauth.error) {
+    try { const el = document.querySelector('#lg-err'); if (el) el.textContent = oauth.error; } catch {}
+  }
   if (oauth?.user && sbReady()) {
     try {
       const email = (oauth.user.email || '').toLowerCase();
-      const user = state.users.find((u) => u.active && u.email?.toLowerCase() === email);
-      if (!user) {
-        // Nunca conceder el rol del dueño local a una cuenta Google diferente.
-        toast('Google autenticado, pero este correo no tiene usuario en ZoCo.');
-      } else {
+      const gname = oauth.user.user_metadata?.name || oauth.user.user_metadata?.full_name || email.split('@')[0];
+      const res = await googleSignIn(oauth.user);
+      if (!res.ok) { toast(res.error || 'No se pudo entrar con Google'); }
+      else {
+        const user = res.user;
+
+        if (res.created) {
+          state.users.push(user);
+          // Si ya tenía empresa en la nube y este equipo está vacío, trae sus datos.
+          if (res.cloudCompany && !state.products.length) {
+            try { alignCompany({ ok: true, company: res.cloudCompany }); await pullCloud(true); } catch (e) { console.warn('No se pudo traer la empresa', e); }
+          } else if (!res.cloudCompany && !state.products.length) {
+            try { alignCompany(await ensureCompany(gname)); } catch (e) { console.warn('No se pudo crear la empresa', e); }
+          }
+          emit();
+          toast('Cuenta de Google lista: ' + email);
+        }
+
         // currentUser() lee zoco.session, no state.user: es necesario persistirla.
         localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() }));
         state.user = user;
-        try { alignCompany(await ensureCompany(oauth.user.user_metadata?.name || email.split('@')[0])); } catch (e) { console.warn('No se pudo vincular empresa', e); }
+        try { alignCompany(await ensureCompany(gname)); } catch (e) { console.warn('No se pudo vincular empresa', e); }
         state.superadmin = await amISuperadmin();
         route = 'inicio'; location.hash = '#/inicio';
         toast('Bienvenido con Google');

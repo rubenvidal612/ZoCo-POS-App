@@ -139,7 +139,20 @@ export function signInWithGoogle() {
 /** Lee el #access_token que Supabase devuelve al volver de Google. */
 export async function handleOAuthReturn() {
   const hash = location.hash || '';
-  if (!hash.includes('access_token=')) return { ok: false };
+  if (!hash.includes('access_token=')) {
+    // Supabase devuelve el motivo cuando algo falla (redirect no permitido, etc.)
+    if (hash.includes('error')) {
+      const p = new URLSearchParams(hash.replace(/^#/, ''));
+      const msg = p.get('error_description') || p.get('error') || 'Error de autenticación';
+      return { ok: false, error: decodeURIComponent(msg.replace(/\+/g, ' ')) };
+    }
+    if (location.search.includes('error')) {
+      const p = new URLSearchParams(location.search);
+      const msg = p.get('error_description') || p.get('error') || 'Error de autenticación';
+      return { ok: false, error: decodeURIComponent(msg.replace(/\+/g, ' ')) };
+    }
+    return { ok: false };
+  }
   const params = new URLSearchParams(hash.replace(/^#/, ''));
   if (params.get('type') === 'recovery') { try { sessionStorage.setItem('zoco.recovery', '1'); } catch {} }
   const access_token = params.get('access_token');
@@ -260,4 +273,51 @@ export async function adminSetCommission(companyId, commissionId, status) {
     if (!r.ok) return { ok: false, error: (await r.text()).slice(0, 160) };
     return { ok: true };
   } catch (e) { return { ok: false, error: e.message }; }
+}
+/**
+ * Acceso con Google: garantiza que la cuenta tenga acceso a ZoCo.
+ * - Si el correo ya existe como usuario local, entra con ese usuario.
+ * - Si no existe, crea el usuario (rol de la nube si ya tiene empresa; si no, dueño
+ *   cuando el equipo no tiene dueño, o cajero cuando ya lo tiene).
+ * Devuelve { ok, user, created }.
+ */
+export async function googleSignIn(guser) {
+  const email = String(guser?.email || '').toLowerCase();
+  if (!email) return { ok: false, error: 'Google no devolvió correo' };
+  const name = guser?.user_metadata?.name || guser?.user_metadata?.full_name || email.split('@')[0];
+
+  const st = (() => {
+    try { return JSON.parse(localStorage.getItem('zoco.pos.v1') || 'null'); } catch { return null; }
+  })();
+  const users = Array.isArray(st?.users) ? st.users : [];
+  let user = users.find((u) => u.active !== false && String(u.email || '').toLowerCase() === email);
+  let created = false;
+
+  if (!user) {
+    let cloudRole = '';
+    let cloudCompany = '';
+    try {
+      const companies = await myCompanies();
+      if (companies.length) {
+        cloudCompany = companies[0].company_id || '';
+        cloudRole = String(companies[0].role || '').toUpperCase();
+      }
+    } catch {}
+
+    const roles = ['OWNER', 'ADMIN', 'CASHIER', 'STOCK', 'ACCOUNT'];
+    const role = roles.includes(cloudRole)
+      ? cloudRole
+      : (users.some((u) => String(u.role).toUpperCase() === 'OWNER') ? 'CASHIER' : 'OWNER');
+
+    user = {
+      id: 'u-' + Math.random().toString(36).slice(2, 9),
+      name, email, role, pin: '1234', active: true,
+      jobTitle: role === 'OWNER' ? 'Propietario' : 'Vendedor',
+      payType: 'HOURLY', payRate: 60,
+    };
+    created = true;
+    return { ok: true, user, created, cloudCompany, needsState: true, role };
+  }
+
+  return { ok: true, user, created: false };
 }
