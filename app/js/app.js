@@ -11,7 +11,7 @@ import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
 import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money, esc } from './ui.js';
@@ -558,9 +558,9 @@ bootOAuth().then(async (oauth) => {
     try {
       const email = (oauth.user.email || '').toLowerCase();
       const gname = oauth.user.user_metadata?.name || oauth.user.user_metadata?.full_name || email.split('@')[0];
-      console.log('[oauth] usuario de Google:', oauth.user?.email, oauth.user?.id);
+      logOauth('usuario', email + ' | ' + oauth.user.id);
       const res = await googleSignIn(oauth.user);
-      console.log('[oauth] resultado local:', res.ok, res.created, res.user?.role);
+      logOauth('resultado', 'ok=' + res.ok + ' | creado=' + res.created + ' | rol=' + (res.user?.role || '-') + ' | err=' + (res.error || '-'));
       if (!res.ok) {
         toast(res.error || 'No se pudo entrar con Google');
         const errEl = document.querySelector('#lg-err');
@@ -570,27 +570,34 @@ bootOAuth().then(async (oauth) => {
 
         if (res.created) {
           state.users.push(user);
-          // Si ya tenía empresa en la nube y este equipo está vacío, trae sus datos.
-          if (res.cloudCompany && !state.products.length) {
-            try { alignCompany({ ok: true, company: res.cloudCompany }); await pullCloud(true); } catch (e) { console.warn('No se pudo traer la empresa', e); }
-          } else if (!res.cloudCompany && !state.products.length) {
-            try { alignCompany(await ensureCompany(gname)); } catch (e) { console.warn('No se pudo crear la empresa', e); }
-          }
-          emit();
-          toast('Cuenta de Google lista: ' + email);
+          try { emit(); } catch {}
         }
 
-        // currentUser() lee zoco.session, no state.user: es necesario persistirla.
-        localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() }));
+        // 1) Sesión local PRIMERO: si algo de la nube falla, ya quedaste dentro.
+        try { localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() })); } catch {}
         state.user = user;
-        try { alignCompany(await ensureCompany(gname)); } catch (e) { console.warn('No se pudo vincular empresa', e); }
-        state.superadmin = await amISuperadmin();
-        route = 'inicio'; location.hash = '#/inicio';
-        toast('Bienvenido con Google');
+        logOauth('sesion', 'guardada para ' + user.id);
+        route = 'inicio';
+
+        // 2) Enriquecimiento (no bloquea el acceso si falla)
+        try { alignCompany(await ensureCompany(gname)); } catch (e) { logOauth('empresa', 'no se pudo: ' + e.message); }
+        try {
+          if (res.created && res.cloudCompany && !state.products.length) {
+            alignCompany({ ok: true, company: res.cloudCompany });
+            await pullCloud(true);
+          }
+        } catch (e) { logOauth('pull', 'no se pudo: ' + e.message); }
+        try { state.superadmin = await amISuperadmin(); } catch {}
+        try { location.hash = '#/inicio'; } catch {}
+        toast('Bienvenido, ' + (user.name || email));
       }
-    } catch (e) { console.error('Error de acceso con Google', e); toast('No se pudo completar el acceso con Google'); }
+    } catch (e) {
+      logOauth('error', e.message);
+      toast('No se pudo completar el acceso con Google: ' + e.message);
+    }
   }
   paintShell();
+  logOauth('shell', currentUser() ? 'con usuario ' + currentUser().email : 'sin usuario');
     setTimeout(() => initInstallPrompt(), 1200);
     setTimeout(() => maybeDailyNotice(), 2500);
     setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
