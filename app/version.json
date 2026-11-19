@@ -1,8 +1,9 @@
 {
-    "version":  "2.45.1",
+    "version":  "2.46.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Pagina de diagnostico: /auth-debug.html para ver el error exacto de Google",
-                  "Google usa redirect limpio (solo el dominio)"
+                  "Google: si falla la verificacion por red se usa el propio token (entra igual)",
+                  "Registro en consola de cada paso del acceso con Google",
+                  "Mensaje visible si el acceso con Google no se completa"
               ]
 }

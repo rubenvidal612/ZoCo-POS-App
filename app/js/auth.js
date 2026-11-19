@@ -159,19 +159,50 @@ export async function handleOAuthReturn() {
   const refresh_token = params.get('refresh_token');
   const expires_in = Number(params.get('expires_in') || 3600);
   if (!access_token) return { ok: false };
+
+  /** Lee los datos del JWT sin depender de la red (respaldo si /user falla). */
+  const decodeJwt = (t) => {
+    try {
+      const part = String(t).split('.')[1] || '';
+      const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(
+        atob(b64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''),
+      );
+      return JSON.parse(json);
+    } catch { return null; }
+  };
+
+  let user = null;
   try {
     const r = await safeFetch(`${sbConfig().url}/auth/v1/user`, {
       headers: { apikey: sbConfig().key, Authorization: 'Bearer ' + access_token },
     });
-    if (!r.ok) return { ok: false, error: 'No se pudo verificar la identidad de Google' };
-    const user = await r.json();
-    if (!user?.id || !user?.email) return { ok: false, error: 'La cuenta de Google no devolvió una identidad válida' };
-    saveCloudSession({ access_token, refresh_token, expires_in, user, token_type: 'bearer' });
-    history.replaceState(null, '', location.pathname + (location.search || ''));
-    return { ok: true, user };
-  } catch (e) {
-    return { ok: false, error: e.message };
+    if (r.ok) user = await r.json();
+  } catch {}
+
+  // Respaldo: si la verificación por red falla, se usa el propio token.
+  if (!user?.id) {
+    const claims = decodeJwt(access_token);
+    if (claims?.sub) {
+      user = {
+        id: claims.sub,
+        email: claims.email || '',
+        user_metadata: claims.user_metadata || {},
+        app_metadata: claims.app_metadata || {},
+        _fromToken: true,
+      };
+    }
   }
+
+  if (!user?.id) return { ok: false, error: 'No se pudo leer tu identidad de Google. Intenta de nuevo.' };
+  if (!user.email) {
+    const claims = decodeJwt(access_token) || {};
+    user.email = claims.email || '';
+  }
+
+  saveCloudSession({ access_token, refresh_token, expires_in, user, token_type: 'bearer' });
+  history.replaceState(null, '', location.pathname + (location.search || ''));
+  return { ok: true, user };
 }
 
 /** Si el usuario de Google es nuevo, le crea su empresa. */

@@ -502,9 +502,14 @@ bootOAuth().then(async (oauth) => {
     try {
       const email = (oauth.user.email || '').toLowerCase();
       const gname = oauth.user.user_metadata?.name || oauth.user.user_metadata?.full_name || email.split('@')[0];
+      console.log('[oauth] usuario de Google:', oauth.user?.email, oauth.user?.id);
       const res = await googleSignIn(oauth.user);
-      if (!res.ok) { toast(res.error || 'No se pudo entrar con Google'); }
-      else {
+      console.log('[oauth] resultado local:', res.ok, res.created, res.user?.role);
+      if (!res.ok) {
+        toast(res.error || 'No se pudo entrar con Google');
+        const errEl = document.querySelector('#lg-err');
+        if (errEl) errEl.textContent = res.error || 'No se pudo entrar con Google';
+      } else {
         const user = res.user;
 
         if (res.created) {
