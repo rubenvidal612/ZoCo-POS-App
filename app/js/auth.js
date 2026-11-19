@@ -130,6 +130,7 @@ export function cloudSignOut() {
 /* ================= Google (OAuth) ================= */
 export function signInWithGoogle() {
   if (!sbReady()) return false;
+  try { sessionStorage.setItem('zoco.oauth.pending', String(Date.now())); } catch {}
   // redirect limpio: solo el origen (más fácil de autorizar en Supabase)
   const redirect = location.origin + '/';
   const url = `${sbConfig().url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;

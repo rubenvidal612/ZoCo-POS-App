@@ -1,8 +1,8 @@
 {
-    "version":  "2.46.2",
+    "version":  "2.46.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Login muestra la version y boton \"Forzar actualizacion\"",
-                  "Boton de Google reparado (redirect)"
+                  "Aviso cuando Google no regresa a la app (Site URL mal configurada)",
+                  "Marca el intento de Google para diagnosticar"
               ]
 }

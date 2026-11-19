@@ -512,6 +512,17 @@ captureRef();
   }
 bootOAuth().then(async (oauth) => {
   await hydrate();
+  // ¿Se intentó Google y volvimos SIN tokens? Casi siempre es la URL de Supabase.
+  try {
+    const pend = sessionStorage.getItem('zoco.oauth.pending');
+    if (pend && !(location.hash || '').includes('access_token') && !(location.hash || '').includes('error')) {
+      sessionStorage.removeItem('zoco.oauth.pending');
+      const el = document.querySelector('#lg-err');
+      if (el) el.innerHTML = 'Google no regresó a esta dirección.<br>Revisa en Supabase → Authentication → URL Configuration:<br>Site URL = ' + location.origin + '<br>Redirect URLs = ' + location.origin + '/**';
+    } else if (pend) {
+      sessionStorage.removeItem('zoco.oauth.pending');
+    }
+  } catch {}
   if (oauth && oauth.ok === false && oauth.error) {
     try { const el = document.querySelector('#lg-err'); if (el) el.textContent = oauth.error; } catch {}
   }
