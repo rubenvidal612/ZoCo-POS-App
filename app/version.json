@@ -1,7 +1,7 @@
 {
-    "version":  "2.47.1",
+    "version":  "2.47.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Registro visible del intento de Google en el login (diagnostico)"
+                  "Google: fuerza flow_type=implicit para que los tokens vuelvan en el hash"
               ]
 }

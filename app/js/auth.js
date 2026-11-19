@@ -141,7 +141,8 @@ export function signInWithGoogle() {
   try { sessionStorage.setItem('zoco.oauth.pending', String(Date.now())); } catch {}
   // redirect limpio: solo el origen (más fácil de autorizar en Supabase)
   const redirect = location.origin + '/';
-  const url = `${sbConfig().url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
+  // flow_type=implicit: los tokens vuelven en el hash, como maneja handleOAuthReturn
+  const url = `${sbConfig().url}/auth/v1/authorize?provider=google&flow_type=implicit&redirect_to=${encodeURIComponent(redirect)}`;
   location.href = url;
   return true;
 }
