@@ -892,14 +892,22 @@ function load() {
     if (!raw) return seed();
     const s = JSON.parse(raw);
     if (!s.products) return seed();
-    const migrated = migrate(s);
-    // Diagnóstico temporal (se puede quitar): deja ver qué pasa al arrancar
+    // Si la migración falla por datos raros, se usa el estado tal cual:
+    // preferimos un estado sin migrar antes que arrancar vacío (pérdida de datos).
+    let migrated;
+    let migError = '';
+    try {
+      migrated = migrate(s);
+    } catch (e) {
+      migError = e.message;
+      console.warn('migrate falló, se usa el estado guardado sin migrar:', e);
+      migrated = s;
+    }
     try {
       window.__storeDebug = {
+        error: migError || '(sin error)',
         guardo: (s.adjustments || []).length,
         migro: (migrated.adjustments || []).length,
-        guardoTrf: (s.transfers || []).length,
-        migroTrf: (migrated.transfers || []).length,
       };
     } catch {}
     // Red de seguridad: si la migración devolvió una colección vacía pero lo

@@ -1,8 +1,7 @@
 {
-    "version":  "2.59.2",
+    "version":  "2.59.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Arreglado: mermas, traspasos y devoluciones se perdian al recargar",
-                  "Reportes: panel de devoluciones, mermas y traspasos"
+                  "CRITICO: si la migracion falla ya NO se arranca con negocio vacio; se conserva el estado guardado"
               ]
 }
