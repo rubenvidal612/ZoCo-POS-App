@@ -1,8 +1,10 @@
 {
-    "version":  "2.43.1",
+    "version":  "2.44.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "ZoCo Pro $349 incluye 2 sucursales (antes 3)",
-                  "Limite actualizado en la app, el servidor y la funcion de Supabase"
+                  "Login sin correo precargado ni credenciales demo visibles",
+                  "Entrar con correo y contrasena usa TU cuenta (no la del equipo)",
+                  "Mensajes claros: cuenta creada con Google, correo sin confirmar, contrasena incorrecta",
+                  "Registro con correo entra con la cuenta nueva"
               ]
 }

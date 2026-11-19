@@ -90,7 +90,7 @@ function paintLogin() {
         <h1 id="lg-title">Bienvenido a ZoCo</h1>
         <p id="lg-sub">Entra con tu cuenta para usar tu punto de venta.</p>
         <div class="field"><label>Correo</label>
-          <input id="lg-email" type="email" placeholder="tu@correo.com" autocomplete="username" value="ramberamericasefectivo@gmail.com"></div>
+          <input id="lg-email" type="email" placeholder="tu@correo.com" autocomplete="username"></div>
         <div class="field"><label>Contraseña</label>
           <input id="lg-pass" type="password" placeholder="••••••" autocomplete="current-password"></div>
         <div class="field" id="lg-name-wrap" style="display:none"><label>Nombre de tu negocio</label>
@@ -102,10 +102,6 @@ function paintLogin() {
         <div class="login-links">
           <button type="button" id="lg-forgot">¿Olvidaste tu contraseña?</button>
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
-        </div>
-        <div class="login-hint">
-          Demo: <b>ramberamericasefectivo@gmail.com</b> / <b>1234</b><br>
-          Cajero: <b>cajero@zoco.app</b> / <b>1234</b>
         </div>
       </form>
     </div>`;
@@ -155,8 +151,17 @@ function paintLogin() {
       const r = await cloudSignUp(email, pass, $('#lg-name').value.trim() || email.split('@')[0]);
       if (!r.ok) { $('#lg-err').textContent = r.error; return; }
       if (r.needConfirm) { $('#lg-err').textContent = '📬 Revisa tu correo para confirmar la cuenta'; return; }
-      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
-      if (u) state.user = u;
+
+      // La cuenta nueva entra con SU correo, no con el dueño que ya estaba en el equipo.
+      let u = state.users.find((x) => String(x.email || '').toLowerCase() === email.toLowerCase());
+      if (!u) {
+        const res = await googleSignIn({ email, user_metadata: { name: $('#lg-name').value.trim() || email.split('@')[0] } });
+        if (res.ok) { state.users.push(res.user); u = res.user; }
+      }
+      if (!u) { $('#lg-err').textContent = 'No se pudo preparar tu usuario. Intenta de nuevo.'; return; }
+
+      localStorage.setItem('zoco.session', JSON.stringify({ userId: u.id, at: Date.now() }));
+      state.user = u;
       state.superadmin = await amISuperadmin();
       // cada cliente nuevo arranca con el demo de su giro (se puede quitar después)
       if (!(state.products || []).length) {
@@ -188,11 +193,35 @@ function paintLogin() {
     if (sbReady()) {
       $('#lg-err').textContent = 'Conectando…';
       const r = await cloudSignIn(email, pass);
-      if (!r.ok) { $('#lg-err').textContent = r.error || 'Correo o contraseña incorrectos'; return; }
-      const u = state.users.find((x) => x.role === 'owner') || state.users[0];
-      if (u) state.user = u;
+      if (!r.ok) {
+        const low = String(r.error || '').toLowerCase();
+        let msg = r.error || 'Correo o contraseña incorrectos';
+        if (low.includes('invalid') || low.includes('credentials')) {
+          msg = 'Correo o contraseña incorrectos. Si tu cuenta la creaste con Google, usa “Continuar con Google”.';
+        } else if (low.includes('not confirmed') || low.includes('email not confirmed')) {
+          msg = '📬 Falta confirmar tu correo. Revisa tu bandeja (y spam) y vuelve a intentar.';
+        }
+        $('#lg-err').textContent = msg;
+        return;
+      }
+
+      // El usuario de la nube debe entrar con SU cuenta, no con la del equipo.
+      let u = state.users.find((x) => String(x.email || '').toLowerCase() === email.toLowerCase());
+      if (!u) {
+        const res = await googleSignIn({ email, user_metadata: { name: r.user?.user_metadata?.name } });
+        if (res.ok) {
+          state.users.push(res.user);
+          u = res.user;
+          emit();
+        }
+      }
+      if (!u) { $('#lg-err').textContent = 'No se pudo preparar tu usuario. Intenta de nuevo.'; return; }
+
+      localStorage.setItem('zoco.session', JSON.stringify({ userId: u.id, at: Date.now() }));
+      state.user = u;
+      try { alignCompany(await ensureCompany(u.name || email.split('@')[0])); } catch {}
       state.superadmin = await amISuperadmin();
-      toast('Bienvenido');
+      toast('Bienvenido, ' + (u.name || email));
       route = 'inicio'; location.hash = '#/inicio'; paintShell();
       return;
     }
