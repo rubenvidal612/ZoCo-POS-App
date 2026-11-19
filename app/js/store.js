@@ -893,15 +893,15 @@ function load() {
     const s = JSON.parse(raw);
     if (!s.products) return seed();
     const migrated = migrate(s);
-    // Red de seguridad: si la migración no devolvió alguna colección,
-    // se conserva la que ya estaba guardada (nunca perder movimientos).
-    [
-      'sales', 'returns', 'adjustments', 'transfers', 'purchases', 'suppliers',
-      'expenses', 'cashMovements', 'layaways', 'coupons', 'commissions', 'cuts',
-      'customers', 'users', 'products', 'branches', 'consumptions', 'productions',
-      'referrals', 'personal',
-    ].forEach((k) => {
-      if (migrated[k] == null && s[k] != null) migrated[k] = s[k];
+    // Red de seguridad: si la migración devolvió una colección vacía pero lo
+    // guardado sí tenía registros, se conservan (nunca perder movimientos).
+    ['sales', 'returns', 'adjustments', 'transfers', 'purchases', 'expenses',
+     'cashMovements', 'cuts', 'suppliers', 'layaways'].forEach((k) => {
+      const mig = migrated[k];
+      const prev = s[k];
+      if (Array.isArray(prev) && prev.length && (!Array.isArray(mig) || mig.length === 0)) {
+        migrated[k] = prev;
+      }
     });
     // guarda reparaciones (usuarios, etc.) de inmediato
     try { localStorage.setItem(KEY, JSON.stringify(migrated)); } catch {}
