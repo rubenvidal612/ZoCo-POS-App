@@ -1,9 +1,8 @@
 {
-    "version":  "2.46.0",
+    "version":  "2.46.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Google: si falla la verificacion por red se usa el propio token (entra igual)",
-                  "Registro en consola de cada paso del acceso con Google",
-                  "Mensaje visible si el acceso con Google no se completa"
+                  "Corregido: el boton de Google no hacia nada (error redirect is not defined)",
+                  "Tambien arreglado el envio de enlace para crear contrasena"
               ]
 }
