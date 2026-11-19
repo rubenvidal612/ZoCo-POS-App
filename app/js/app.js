@@ -162,21 +162,22 @@ function paintLogin() {
   const oauthBox = document.querySelector('#lg-oauth');
   if (oauthBox && oauthNotice) { oauthBox.style.display = 'block'; oauthBox.textContent = oauthNotice; }
 
-  // Registro de los últimos intentos de Google (visible para diagnosticar)
+  // Registro del último intento de Google: solo se muestra con ?diag=1
   try {
-    const raw = localStorage.getItem('zoco.oauth.log');
-    const log = raw ? JSON.parse(raw) : [];
-    document.documentElement.dataset.diag = 'n=' + log.length;
-    if (log.length) {
-      const box = document.querySelector('#lg-diag');
-      if (box) {
-        box.style.display = 'block';
-        box.innerHTML = '<b>Último intento con Google</b><br>' +
-          log.slice(-6).map((x) => `${esc(x.t)} · ${esc(x.step)}: ${esc(x.detail)}`).join('<br>');
-        document.documentElement.dataset.diag = 'shown';
+    const withDiag = (location.search || '').includes('diag=1');
+    if (withDiag) {
+      const raw = localStorage.getItem('zoco.oauth.log');
+      const log = raw ? JSON.parse(raw) : [];
+      if (log.length) {
+        const box = document.querySelector('#lg-diag');
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML = '<b>Último intento con Google</b><br>' +
+            log.slice(-6).map((x) => `${esc(x.t)} · ${esc(x.step)}: ${esc(x.detail)}`).join('<br>');
+        }
       }
     }
-  } catch (e) { document.documentElement.dataset.diag = 'err:' + e.message; }
+  } catch {}
 
   const hardBtn = document.querySelector('#lg-hard');
   if (hardBtn) {

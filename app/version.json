@@ -1,8 +1,7 @@
 {
-    "version":  "2.53.0",
+    "version":  "2.53.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "La sesion guarda una copia del usuario: si el arranque reescribe la lista, igual entras",
-                  "Compatible con cuentas de Google sin contrasena local"
+                  "Login limpio: el recuadro negro de diagnostico ya no se muestra"
               ]
 }
