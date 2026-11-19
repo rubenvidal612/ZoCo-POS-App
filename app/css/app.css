@@ -1659,3 +1659,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
   .page-actions{width:100%}
   .page-actions .btn{flex:1}
 }
+/* Version discreta dentro de la app */
+.side-ver{margin-top:auto;padding:10px 14px 14px;text-align:center}
+.side-ver span{font-size:10px;letter-spacing:.4px;color:rgba(255,255,255,.35);font-weight:600}
+.shell.collapsed .side-ver{display:none}

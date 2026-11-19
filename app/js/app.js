@@ -342,6 +342,7 @@ function paintShell() {
         }).join('')}
 
         <button class="nav logout" data-r="salir"><span class="ic">⏻</span><span class="lbl">Cerrar sesión</span></button>
+        <div class="side-ver"><span id="app-ver">v…</span></div>
       </aside>
 
       <div class="main">
@@ -384,6 +385,17 @@ function paintShell() {
     location.hash = '#/' + b.dataset.r;
   });
   $('#brnch').onclick = switchBranch;
+  // Versión discreta dentro de la app
+  (() => {
+    const badge = app.querySelector('#app-ver');
+    if (!badge) return;
+    fetch('./version.json?t=' + Date.now()).then((r) => r.json()).then((v) => {
+      if (v?.version) badge.textContent = 'v' + v.version;
+    }).catch(() => { badge.textContent = ''; });
+    badge.title = 'Versión de ZoCo POS';
+    badge.style.cursor = 'pointer';
+    badge.onclick = () => toast('ZoCo POS ' + badge.textContent);
+  })();
   const shellEl = app.querySelector('.shell');
   const isMob = () => window.matchMedia('(max-width: 900px)').matches;
   if (localStorage.getItem('zoco.sidebar') === 'closed' && !isMob()) shellEl.classList.add('collapsed');
