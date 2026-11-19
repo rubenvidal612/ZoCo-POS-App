@@ -1,8 +1,8 @@
 {
-    "version":  "2.63.0",
+    "version":  "2.64.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Historial de cortes Z con reimpresion",
-                  "Saldo a favor del proveedor se aplica a la siguiente compra"
+                  "Configuracion \u003e Folios: un solo consecutivo o separado por nota interna y factura fiscal",
+                  "Historial de cortes Z y saldo a favor aplicable"
               ]
 }

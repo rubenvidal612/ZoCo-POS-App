@@ -1273,12 +1273,53 @@ export function addLine(cart, product, size, qty = 1, color = '') {
 /* ================= Ventas ================= */
 export function nextCode() { const n = state.seq++; return `${branch().id === 'b1' ? 1 : 2}-${1000 + n}`; }
 
+/* ================= Folios: consecutivo único o separado (interno/fiscal) ================= */
+export function folioConfig() {
+  const f = (state.settings && state.settings.folios) || {};
+  return {
+    mode: f.mode === 'separado' ? 'separado' : 'unico',
+    prefixInterno: String(f.prefixInterno || 'N'),
+    prefixFiscal: String(f.prefixFiscal || 'F'),
+    nextInterno: Number(f.nextInterno) > 0 ? Number(f.nextInterno) : 1000,
+    nextFiscal: Number(f.nextFiscal) > 0 ? Number(f.nextFiscal) : 1000,
+  };
+}
+
+export function setFolioConfig(patch = {}) {
+  state.settings = state.settings || {};
+  const next = { ...folioConfig(), ...patch };
+  if (next.mode !== 'separado') next.mode = 'unico';
+  state.settings.folios = next;
+  emit();
+  return next;
+}
+
+/** Toma el siguiente folio según el tipo de venta. */
+export function takeFolio(kind = 'interno') {
+  const c = folioConfig();
+  if (c.mode !== 'separado') {
+    const n = state.seq++;
+    return `${branch().id === 'b1' ? 1 : 2}-${1000 + n}`;
+  }
+  if (kind === 'fiscal') {
+    const n = c.nextFiscal;
+    state.settings.folios = { ...c, nextFiscal: n + 1 };
+    return `${c.prefixFiscal}-${n}`;
+  }
+  const n = c.nextInterno;
+  state.settings.folios = { ...c, nextInterno: n + 1 };
+  return `${c.prefixInterno}-${n}`;
+}
+
 export function commitSale({ cart, method, received, customerName, note, customerId, payments, fiscalMode }) {
   const t = cartTotals(cart);
   const hasSplit = Array.isArray(payments) && payments.length;
   const totalReceived = hasSplit ? payments.reduce((a, p) => a + p.amount, 0) : (received ?? t.total);
+  const esFiscal = (hasSplit
+    ? payments.some((p) => p.method === 'debit' || p.method === 'credit')
+    : (method === 'debit' || method === 'credit'));
   const sale = {
-    id: uid('s'), code: nextCode(), date: new Date().toISOString(),
+    id: uid('s'), code: takeFolio(esFiscal ? 'fiscal' : 'interno'), date: new Date().toISOString(),
     branchId: state.currentBranch, branchName: branch().name,
     user: state.user.name, customer: customerName || '-', customerId: customerId || null,
     note: note || '',

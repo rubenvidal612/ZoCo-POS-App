@@ -18,7 +18,7 @@ import {
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
-  importBackup, backupFileName, markBackupDone, lastBackupAt,
+  importBackup, backupFileName, markBackupDone, lastBackupAt, folioConfig, setFolioConfig,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -1012,6 +1012,34 @@ export function settingsView(ctx) {
           </div>
         </div>
       </div>
+      <div class="panel" data-sec="Folios">
+        <div class="panel-head"><h2>Folios y numeración</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Elige cómo se numeran tus notas internas (efectivo) y tus facturas (tarjeta).
+            Si nunca lo cambias, todo lleva un solo consecutivo.
+          </div>
+          <div class="field"><label>Modo de numeración</label>
+            <select id="fl-mode">
+              <option value="unico">Un solo consecutivo (nota y factura comparten)</option>
+              <option value="separado">Consecutivos separados por tipo</option>
+            </select>
+          </div>
+          <div id="fl-sep" style="display:none">
+            <div class="row2">
+              <div class="field"><label>Prefijo nota interna</label><input id="fl-pi" placeholder="N"></div>
+              <div class="field"><label>Siguiente nota</label><input id="fl-ni" type="number" min="1" placeholder="1000"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>Prefijo factura fiscal</label><input id="fl-pf" placeholder="F"></div>
+              <div class="field"><label>Siguiente factura</label><input id="fl-nf" type="number" min="1" placeholder="1000"></div>
+            </div>
+            <div class="hint" style="margin-bottom:10px">Ejemplo: nota <b>N-1000</b>, factura <b>F-1000</b>.</div>
+          </div>
+          <button class="btn sm" id="fl-save">Guardar numeración</button>
+          <div class="hint" id="fl-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
       <div class="panel" data-sec="Respaldo">
         <div class="panel-head"><h2>Respaldo de tu negocio</h2></div>
         <div style="padding:16px">
@@ -1613,6 +1641,43 @@ export function settingsView(ctx) {
       $('#ac-pass', root).value = '';
       $('#ac-pass2', root).value = '';
       toast('Contraseña guardada ✓ Ya puedes entrar con tu correo y contraseña');
+    };
+  }
+
+  // ===== Folios: consecutivo único o separado =====
+  const flMode = $('#fl-mode', root);
+  if (flMode) {
+    const cfg = folioConfig();
+    flMode.value = cfg.mode;
+    const pi = $('#fl-pi', root), pf = $('#fl-pf', root);
+    const ni = $('#fl-ni', root), nf = $('#fl-nf', root);
+    pi.value = cfg.prefixInterno;
+    pf.value = cfg.prefixFiscal;
+    ni.value = cfg.nextInterno;
+    nf.value = cfg.nextFiscal;
+    const sep = $('#fl-sep', root);
+    const paintSep = () => { if (sep) sep.style.display = flMode.value === 'separado' ? 'block' : 'none'; };
+    flMode.onchange = paintSep;
+    paintSep();
+    const flMsg = (t, bad) => {
+      const e = $('#fl-msg', root);
+      if (!e) return;
+      e.textContent = t;
+      e.style.color = bad ? 'var(--danger)' : 'var(--ok,#059669)';
+    };
+    $('#fl-save', root).onclick = () => {
+      const patch = {
+        mode: flMode.value,
+        prefixInterno: (pi.value || 'N').trim().toUpperCase().slice(0, 4),
+        prefixFiscal: (pf.value || 'F').trim().toUpperCase().slice(0, 4),
+        nextInterno: Math.max(1, Number(ni.value) || 1000),
+        nextFiscal: Math.max(1, Number(nf.value) || 1000),
+      };
+      setFolioConfig(patch);
+      flMsg(patch.mode === 'separado'
+        ? '✓ Guardado: notas ' + patch.prefixInterno + '-' + patch.nextInterno + ' · facturas ' + patch.prefixFiscal + '-' + patch.nextFiscal
+        : '✓ Guardado: un solo consecutivo para notas y facturas');
+      toast('Numeración guardada');
     };
   }
 
