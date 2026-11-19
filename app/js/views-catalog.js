@@ -744,6 +744,23 @@ export function reportsView() {
         <div style="padding:16px 18px" id="goal-body"></div>
       </div>
       <div class="panel">
+        <div class="panel-head"><h2>Ventas por periodo y sucursal</h2>
+          <div class="sp"></div>
+          <select id="vr-branch" style="height:32px;border:1px solid var(--line);border-radius:8px;font-size:12px;padding:0 8px">
+            <option value="">Todas las sucursales</option>
+            ${(state.branches || []).map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}
+          </select>
+          <select id="vr-period" style="height:32px;border:1px solid var(--line);border-radius:8px;font-size:12px;padding:0 8px;margin-left:6px">
+            <option value="today">Hoy</option>
+            <option value="week">7 días</option>
+            <option value="month" selected>Mes</option>
+            <option value="year">Año</option>
+            <option value="all">Todo</option>
+          </select>
+        </div>
+        <div style="padding:14px 18px" id="vr-body"></div>
+      </div>
+      <div class="panel">
         <div class="panel-head"><h2>Más vendidos por valor</h2></div>
         <table><thead><tr><th>#</th><th>Producto</th><th>Importe</th></tr></thead>
         <tbody>${topList.length ? topList.map(([n, v], i) => `<tr><td>${i + 1}</td><td class="t-strong">${esc(n)}</td><td class="mono">${money(v)}</td></tr>`).join('')
@@ -801,6 +818,98 @@ export function reportsView() {
       };
     };
     gs.onchange = paintGoal; gp.onchange = paintGoal; paintGoal();
+
+    /* ---- Ventas por periodo y sucursal ---- */
+    const paintVentas = () => {
+      const box = root.querySelector('#vr-body');
+      if (!box) return;
+      const per = root.querySelector('#vr-period')?.value || 'month';
+      const br = root.querySelector('#vr-branch')?.value || '';
+      const now = new Date();
+      const desde = (() => {
+        if (per === 'today') { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
+        if (per === 'week') return Date.now() - 7 * 864e5;
+        if (per === 'month') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        if (per === 'year') return new Date(now.getFullYear(), 0, 1).getTime();
+        return 0;
+      })();
+
+      const ventas = (state.sales || []).filter((s) => s.status === 'done'
+        && new Date(s.date).getTime() >= desde
+        && (!br || s.branchId === br));
+
+      const devol = (state.returns || []).filter((r) => new Date(r.date).getTime() >= desde
+        && (!br || r.branchId === br));
+
+      const total = ventas.reduce((a, s) => a + Number(s.total || 0), 0);
+      const desc = ventas.reduce((a, s) => a + Number(s.discount || 0), 0);
+      const devTotal = devol.reduce((a, r) => a + Number(r.total || 0), 0);
+      const tickets = ventas.length;
+      const promedio = tickets ? total / tickets : 0;
+
+      // por día
+      const porDia = {};
+      ventas.forEach((s) => {
+        const k = new Date(s.date).toDateString();
+        porDia[k] = porDia[k] || { n: 0, total: 0 };
+        porDia[k].n += 1;
+        porDia[k].total += Number(s.total || 0);
+      });
+      const dias = Object.entries(porDia).sort((a, b) => new Date(b[0]) - new Date(a[0])).slice(0, 12);
+
+      // por método
+      const metodos = {};
+      ventas.forEach((s) => {
+        const pm = Array.isArray(s.payments) && s.payments.length
+          ? s.payments : [{ method: s.method, amount: s.total }];
+        pm.forEach((p) => { metodos[p.method] = (metodos[p.method] || 0) + Number(p.amount || 0); });
+      });
+      const metList = Object.entries(metodos).sort((a, b) => b[1] - a[1]);
+      const nombreMetodo = { cash: 'Efectivo', debit: 'Débito', credit: 'Crédito', transfer: 'Transferencia', credit_sale: 'Crédito', split: 'Mixto', other: 'Otro' };
+
+      box.innerHTML = `
+        <div class="kpis" style="margin-bottom:12px">
+          <div class="kpi"><div class="l">Vendido</div><div class="v">${money(total)}</div><div class="s">${tickets} ticket(s)</div></div>
+          <div class="kpi"><div class="l">Ticket promedio</div><div class="v">${money(promedio)}</div><div class="s">${per === 'today' ? 'hoy' : per === 'week' ? '7 días' : per === 'month' ? 'del mes' : per === 'year' ? 'del año' : 'histórico'}</div></div>
+          <div class="kpi"><div class="l">Descuentos</div><div class="v">${money(desc)}</div><div class="s">aplicados</div></div>
+          <div class="kpi"><div class="l">Devoluciones</div><div class="v">${money(devTotal)}</div><div class="s">${devol.length} movimiento(s)</div></div>
+        </div>
+        <div class="kpis" style="margin-bottom:12px">
+          <div class="kpi"><div class="l">Neto</div><div class="v">${money(total - devTotal)}</div><div class="s">vendido − devuelto</div></div>
+        </div>
+        <div class="pay-head" style="margin:10px 0 6px">Por método de pago</div>
+        <table><thead><tr><th>Método</th><th>Importe</th></tr></thead><tbody>
+          ${metList.length ? metList.map(([k, v]) => `<tr><td class="t-strong">${esc(nombreMetodo[k] || k)}</td><td class="mono">${money(v)}</td></tr>`).join('')
+            : '<tr><td colspan="2"><div class="cart-empty">Sin ventas en este periodo.</div></td></tr>'}
+        </tbody></table>
+        <div class="pay-head" style="margin:14px 0 6px">Últimos días</div>
+        <table><thead><tr><th>Día</th><th>Tickets</th><th>Importe</th></tr></thead><tbody>
+          ${dias.length ? dias.map(([d, v]) => `<tr><td>${new Date(d).toLocaleDateString('es-MX')}</td>
+            <td class="mono">${v.n}</td><td class="mono">${money(v.total)}</td></tr>`).join('')
+            : '<tr><td colspan="3"><div class="cart-empty">Sin ventas en este periodo.</div></td></tr>'}
+        </tbody></table>
+        <div style="margin-top:12px">
+          <button class="btn ghost sm" id="vr-export">Exportar estas ventas (CSV)</button>
+        </div>`;
+
+      const exp = box.querySelector('#vr-export');
+      if (exp) {
+        exp.onclick = async () => {
+          const { downloadExcel } = await import('./exports.js');
+          const nombre = (state.branches || []).find((b) => b.id === br)?.name || 'todas';
+          downloadExcel('ventas-' + nombre.toLowerCase().replace(/\s+/g, '-') + '-' + per, 
+            ['Folio', 'Fecha', 'Sucursal', 'Cliente', 'Vendedor', 'Método', 'Subtotal', 'Descuento', 'Total', 'Estado'],
+            ventas.map((s) => [
+              s.code, new Date(s.date).toLocaleString('es-MX'), s.branchName || '', s.customer || '',
+              s.user || '', s.method || '', s.subtotal ?? '', s.discount ?? '', s.total ?? '', s.status,
+            ]));
+          toast('CSV descargado');
+        };
+      }
+    };
+    const vrP = root.querySelector('#vr-period'), vrB = root.querySelector('#vr-branch');
+    if (vrP) { vrP.onchange = paintVentas; paintVentas(); }
+    if (vrB) vrB.onchange = paintVentas;
 
     /* ---- Devoluciones, mermas y traspasos ---- */
     const paintMov = () => {

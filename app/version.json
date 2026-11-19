@@ -1,8 +1,8 @@
 {
-    "version":  "2.64.0",
+    "version":  "2.65.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Configuracion \u003e Folios: un solo consecutivo o separado por nota interna y factura fiscal",
-                  "Historial de cortes Z y saldo a favor aplicable"
+                  "Reportes: ventas por periodo y sucursal, con metodos de pago, ultimos dias y exportacion CSV",
+                  "Configuracion de folios, historial de cortes Z y saldo a favor aplicable"
               ]
 }
