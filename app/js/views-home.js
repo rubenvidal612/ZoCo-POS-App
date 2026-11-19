@@ -3,8 +3,7 @@ import { el, money, esc, modal, toast } from './ui.js';
 import { state, totalStock, cashBreakdown, openRegister } from './store.js';
 import { openCutZ } from './views-inventory.js';
 
-const spark = (color) => `
-  <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
+const spark = (color) => `  <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
     <path d="M0 26 C 20 24, 34 30, 52 22 S 80 10, 104 18 S 140 26, 160 16 S 186 8, 200 14"
       stroke="${color}" stroke-width="2" stroke-linecap="round">
       <animate attributeName="d" dur="10s" repeatCount="indefinite" calcMode="spline"
@@ -149,7 +148,9 @@ export function homeView(ctx) {
                 : `<button class="btn sm" id="open-reg" style="flex:1">Abrir caja</button>`}
             </div>
             ${state.cuts?.length ? `<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
-              Último corte: <b>${esc(state.cuts[0].folio)}</b> · diferencia ${money(state.cuts[0].difference || 0)}</div>` : ''}
+              Último corte: <b>${esc(state.cuts[0].folio)}</b> · diferencia ${money(state.cuts[0].difference || 0)}
+              <button class="btn ghost sm" id="cut-hist" style="margin-left:8px;padding:2px 10px;font-size:11px">Ver historial</button>
+            </div>` : ''}
           </div>
         </div>
 
@@ -203,6 +204,8 @@ export function homeView(ctx) {
     root.querySelector('#go-new').onclick = () => ctx.go('productos', { create: true });
     root.querySelector('#go-stock').onclick = () => ctx.go('productos');
     root.querySelectorAll('#cut-z').forEach((button) => button.addEventListener('click', () => openCutZ(render)));
+    const cutHist = root.querySelector('#cut-hist');
+    if (cutHist) cutHist.onclick = () => openCutHistory();
     root.querySelectorAll('#open-reg').forEach((button) => button.addEventListener('click', () => {
       const m = modal({
         title: 'Abrir caja',
@@ -246,4 +249,48 @@ export function homeView(ctx) {
 
   render();
   return { root, refresh: render };
+}
+
+/** Historial de cortes Z: ver el detalle y reimprimir cualquiera. */
+function openCutHistory() {
+  const cuts = state.cuts || [];
+  if (!cuts.length) { toast('Aún no hay cortes guardados'); return; }
+  const m = modal({
+    title: 'Historial de cortes Z',
+    wide: true,
+    body: `<div class="hint" style="margin-bottom:10px">${cuts.length} corte(s) guardados. Toca uno para verlo o reimprimirlo.</div>
+      <div class="po-list">
+        ${cuts.map((c) => `<div class="po-row">
+          <div class="po-main">
+            <div class="po-folio">${esc(c.folio)} <span class="po-tag ${Math.abs(Number(c.difference || 0)) < 0.01 ? 'po-ok' : 'po-ordered'}">${Math.abs(Number(c.difference || 0)) < 0.01 ? 'cuadra' : 'diferencia'}</span></div>
+            <div class="po-sub">${new Date(c.date).toLocaleString('es-MX')} · ${esc(c.branchName || '')} · ${esc(c.user || '')}</div>
+          </div>
+          <div class="po-money"><b>${money(c.counted || 0)}</b><div class="po-sub">contado</div></div>
+          <div class="po-actions"><button class="btn sm" data-cut="${esc(c.id)}">Ver / imprimir</button></div>
+        </div>`).join('')}
+      </div>`,
+    foot: `<button class="btn ghost" data-close>Cerrar</button>`,
+  });
+  m.root.querySelectorAll('[data-cut]').forEach((b) => {
+    b.onclick = async () => {
+      const cut = cuts.find((c) => c.id === b.dataset.cut);
+      if (!cut) return;
+      const { cutText } = await import('./printer.js');
+      const m2 = modal({
+        title: 'Corte ' + cut.folio,
+        body: `<pre class="ticket-preview">${esc(cutText(cut))}</pre>`,
+        foot: `<button class="btn ghost" data-close>Cerrar</button>
+               <button class="btn" id="cut-print">Imprimir</button>`,
+      });
+      m2.root.querySelector('#cut-print').onclick = () => {
+        const w = window.open('', '_blank', 'width=420,height=640');
+        if (!w) { toast('Permite las ventanas emergentes para imprimir'); return; }
+        w.document.write('<pre style="font-family:monospace;font-size:12px;margin:12px"></pre>');
+        w.document.querySelector('pre').textContent = cutText(cut);
+        w.document.close();
+        w.focus();
+        setTimeout(() => { try { w.print(); } catch {} }, 300);
+      };
+    };
+  });
 }

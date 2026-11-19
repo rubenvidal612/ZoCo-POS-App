@@ -3,7 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog, readImageCompressed } f
 import {
   state, productById, sizesFor, fmtSize, variantsOf, totalStock,
   supplierById, upsertSupplier, deleteSupplier,
-  createPurchase, receivePurchase, payPurchase, cancelPurchase, payables,
+  createPurchase, receivePurchase, payPurchase, cancelPurchase, payables, creditOf,
 } from './store.js';
 
 const ROLE_LABEL = { ordered: 'Pedida', partial: 'Recibida parcial', received: 'Recibida', cancelled: 'Cancelada' };
@@ -187,6 +187,12 @@ export function purchasesView(ctx) {
         <button class="btn ghost sm" id="po-add" style="width:100%">+ Agregar a la orden</button>
         <div id="po-lines" style="margin-top:12px"></div>
         <div class="field" style="margin-top:12px"><label>Nota (opcional)</label><input id="po-note" placeholder="Ej. pedido por WhatsApp"></div>
+        <div id="po-credit-wrap" style="display:none;margin-top:12px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700">
+            <input type="checkbox" id="po-credit" checked>
+            <span>Aplicar saldo a favor del proveedor (<b id="po-credit-amt">$0</b>)</span>
+          </label>
+        </div>
         <div class="field" style="margin-top:12px"><label>Foto de la compra (opcional)</label>
           <input id="po-img" type="file" accept="image/*">
           <div id="po-img-prev" style="margin-top:8px"></div>
@@ -209,6 +215,18 @@ export function purchasesView(ctx) {
       }).join('') + `<div class="po-line"><div style="flex:1"><b>Total</b></div><div><b>${money(total)}</b></div><div></div></div>`;
       box.querySelectorAll('[data-rmline]').forEach((b) => (b.onclick = () => { lines.splice(Number(b.dataset.rmline), 1); paintLines(); }));
     };
+    const refreshCredit = () => {
+      const sp = r.querySelector('#po-sp').value;
+      const disp = sp ? creditOf(sp) : 0;
+      const wrap = r.querySelector('#po-credit-wrap');
+      const amt = r.querySelector('#po-credit-amt');
+      if (!wrap || !amt) return;
+      if (disp > 0.004) { wrap.style.display = 'block'; amt.textContent = money(disp); }
+      else { wrap.style.display = 'none'; }
+    };
+    r.querySelector('#po-sp').onchange = refreshCredit;
+    refreshCredit();
+
     r.querySelector('#po-prod').onchange = () => {
       const p = productById(r.querySelector('#po-prod').value);
       const sel = r.querySelector('#po-var');
@@ -246,6 +264,7 @@ export function purchasesView(ctx) {
         items: lines,
         note: r.querySelector('#po-note').value,
         photo: poPhoto,
+        useCredit: !!r.querySelector('#po-credit')?.checked,
       });
       if (!res.ok) { toast(res.msg || 'No se pudo crear'); return; }
       toast('Orden ' + res.purchase.folio + ' creada');
