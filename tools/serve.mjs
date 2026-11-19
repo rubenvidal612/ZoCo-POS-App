@@ -264,8 +264,10 @@ const server = http.createServer(async (req, res) => {
         const pick = (o) => o?.data || o || {};
         const planRaw = String(pick(body)?.company?.plan || pick(current)?.company?.plan || 'pro').toLowerCase();
         const plan = LEGACY[planRaw] || planRaw;
+        // Modo gratuito de prueba: no se limitan sucursales
+        const betaFree = pick(body)?.settings?.betaFree !== false;
         const limit = PLAN_BRANCHES[plan];
-        if (limit) {
+        if (limit && !betaFree) {
           const prev = pick(current).branches || [];
           const nextB = pick(body).branches || [];
           const prevIds = new Set(prev.map((b) => b.id));

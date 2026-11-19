@@ -1595,3 +1595,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
   .login-card{padding:22px 18px}
   .login-logo{width:48px;height:48px;font-size:21px}
 }
+/* Modo gratuito de prueba */
+.pl-free{display:flex;flex-direction:column;gap:4px;background:#ECFDF5;border:1px solid #A7F3D0;
+  color:#065F46;border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.pl-free.off{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+.pl-free b{font-size:13.5px}
+.pl-free span{font-size:12px;line-height:1.45}
+.pl-free-sw{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin-top:6px;cursor:pointer}
+.pl-free-sw input{width:16px;height:16px;accent-color:#059669}

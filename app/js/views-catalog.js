@@ -16,6 +16,7 @@ import {
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
+  isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
@@ -2840,6 +2841,7 @@ export function planPanelMarkup(withSec = true) {
     <div class="panel" ${withSec ? 'data-sec="Plan y límites"' : ''}>
       <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
       <div style="padding:16px">
+        <div id="pl-free"></div>
         <div id="pl-current"></div>
         <div id="pl-usage" class="pl-usage"></div>
         <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
@@ -2863,19 +2865,41 @@ export function bindPlanPanel(root) {
     const badge = $('#pl-badge', root);
     if (badge) badge.textContent = p.name.replace('ZoCo ', '');
 
+    const free = isBetaFree();
+    const freeBox = $('#pl-free', root);
+    if (freeBox) {
+      freeBox.innerHTML = free
+        ? `<div class="pl-free">
+             <b>Modo gratuito de prueba</b>
+             <span>Sin cobros y sin límites por ahora. Puedes usar la app completa con todas tus sucursales.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw"> Activar cobro y límites</label>
+           </div>`
+        : `<div class="pl-free off">
+             <b>Modo de cobro activo</b>
+             <span>Se aplican los límites de sucursales del plan.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw" checked> Volver a modo gratuito</label>
+           </div>`;
+      const sw = $('#pl-free-sw', root);
+      if (sw) sw.onchange = () => {
+        setBetaFree(!!sw.checked === false);
+        paintPlan();
+        toast(sw.checked ? 'Modo gratuito activado' : 'Cobro y límites activados');
+      };
+    }
+
     plCur.innerHTML = `
       <div class="pl-hero">
         <div>
           <div class="pl-name">${esc(p.name)}</div>
-          <div class="pl-hint">${esc(p.hint)}</div>
+          <div class="pl-hint">${free ? 'Gratis durante la prueba · sin límites' : esc(p.hint)}</div>
         </div>
-        <div class="pl-price">$${p.price}<span>/mes</span></div>
+        <div class="pl-price">${free ? 'Gratis' : '$' + p.price}<span>${free ? '' : '/mes'}</span></div>
       </div>`;
 
     const over = u.overLimit;
     $('#pl-usage', root).innerHTML = `
       <div class="pl-bar">
-        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used} / ${u.branches.limit}</b></div>
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
         <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
       </div>
       <div class="pl-unlimited">

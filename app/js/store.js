@@ -802,6 +802,7 @@ function migrate(s) {
     if (!u.jobTitle) u.jobTitle = u.role === 'OWNER' ? 'Propietario' : 'Vendedor';
   });
   if (!s.settings) s.settings = { aiKey: '', aiProvider: 'gemini' };
+  if (s.settings.betaFree == null) s.settings.betaFree = true;
   // Datos que salen impresos en el ticket (editables)
   if (!s.settings.ticket) s.settings.ticket = {};
   const tk = s.settings.ticket;
@@ -1358,6 +1359,18 @@ export function currentPlan() {
   return PLANS[code] || PLANS.pro;
 }
 
+/** Modo gratuito de prueba: sin cobros y sin límites (activo por defecto). */
+export function isBetaFree() {
+  return state.settings?.betaFree !== false;
+}
+
+export function setBetaFree(on) {
+  if (!state.settings) state.settings = {};
+  state.settings.betaFree = !!on;
+  emit();
+  return state.settings.betaFree;
+}
+
 export function planLimits() {
   return currentPlan().limits;
 }
@@ -1371,6 +1384,7 @@ export function planUsage() {
   const pct = limit === Infinity ? 0 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   return {
     plan,
+    free: isBetaFree(),
     branches: { used, limit, pct },
     users: { used: users, limit: Infinity },
     products: { used: (state.products || []).length, limit: Infinity },
@@ -1381,6 +1395,7 @@ export function planUsage() {
 /** ¿Se puede agregar uno más de este tipo? Solo las sucursales se limitan. */
 export function canAdd(kind) {
   if (kind !== 'branch') return { ok: true };
+  if (isBetaFree()) return { ok: true, free: true };
   const u = planUsage();
   if (u.branches.limit === Infinity) return { ok: true };
   if (u.branches.used >= u.branches.limit) {
