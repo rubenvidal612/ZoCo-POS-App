@@ -936,13 +936,22 @@ export function readSession() {
 }
 export function currentUser() {
   const s = readSession();
-  const u = s && state.users.find((x) => x.id === s.userId);
-  return u || null;
+  if (!s) return null;
+  const u = state.users.find((x) => x.id === s.userId);
+  if (u) return u;
+  // Respaldo: la sesión guarda una copia del usuario (login con Google, etc.)
+  // Si el arranque reescribió la lista, igual se puede entrar.
+  if (s.user && s.user.id === s.userId) {
+    const copy = { ...s.user, active: true };
+    if (!state.users.some((x) => x.id === copy.id)) state.users.push(copy);
+    return copy;
+  }
+  return null;
 }
 export function login(email, pass) {
   const u = state.users.find((x) => x.email.toLowerCase() === String(email).toLowerCase().trim() && x.pass === String(pass));
   if (!u || !u.active) return { ok: false, msg: 'Correo o contraseña incorrectos' };
-  localStorage.setItem(SKEY, JSON.stringify({ userId: u.id, at: Date.now() }));
+  localStorage.setItem(SKEY, JSON.stringify({ userId: u.id, at: Date.now(), user: { id: u.id, name: u.name, email: u.email, role: u.role } }));
   state.user = u;
   return { ok: true, user: u };
 }

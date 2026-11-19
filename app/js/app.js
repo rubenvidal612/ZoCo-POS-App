@@ -576,7 +576,7 @@ bootOAuth().then(async (oauth) => {
         try { emit(); } catch {}
 
         // 1) Sesión local PRIMERO: si algo de la nube falla, ya quedaste dentro.
-        try { localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() })); } catch {}
+        try { localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now(), user: { id: user.id, name: user.name, email: user.email, role: user.role } })); } catch {}
         state.user = user;
         logOauth('sesion', 'guardada para ' + user.id + ' | usuarios en memoria: ' + state.users.length);
         route = 'inicio';

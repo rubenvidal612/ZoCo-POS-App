@@ -1,8 +1,8 @@
 {
-    "version":  "2.52.0",
+    "version":  "2.53.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Corregido: las cuentas de Google ya no se descartan al arrancar (no tienen contrasena local)",
-                  "Falso aviso del Site URL eliminado cuando Google vuelve con codigo"
+                  "La sesion guarda una copia del usuario: si el arranque reescribe la lista, igual entras",
+                  "Compatible con cuentas de Google sin contrasena local"
               ]
 }
