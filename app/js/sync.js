@@ -72,6 +72,13 @@ export async function pushCloud() {
   }
 }
 
+/** Cuenta registros "reales" de un estado (para saber si tiene negocio dentro). */
+function peso(d) {
+  if (!d || typeof d !== 'object') return 0;
+  return (d.products || []).length + (d.sales || []).length + (d.customers || []).length
+    + (d.purchases || []).length + (d.expenses || []).length + (d.layaways || []).length;
+}
+
 /** Baja el estado de la nube si es más nuevo que el local. */
 export async function pullCloud(force = false) {
   if (!sbReady()) return { ok: false, error: 'Sin configurar' };
@@ -84,6 +91,18 @@ export async function pullCloud(force = false) {
     const remoteRev = Number(row.rev || 0);
     const localRev = Number(state.rev || 0);
     if (!force && remoteRev <= localRev && !isDirty()) return { ok: true, skipped: true, rev: remoteRev };
+
+    // PROTECCIÓN: nunca reemplazar un negocio con datos por una nube vacía.
+    const pRemote = peso(row.data);
+    const pLocal = peso(state);
+    if (pLocal > 0 && pRemote === 0) {
+      return { ok: true, skipped: true, rev: remoteRev, reason: 'cloud-vacia' };
+    }
+    // Y si lo local es más nuevo, no se pisa con una revisión vieja.
+    if (pLocal > 0 && remoteRev < localRev) {
+      return { ok: true, skipped: true, rev: remoteRev, reason: 'local-mas-nuevo' };
+    }
+
     if (row.data && typeof row.data === 'object' && Object.keys(row.data).length) {
       Object.assign(state, row.data);
       state.rev = remoteRev;

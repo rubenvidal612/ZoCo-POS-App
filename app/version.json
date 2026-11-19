@@ -1,9 +1,8 @@
 {
-    "version":  "2.58.0",
+    "version":  "2.58.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Reportes: nuevo panel de devoluciones, mermas y traspasos con filtro de periodo",
-                  "Cuentas por pagar permite saldo a favor",
-                  "Fotos comprimidas y fotos en compras"
+                  "Proteccion: la nube vacia ya no puede borrar el negocio local",
+                  "Si lo local es mas nuevo que la nube, no se sobreescribe"
               ]
 }
