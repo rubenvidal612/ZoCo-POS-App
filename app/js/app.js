@@ -3,6 +3,7 @@ import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, 
 import { posView } from './views-pos.js';
 import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
+import { purchasesView } from './views-purchases.js';
 import { aiView } from './views-ai.js';
 import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
@@ -34,6 +35,7 @@ const NAV_GROUPS = [
     label: 'GESTIÓN',
     items: [
       { id: 'productos', label: 'Productos', icon: '▦', mobile: true, perm: 'products.edit' },
+      { id: 'compras', label: 'Compras', icon: '📦', perm: 'products.edit' },
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
@@ -74,7 +76,7 @@ let pendingCreate = false;
 let current = null;
 
 const titles = {
-  inicio: 'Resumen', vender: 'Vender', productos: 'Productos', ventas: 'Transacciones',
+  inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
   reportes: 'Reportes', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
   usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
@@ -465,6 +467,7 @@ function mount() {
       return v;
     }),
     ventas: () => salesView(ctx),
+    compras: guard('products.edit', () => purchasesView(ctx)),
     clientes: guard('customers.manage', () => customersView(ctx)),
     usuarios: guard('users.manage', () => usersView(ctx)),
     checador: () => timeClockView(ctx),

@@ -1,9 +1,9 @@
 {
-    "version":  "2.55.0",
+    "version":  "2.56.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Invitaciones de empleados por correo (Configuracion \u003e Equipo)",
-                  "El empleado entra a la MISMA empresa desde su celular",
-                  "SQL nuevo en supabase/migrations/20261119000004_invitaciones.sql"
+                  "Nuevo modulo Compras: proveedores, ordenes con recepcion parcial y cuentas por pagar",
+                  "Recibir mercancia suma al inventario de la sucursal",
+                  "Los pagos a proveedor bajan la cuenta por pagar y salen de caja"
               ]
 }

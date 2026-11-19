@@ -806,6 +806,8 @@ function migrate(s) {
   if (!Array.isArray(s.customers)) s.customers = [];
   if (!Array.isArray(s.coupons)) s.coupons = [];
   if (!Array.isArray(s.layaways)) s.layaways = [];
+  if (!Array.isArray(s.suppliers)) s.suppliers = [];
+  if (!Array.isArray(s.purchases)) s.purchases = [];
   if (!Array.isArray(s.expenses)) s.expenses = [];
   if (!Array.isArray(s.returns)) s.returns = [];
   if (!Array.isArray(s.adjustments)) s.adjustments = [];
@@ -1324,6 +1326,141 @@ export function cancelLayaway(id) {
   });
   l.status = 'cancelled';
   emit();
+}
+
+/* ================= Compras y proveedores ================= */
+
+export function supplierById(id) { return state.suppliers.find((s) => s.id === id); }
+
+export function upsertSupplier(data) {
+  if (data.id) {
+    const s = supplierById(data.id);
+    if (s) Object.assign(s, data);
+  } else {
+    state.suppliers.push({ id: uid('sp'), name: '', phone: '', rfc: '', notes: '', ...data });
+  }
+  emit();
+}
+
+export function deleteSupplier(id) {
+  state.suppliers = state.suppliers.filter((s) => s.id !== id);
+  emit();
+}
+
+/**
+ * Crea una orden de compra. Los artículos quedan "pedidos" hasta recibirlos.
+ * items: [{ productId, vkey, qty, cost }]
+ */
+export function createPurchase({ supplierId, items, note = '', date = null }) {
+  const list = (items || []).filter((i) => i && i.productId && Number(i.qty) > 0);
+  if (!list.length) return { ok: false, msg: 'Agrega al menos un producto' };
+  const total = list.reduce((a, i) => a + round3(Number(i.qty) * Number(i.cost || 0)), 0);
+  const po = {
+    id: uid('po'),
+    folio: 'OC-' + state.seq++,
+    supplierId: supplierId || null,
+    date: date || new Date().toISOString(),
+    branchId: state.currentBranch,
+    status: 'ordered',           // ordered | partial | received | cancelled
+    items: list.map((i) => ({
+      productId: i.productId,
+      vkey: i.vkey || '',
+      qty: round3(Number(i.qty)),
+      received: 0,
+      cost: Number(i.cost || 0),
+    })),
+    total: round3(total),
+    paid: 0,
+    payments: [],
+    note: String(note || ''),
+  };
+  state.purchases.unshift(po);
+  emit();
+  return { ok: true, purchase: po };
+}
+
+/** Recibe mercancía (total o parcial) y suma al inventario de la sucursal. */
+export function receivePurchase(id, receipts = [], { branchId = null } = {}) {
+  const po = state.purchases.find((x) => x.id === id);
+  if (!po || po.status === 'cancelled' || po.status === 'received') return { ok: false, msg: 'Orden no disponible' };
+  const br = branchId || po.branchId || state.currentBranch;
+  let moved = 0;
+  (receipts || []).forEach((r) => {
+    const it = po.items.find((x) => x.productId === r.productId && x.vkey === (r.vkey || ''));
+    if (!it) return;
+    const pending = round3(it.qty - it.received);
+    const qty = Math.min(pending, round3(Math.max(0, Number(r.qty) || 0)));
+    if (qty <= 0) return;
+    const p = productById(it.productId);
+    if (!p) return;
+    p.branchStock = p.branchStock || {};
+    p.branchStock[br] = p.branchStock[br] || {};
+    const k = it.vkey || '';
+    if (k) {
+      p.branchStock[br][k] = round3(Number(p.branchStock[br][k] || 0) + qty);
+    } else {
+      // sin variante: reparte al primer tamaño disponible
+      const first = sizesFor(p.section)[0];
+      const key = fmtSize(first);
+      p.branchStock[br][key] = round3(Number(p.branchStock[br][key] || 0) + qty);
+    }
+    // costo promedio simple
+    if (Number(it.cost) > 0) {
+      const prev = Number(p.cost || 0);
+      p.cost = prev > 0 ? round3((prev + Number(it.cost)) / 2) : Number(it.cost);
+    }
+    it.received = round3(it.received + qty);
+    moved += qty;
+  });
+  if (!moved) return { ok: false, msg: 'No se recibió ninguna cantidad' };
+  const all = po.items.every((i) => round3(i.received) >= round3(i.qty));
+  po.status = all ? 'received' : 'partial';
+  po.receivedAt = new Date().toISOString();
+  emit();
+  return { ok: true, moved, status: po.status };
+}
+
+/** Registra un pago (total o parcial) a la orden: baja la cuenta por pagar. */
+export function payPurchase(id, amount, note = '') {
+  const po = state.purchases.find((x) => x.id === id);
+  if (!po) return { ok: false, msg: 'Orden no encontrada' };
+  const amt = round3(Math.max(0, Number(amount) || 0));
+  if (amt <= 0) return { ok: false, msg: 'Monto inválido' };
+  const due = round3(po.total - po.paid);
+  if (due + 1e-9 < amt) return { ok: false, msg: 'El pago excede lo que se debe: ' + due.toFixed(2) };
+  po.paid = round3(po.paid + amt);
+  po.payments.push({ at: new Date().toISOString(), amount: amt, note: String(note || '') });
+  addCash('out', amt, 'Pago a proveedor ' + po.folio);
+  emit();
+  return { ok: true, paid: po.paid, due: round3(po.total - po.paid) };
+}
+
+export function cancelPurchase(id) {
+  const po = state.purchases.find((x) => x.id === id);
+  if (!po || po.status === 'received') return { ok: false, msg: 'Ya recibida: no se puede cancelar' };
+  po.status = 'cancelled';
+  emit();
+  return { ok: true };
+}
+
+/** Cuentas por pagar: lo que se debe, agrupado por proveedor. */
+export function payables() {
+  const rows = [];
+  (state.purchases || []).forEach((po) => {
+    if (po.status === 'cancelled') return;
+    const due = round3(Number(po.total || 0) - Number(po.paid || 0));
+    if (due <= 0.004) return;
+    const sp = supplierById(po.supplierId);
+    rows.push({ po, due, supplier: sp?.name || 'Sin proveedor' });
+  });
+  const bySupplier = {};
+  rows.forEach((r) => {
+    bySupplier[r.supplier] = bySupplier[r.supplier] || { name: r.supplier, due: 0, count: 0 };
+    bySupplier[r.supplier].due = round3(bySupplier[r.supplier].due + r.due);
+    bySupplier[r.supplier].count += 1;
+  });
+  const total = round3(rows.reduce((a, r) => a + r.due, 0));
+  return { rows, bySupplier: Object.values(bySupplier).sort((a, b) => b.due - a.due), total };
 }
 
 /* ================= Caja ================= */

@@ -1617,3 +1617,45 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 .login-diag{display:none;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#0F172A;color:#E2E8F0;
   font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-all;text-align:left;max-height:150px;overflow:auto}
 .login-diag b{color:#FDBA74}
+/* ===== Compras ===== */
+.purchv{padding:0 0 24px}
+.po-list{display:flex;flex-direction:column;gap:8px}
+.po-row{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;flex-wrap:wrap}
+.po-main{flex:1;min-width:160px}
+.po-folio{font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.po-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.po-money{text-align:right;font-size:13px;min-width:90px}
+.po-actions{display:flex;gap:6px;flex-wrap:wrap}
+.po-tag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.po-tag.po-ordered{background:#FEF3C7;border-color:#FCD34D;color:#92400E}
+.po-tag.po-partial{background:#DBEAFE;border-color:#93C5FD;color:#1E40AF}
+.po-tag.po-ok{background:#D1FAE5;border-color:#6EE7B7;color:#065F46}
+.po-tag.po-cancel{background:#F1F5F9;color:#64748B}
+.po-line{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.pay-total{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.pay-head{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+@media (max-width:640px){
+  .po-row{gap:8px}
+  .po-money{text-align:left;min-width:0}
+  .po-actions{width:100%}
+}
+/* ===== Encabezado de pagina y pestanas (Compras) ===== */
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.page-head h1{font-size:22px;margin:0;letter-spacing:-.4px}
+.page-head p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.page-actions{display:flex;gap:8px;flex-wrap:wrap}
+.page-actions .btn{width:auto}
+.tabs{display:flex;gap:6px;margin:6px 0 14px;overflow-x:auto;padding-bottom:2px}
+.tabs button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;
+  font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.empty{text-align:center;padding:42px 16px;color:var(--muted)}
+.empty-ico{font-size:38px;margin-bottom:8px}
+.empty h3{margin:0 0 6px;font-size:16px;color:var(--text)}
+.empty p{margin:0;font-size:13px}
+@media (max-width:640px){
+  .page-head h1{font-size:19px}
+  .page-actions{width:100%}
+  .page-actions .btn{flex:1}
+}
