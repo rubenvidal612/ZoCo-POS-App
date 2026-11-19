@@ -1,7 +1,8 @@
 {
-    "version":  "2.47.2",
+    "version":  "2.48.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Google: fuerza flow_type=implicit para que los tokens vuelvan en el hash"
+                  "Google: soporte del flujo PKCE (?code=) ademas del implicito",
+                  "Diagnostico de Google ahora visible arriba del login"
               ]
 }

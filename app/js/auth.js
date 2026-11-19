@@ -136,22 +136,98 @@ export function logOauth(step, detail = '') {
     localStorage.setItem(k, JSON.stringify(arr.slice(-12)));
   } catch {}
 }
+
+/* ---- utilidades PKCE ---- */
+function b64url(bytes) {
+  let s = '';
+  bytes.forEach((b) => { s += String.fromCharCode(b); });
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function randomVerifier() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return b64url(bytes);
+}
+async function sha256B64(txt) {
+  const data = new TextEncoder().encode(txt);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return b64url(new Uint8Array(hash));
+}
+export function decodeJwt(t) {
+  try {
+    const part = String(t).split('.')[1] || '';
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(b64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''),
+    );
+    return JSON.parse(json);
+  } catch { return null; }
+}
 export function signInWithGoogle() {
   if (!sbReady()) return false;
   try { sessionStorage.setItem('zoco.oauth.pending', String(Date.now())); } catch {}
-  // redirect limpio: solo el origen (más fácil de autorizar en Supabase)
   const redirect = location.origin + '/';
-  // flow_type=implicit: los tokens vuelven en el hash, como maneja handleOAuthReturn
-  const url = `${sbConfig().url}/auth/v1/authorize?provider=google&flow_type=implicit&redirect_to=${encodeURIComponent(redirect)}`;
-  location.href = url;
+  // PKCE: se genera el verificador y se manda el reto SHA-256.
+  // Así funciona tanto si el proyecto usa PKCE como si usa implicit.
+  const verifier = randomVerifier();
+  try { sessionStorage.setItem('zoco.oauth.verifier', verifier); } catch {}
+  sha256B64(verifier).then((challenge) => {
+    const p = new URLSearchParams({ provider: 'google', redirect_to: redirect });
+    if (challenge) {
+      p.set('code_challenge', challenge);
+      p.set('code_challenge_method', 'S256');
+      p.set('flow_type', 'pkce');
+    }
+    location.href = `${sbConfig().url}/auth/v1/authorize?${p.toString()}`;
+  }).catch(() => {
+    location.href = `${sbConfig().url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
+  });
   return true;
 }
 
-/** Lee el #access_token que Supabase devuelve al volver de Google. */
+/** Lee el #access_token (implicit) o el ?code= (PKCE) que devuelve Supabase. */
 export async function handleOAuthReturn() {
   const hash = location.hash || '';
-  logOauth('vuelta', 'hash=' + (hash ? hash.slice(0, 40) + '…' : 'vacío') + ' | search=' + (location.search || 'vacío'));
-  if (location.search.includes('code=')) logOauth('flujo', 'PKCE (?code=) no soportado por este login');
+  const search = location.search || '';
+  logOauth('vuelta', 'hash=' + (hash ? hash.slice(0, 30) + '…' : 'vacío') + ' | search=' + (search ? search.slice(0, 30) + '…' : 'vacío'));
+
+  // ---------- Flujo PKCE: llega ?code= ----------
+  const q = new URLSearchParams(search);
+  const code = q.get('code');
+  if (code) {
+    logOauth('pkce', 'code recibido');
+    try {
+      const verifier = (() => { try { return sessionStorage.getItem('zoco.oauth.verifier') || ''; } catch { return ''; } })();
+      const r = await safeFetch(`${sbConfig().url}/auth/v1/token?grant_type=pkce`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: sbConfig().key },
+        body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.access_token) {
+        const msg = j.error_description || j.msg || j.error || ('HTTP ' + r.status);
+        logOauth('pkce-fail', msg);
+        return { ok: false, error: 'No se pudo completar el acceso con Google: ' + msg };
+      }
+      let user = j.user || null;
+      if (!user?.id) {
+        const claims = decodeJwt(j.access_token) || {};
+        if (claims.sub) {
+          user = { id: claims.sub, email: claims.email || '', user_metadata: claims.user_metadata || {}, app_metadata: claims.app_metadata || {}, _fromToken: true };
+        }
+      }
+      if (!user?.id) return { ok: false, error: 'Google no devolvió una identidad válida.' };
+      logOauth('pkce-ok', 'id=' + user.id + ' | email=' + (user.email || '(sin correo)'));
+      saveCloudSession({ access_token: j.access_token, refresh_token: j.refresh_token, expires_in: j.expires_in || 3600, user, token_type: 'bearer' });
+      try { sessionStorage.removeItem('zoco.oauth.verifier'); } catch {}
+      history.replaceState(null, '', location.pathname);
+      return { ok: true, user };
+    } catch (e) {
+      logOauth('pkce-err', e.message);
+      return { ok: false, error: 'No se pudo completar el acceso con Google.' };
+    }
+  }
+
   if (!hash.includes('access_token=')) {
     // Supabase devuelve el motivo cuando algo falla (redirect no permitido, etc.)
     if (hash.includes('error')) {
@@ -172,18 +248,6 @@ export async function handleOAuthReturn() {
   const refresh_token = params.get('refresh_token');
   const expires_in = Number(params.get('expires_in') || 3600);
   if (!access_token) return { ok: false };
-
-  /** Lee los datos del JWT sin depender de la red (respaldo si /user falla). */
-  const decodeJwt = (t) => {
-    try {
-      const part = String(t).split('.')[1] || '';
-      const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
-      const json = decodeURIComponent(
-        atob(b64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''),
-      );
-      return JSON.parse(json);
-    } catch { return null; }
-  };
 
   let user = null;
   try {
