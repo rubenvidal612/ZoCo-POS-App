@@ -612,6 +612,7 @@ bootOAuth().then(async (oauth) => {
   logOauth('shell', currentUser() ? 'con usuario ' + currentUser().email : 'sin usuario');
     setTimeout(() => initInstallPrompt(), 1200);
     setTimeout(() => maybeDailyNotice(), 2500);
+    window.addEventListener('zoco:cloud-bootstrapped', () => { try { toast('Tus datos se subieron a la nube ✓'); } catch {} });
     setTimeout(() => { startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
     // Refresca la suscripción push si el usuario ya dio permiso
     if ('Notification' in window && Notification.permission === 'granted') {

@@ -137,8 +137,20 @@ export function startSync() {
 
   // primera bajada: trae lo que haya en la nube antes de permitir subir
   setTimeout(async () => {
-    try { await pullCloud(); } catch {}
+    let pulled = null;
+    try { pulled = await pullCloud(); } catch {}
     readyToPush = true;
+    // Si la nube está vacía y este equipo ya tiene negocio, se sube solo.
+    try {
+      const hasLocal = ((state.products || []).length + (state.sales || []).length + (state.customers || []).length) > 0;
+      const revLocal = Number(state.rev || 0);
+      if (hasLocal && revLocal === 0 && (pulled?.empty || pulled?.rev === 0)) {
+        const up = await pushCloud();
+        if (up.ok) {
+          window.dispatchEvent(new CustomEvent('zoco:cloud-bootstrapped', { detail: { rev: up.rev } }));
+        }
+      }
+    } catch {}
     if (isDirty()) schedulePush();
   }, 2500);
 

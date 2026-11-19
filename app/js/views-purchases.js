@@ -1,5 +1,5 @@
 // Compras: proveedores, órdenes de compra con recepción parcial y cuentas por pagar.
-import { $, el, money, esc, toast, modal, confirmDialog } from './ui.js';
+import { $, el, money, esc, toast, modal, confirmDialog, readImageCompressed } from './ui.js';
 import {
   state, productById, sizesFor, fmtSize, variantsOf, totalStock,
   supplierById, upsertSupplier, deleteSupplier,
@@ -117,26 +117,30 @@ export function purchasesView(ctx) {
   /* ---------------- Cuentas por pagar ---------------- */
   const paintPayables = () => {
     const body = root.querySelector('#po-body');
-    const { rows, bySupplier, total } = payables();
-    if (!rows.length) {
+    const { rows, credits, bySupplier, total, totalFavor } = payables();
+    if (!rows.length && !credits.length) {
       body.innerHTML = `<div class="empty"><div class="empty-ico">✅</div>
         <h3>Nada por pagar</h3><p>Todas tus compras están pagadas.</p></div>`;
       return;
     }
     body.innerHTML = `
-      <div class="pay-total">
+      ${rows.length ? `<div class="pay-total">
         <div class="po-sub">Total por pagar</div>
         <div style="font-size:26px;font-weight:900;color:var(--danger)">${money(total)}</div>
-      </div>
-      <div class="po-list" style="margin-top:14px">
+      </div>` : ''}
+      ${totalFavor > 0.004 ? `<div class="pay-total" style="margin-top:10px;border-color:#6EE7B7">
+        <div class="po-sub">Saldo a favor (te deben)</div>
+        <div style="font-size:20px;font-weight:900;color:#059669">${money(totalFavor)}</div>
+      </div>` : ''}
+      ${bySupplier.length ? `<div class="po-list" style="margin-top:14px">
         <div class="pay-head">Por proveedor</div>
         ${bySupplier.map((s) => `<div class="po-row">
           <div class="po-main"><div class="po-folio">${esc(s.name)}</div>
             <div class="po-sub">${s.count} compra(s) con saldo</div></div>
           <div class="po-money"><b>${money(s.due)}</b></div>
         </div>`).join('')}
-      </div>
-      <div class="po-list" style="margin-top:14px">
+      </div>` : ''}
+      ${rows.length ? `<div class="po-list" style="margin-top:14px">
         <div class="pay-head">Detalle</div>
         ${rows.map((r) => `<div class="po-row">
           <div class="po-main"><div class="po-folio">${esc(r.po.folio)}</div>
@@ -144,7 +148,15 @@ export function purchasesView(ctx) {
           <div class="po-money"><b>${money(r.due)}</b><div class="po-sub">de ${money(r.po.total)}</div></div>
           <div class="po-actions"><button class="btn sm" data-pay="${r.po.id}">Pagar</button></div>
         </div>`).join('')}
-      </div>`;
+      </div>` : ''}
+      ${credits.length ? `<div class="po-list" style="margin-top:14px">
+        <div class="pay-head">Compras pagadas de más (saldo a favor)</div>
+        ${credits.map((c) => `<div class="po-row">
+          <div class="po-main"><div class="po-folio">${esc(c.po.folio)}</div>
+            <div class="po-sub">${esc(c.supplier)} · pagado ${money(c.po.paid)} de ${money(c.po.total)}</div></div>
+          <div class="po-money"><b style="color:#059669">+${money(c.favor)}</b><div class="po-sub">a favor</div></div>
+        </div>`).join('')}
+      </div>` : ''}`;
     body.querySelectorAll('[data-pay]').forEach((b) => (b.onclick = () => openPay(b.dataset.pay)));
   };
 
@@ -174,7 +186,11 @@ export function purchasesView(ctx) {
         </div>
         <button class="btn ghost sm" id="po-add" style="width:100%">+ Agregar a la orden</button>
         <div id="po-lines" style="margin-top:12px"></div>
-        <div class="field" style="margin-top:12px"><label>Nota (opcional)</label><input id="po-note" placeholder="Ej. pedido por WhatsApp"></div>`,
+        <div class="field" style="margin-top:12px"><label>Nota (opcional)</label><input id="po-note" placeholder="Ej. pedido por WhatsApp"></div>
+        <div class="field" style="margin-top:12px"><label>Foto de la compra (opcional)</label>
+          <input id="po-img" type="file" accept="image/*">
+          <div id="po-img-prev" style="margin-top:8px"></div>
+          <div class="hint">Se comprime automáticamente (máx 900px y ~90 KB).</div></div>`,
       foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn" id="po-save">Guardar orden</button>`,
     });
     const r = m.root;
@@ -211,12 +227,25 @@ export function purchasesView(ctx) {
       lines.push({ productId, vkey, qty, cost });
       paintLines();
     };
+    let poPhoto = null;
+    r.querySelector('#po-img').onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const img = await readImageCompressed(f);
+        poPhoto = img.dataUrl;
+        r.querySelector('#po-img-prev').innerHTML =
+          `<img src="${img.dataUrl}" style="width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
+           <div class="hint">${Math.round(img.bytes / 1024)} KB · ${img.width}×${img.height}</div>`;
+      } catch (err) { toast(err.message); }
+    };
     r.querySelector('#po-save').onclick = () => {
       if (!lines.length) { toast('Agrega al menos un artículo'); return; }
       const res = createPurchase({
         supplierId: r.querySelector('#po-sp').value || null,
         items: lines,
         note: r.querySelector('#po-note').value,
+        photo: poPhoto,
       });
       if (!res.ok) { toast(res.msg || 'No se pudo crear'); return; }
       toast('Orden ' + res.purchase.folio + ' creada');
@@ -279,7 +308,7 @@ export function purchasesView(ctx) {
       const amt = Number(r.querySelector('#pay-amt').value) || 0;
       const res = payPurchase(po.id, amt, r.querySelector('#pay-note').value);
       if (!res.ok) { toast(res.msg || 'No se pudo pagar'); return; }
-      toast('Pago registrado ✓');
+      toast(res.favor > 0 ? 'Pago registrado · saldo a favor ' + money(res.favor) : 'Pago registrado ✓');
       m.close(); render();
     };
   };
@@ -303,7 +332,11 @@ export function purchasesView(ctx) {
         <div class="po-row" style="margin-top:10px"><div class="po-main"><b>Total</b></div><div class="po-money"><b>${money(po.total)}</b></div></div>
         <div class="po-row"><div class="po-main">Pagado</div><div class="po-money">${money(po.paid)}</div></div>
         <div class="po-row"><div class="po-main"><b>Saldo</b></div><div class="po-money"><b>${money(Number(po.total) - Number(po.paid))}</b></div></div>
-        ${po.note ? `<div class="hint" style="margin-top:10px">Nota: ${esc(po.note)}</div>` : ''}`,
+        ${po.note ? `<div class="hint" style="margin-top:10px">Nota: ${esc(po.note)}</div>` : ''}
+        ${po.photo ? `<div style="margin-top:12px">
+          <div class="po-sub" style="margin-bottom:6px">Foto de la compra</div>
+          <img src="${esc(po.photo)}" style="width:100%;max-width:320px;border-radius:12px;border:1px solid var(--line)">
+        </div>` : ''}`,
       foot: `${po.status === 'ordered' || po.status === 'partial' ? '<button class="btn ghost" id="dt-cancel">Cancelar orden</button>' : ''}
         <button class="btn" data-close>Cerrar</button>`,
     });

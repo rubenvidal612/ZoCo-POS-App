@@ -1,9 +1,10 @@
 {
-    "version":  "2.56.0",
+    "version":  "2.57.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo modulo Compras: proveedores, ordenes con recepcion parcial y cuentas por pagar",
-                  "Recibir mercancia suma al inventario de la sucursal",
-                  "Los pagos a proveedor bajan la cuenta por pagar y salen de caja"
+                  "Fotos en las compras (se guardan comprimidas)",
+                  "Todas las imagenes se comprimen mas: max 900px y ~90 KB",
+                  "Se permite pagar de mas: queda como saldo a favor, no como deuda",
+                  "Si la nube esta vacia, tus datos se suben solos al entrar"
               ]
 }

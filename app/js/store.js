@@ -1351,7 +1351,7 @@ export function deleteSupplier(id) {
  * Crea una orden de compra. Los artículos quedan "pedidos" hasta recibirlos.
  * items: [{ productId, vkey, qty, cost }]
  */
-export function createPurchase({ supplierId, items, note = '', date = null }) {
+export function createPurchase({ supplierId, items, note = '', date = null, photo = null }) {
   const list = (items || []).filter((i) => i && i.productId && Number(i.qty) > 0);
   if (!list.length) return { ok: false, msg: 'Agrega al menos un producto' };
   const total = list.reduce((a, i) => a + round3(Number(i.qty) * Number(i.cost || 0)), 0);
@@ -1373,6 +1373,7 @@ export function createPurchase({ supplierId, items, note = '', date = null }) {
     paid: 0,
     payments: [],
     note: String(note || ''),
+    photo: photo || null,
   };
   state.purchases.unshift(po);
   emit();
@@ -1420,19 +1421,23 @@ export function receivePurchase(id, receipts = [], { branchId = null } = {}) {
   return { ok: true, moved, status: po.status };
 }
 
-/** Registra un pago (total o parcial) a la orden: baja la cuenta por pagar. */
+/**
+ * Registra un pago (total o parcial) a la orden.
+ * Se permite pagar de más: el excedente queda como SALDO A FAVOR
+ * (dinero que el proveedor te debe o que se aplicará a otra compra).
+ */
 export function payPurchase(id, amount, note = '') {
   const po = state.purchases.find((x) => x.id === id);
   if (!po) return { ok: false, msg: 'Orden no encontrada' };
   const amt = round3(Math.max(0, Number(amount) || 0));
   if (amt <= 0) return { ok: false, msg: 'Monto inválido' };
   const due = round3(po.total - po.paid);
-  if (due + 1e-9 < amt) return { ok: false, msg: 'El pago excede lo que se debe: ' + due.toFixed(2) };
   po.paid = round3(po.paid + amt);
   po.payments.push({ at: new Date().toISOString(), amount: amt, note: String(note || '') });
   addCash('out', amt, 'Pago a proveedor ' + po.folio);
   emit();
-  return { ok: true, paid: po.paid, due: round3(po.total - po.paid) };
+  const saldo = round3(po.total - po.paid); // negativo = a favor
+  return { ok: true, paid: po.paid, due: saldo, favor: saldo < -0.004 ? round3(Math.abs(saldo)) : 0 };
 }
 
 export function cancelPurchase(id) {
@@ -1443,15 +1448,17 @@ export function cancelPurchase(id) {
   return { ok: true };
 }
 
-/** Cuentas por pagar: lo que se debe, agrupado por proveedor. */
+/** Cuentas por pagar: lo que se debe, agrupado por proveedor (y saldos a favor). */
 export function payables() {
   const rows = [];
+  const credits = [];
   (state.purchases || []).forEach((po) => {
     if (po.status === 'cancelled') return;
-    const due = round3(Number(po.total || 0) - Number(po.paid || 0));
-    if (due <= 0.004) return;
+    const saldo = round3(Number(po.total || 0) - Number(po.paid || 0));
     const sp = supplierById(po.supplierId);
-    rows.push({ po, due, supplier: sp?.name || 'Sin proveedor' });
+    const name = sp?.name || 'Sin proveedor';
+    if (saldo > 0.004) rows.push({ po, due: saldo, supplier: name });
+    else if (saldo < -0.004) credits.push({ po, favor: round3(Math.abs(saldo)), supplier: name });
   });
   const bySupplier = {};
   rows.forEach((r) => {
@@ -1460,7 +1467,8 @@ export function payables() {
     bySupplier[r.supplier].count += 1;
   });
   const total = round3(rows.reduce((a, r) => a + r.due, 0));
-  return { rows, bySupplier: Object.values(bySupplier).sort((a, b) => b.due - a.due), total };
+  const totalFavor = round3(credits.reduce((a, c) => a + c.favor, 0));
+  return { rows, credits, bySupplier: Object.values(bySupplier).sort((a, b) => b.due - a.due), total, totalFavor };
 }
 
 /* ================= Caja ================= */

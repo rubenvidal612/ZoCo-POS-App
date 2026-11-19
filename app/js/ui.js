@@ -73,22 +73,43 @@ export function confirmDialog({ title, message, okText = 'Confirmar', danger = f
   });
 }
 
-/** Lee una imagen del usuario y la comprime (máx 1200px, WebP). Devuelve dataURL. */
-export function readImageCompressed(file, maxSize = 1200, quality = 0.82) {
+/**
+ * Lee una imagen del usuario y la deja SIEMPRE ligera.
+ * - Máximo 900px de lado (antes 1200)
+ * - WebP/JPEG con calidad 0.7
+ * - Si aún pesa más de `maxBytes` (90 KB), baja calidad y tamaño en pasos
+ * Devuelve { dataUrl, width, height, bytes }.
+ */
+export function readImageCompressed(file, maxSize = 900, quality = 0.7, maxBytes = 90 * 1024) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const w = img.width, h = img.height;
-      const scale = Math.min(1, maxSize / Math.max(w, h));
-      const cw = Math.round(w * scale), ch = Math.round(h * scale);
-      const cv = document.createElement('canvas');
-      cv.width = cw; cv.height = ch;
-      cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
-      let out = cv.toDataURL('image/webp', quality);
-      if (out.indexOf('data:image/webp') !== 0) out = cv.toDataURL('image/jpeg', quality);
-      resolve({ dataUrl: out, width: cw, height: ch, bytes: Math.round(out.length * 0.75) });
+      try {
+        let side = maxSize;
+        let q = quality;
+        let out = '';
+        let cw = 0, ch = 0;
+        for (let intento = 0; intento < 6; intento++) {
+          const scale = Math.min(1, side / Math.max(img.width, img.height));
+          cw = Math.max(1, Math.round(img.width * scale));
+          ch = Math.max(1, Math.round(img.height * scale));
+          const cv = document.createElement('canvas');
+          cv.width = cw; cv.height = ch;
+          const ctx = cv.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, cw, ch);
+          out = cv.toDataURL('image/webp', q);
+          if (out.indexOf('data:image/webp') !== 0) out = cv.toDataURL('image/jpeg', q);
+          const bytes = Math.round(out.length * 0.75);
+          if (bytes <= maxBytes) break;
+          // todavía pesa: primero baja calidad, luego reduce tamaño
+          if (q > 0.45) q = Math.max(0.45, q - 0.1);
+          else side = Math.max(320, Math.round(side * 0.8));
+        }
+        resolve({ dataUrl: out, width: cw, height: ch, bytes: Math.round(out.length * 0.75) });
+      } catch (e) { reject(new Error('No se pudo comprimir la imagen')); }
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la imagen')); };
     img.src = url;

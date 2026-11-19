@@ -424,7 +424,7 @@ export function aiView() {
         CHAT.push({ role: 'user', content: '📷 Foto: ' + f.name });
         saveChat(); render();
         try {
-          const img = await readImageCompressed(f, 1400, 0.85);
+          const img = await readImageCompressed(f, 1100, 0.75, 160 * 1024);
           const res = await callModel({
             provider: st.aiProvider || 'gemini',
             key: st.aiKey,
