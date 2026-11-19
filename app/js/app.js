@@ -104,6 +104,7 @@ function paintLogin() {
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
         </div>
         <div id="lg-alt" class="login-alt"></div>
+        <div class="login-ver">v2.46.2 · <button type="button" id="lg-hard">Forzar actualización</button></div>
       </form>
     </div>`;
 
@@ -147,6 +148,22 @@ function paintLogin() {
       $('#lg-err').textContent = r.ok ? '📬 Revisa tu correo para crear tu contraseña.' : 'No se pudo enviar: ' + (r.error || '');
     };
   };
+
+  const hardBtn = document.querySelector('#lg-hard');
+  if (hardBtn) {
+    hardBtn.onclick = async () => {
+      hardBtn.textContent = 'Actualizando…';
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {}
+      location.reload();
+    };
+  }
 
   if (!sbReady()) {
     const r = $('#lg-register'); if (r) r.style.display = 'none';

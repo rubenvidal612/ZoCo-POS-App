@@ -1,8 +1,8 @@
 {
-    "version":  "2.46.1",
+    "version":  "2.46.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Corregido: el boton de Google no hacia nada (error redirect is not defined)",
-                  "Tambien arreglado el envio de enlace para crear contrasena"
+                  "Login muestra la version y boton \"Forzar actualizacion\"",
+                  "Boton de Google reparado (redirect)"
               ]
 }

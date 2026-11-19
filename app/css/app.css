@@ -1606,3 +1606,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 /* Alternativas de acceso en el login */
 .login-alt{margin-top:2px}
 .login-alt .btn{font-size:13px}
+/* Version y actualizacion en el login */
+.login-ver{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;display:flex;gap:6px;
+  align-items:center;justify-content:center}
+.login-ver button{background:none;border:0;color:var(--brand);font-size:11px;font-weight:800;cursor:pointer;text-decoration:underline}
