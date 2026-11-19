@@ -1,8 +1,7 @@
 {
-    "version":  "2.46.3",
+    "version":  "2.46.4",
     "date":  "2026-11-10",
     "notes":  [
-                  "Aviso cuando Google no regresa a la app (Site URL mal configurada)",
-                  "Marca el intento de Google para diagnosticar"
+                  "Aviso visible cuando Google no regresa a la app, con la URL exacta a configurar"
               ]
 }
