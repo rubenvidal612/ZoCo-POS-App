@@ -403,6 +403,7 @@ export function productsView(ctx) {
               value="${p ? stockOf(p, s) : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
           </div>`).join('')}
         </div>
+        <div id="f-codes" style="margin-top:14px"></div>
         <div id="f-variants"></div>`,
       foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="save">Guardar</button>`,
     });
@@ -433,7 +434,42 @@ export function productsView(ctx) {
             </div>
           </div>`).join('');
     };
-    m.root.querySelector('#f-colors').oninput = paintVariants;
+    m.root.querySelector('#f-colors').oninput = () => { paintVariants(); paintCodes(); };
+
+    /* ---- SKU y código de barras por variante (talla o talla+color) ---- */
+    const vSku = { ...(p?.variantSku || {}) };
+    const vBar = { ...(p?.variantBarcode || {}) };
+    const currentKeys = () => {
+      const keys = [];
+      m.root.querySelectorAll('[data-vkey]').forEach((i) => keys.push(i.dataset.vkey));
+      if (!keys.length) m.root.querySelectorAll('.sz-in[data-size]').forEach((i) => keys.push(i.dataset.size));
+      return [...new Set(keys)];
+    };
+    const paintCodes = () => {
+      const box = m.root.querySelector('#f-codes');
+      if (!box) return;
+      const keys = currentKeys();
+      if (!keys.length) { box.innerHTML = ''; return; }
+      box.innerHTML = `
+        <details ${keys.some((k) => vSku[k] || vBar[k]) ? 'open' : ''}>
+          <summary style="cursor:pointer;font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:8px">
+            SKU y código de barras por talla / variante (opcional)
+          </summary>
+          <div style="display:grid;gap:6px;margin-top:8px">
+            ${keys.map((k) => `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center">
+                <div style="font-size:11px;font-weight:800;color:var(--muted);grid-column:1/-1">${esc(k)}</div>
+                <input data-vsku="${esc(k)}" value="${esc(vSku[k] || '')}" placeholder="SKU (ej. ZP-NEG-25)"
+                  style="height:32px;border:1px solid var(--line);border-radius:8px;padding:0 8px;font-size:12px">
+                <input data-vbar="${esc(k)}" value="${esc(vBar[k] || '')}" placeholder="Código de barras"
+                  style="height:32px;border:1px solid var(--line);border-radius:8px;padding:0 8px;font-size:12px">
+              </div>`).join('')}
+          </div>
+          <div class="hint" style="margin-top:6px">Con el código de barras, al escanear cae directo esa talla en el ticket.</div>
+        </details>`;
+    };
+    m.root.querySelector('#f-sec').addEventListener('change', () => setTimeout(paintCodes, 0));
+    paintCodes();
     paintVariants();
     m.root.querySelector('#f-sec').onchange = (e) => {
       const sizes = sizesFor(e.target.value);
@@ -473,6 +509,17 @@ export function productsView(ctx) {
       });
       const branchStock = { ...(p?.branchStock || {}) };
       branchStock[state.currentBranch] = stock;
+      // SKU / código de barras por variante
+      const variantSku = {};
+      const variantBarcode = {};
+      m.root.querySelectorAll('[data-vsku]').forEach((i) => {
+        const v = i.value.trim();
+        if (v) variantSku[i.dataset.vsku] = v;
+      });
+      m.root.querySelectorAll('[data-vbar]').forEach((i) => {
+        const v = i.value.trim();
+        if (v) variantBarcode[i.dataset.vbar] = v;
+      });
       // Perfumería
       let porMl = false, prepararAlVender = false, recipe = null;
       if (m.root.querySelector('#f-perfml')) {
@@ -500,7 +547,7 @@ export function productsView(ctx) {
         section: m.root.querySelector('#f-sec').value,
         cost: Number(m.root.querySelector('#f-cost').value) || Math.round(price * 0.55),
         catalog: m.root.querySelector('#f-cat').value === '1',
-        branchStock,
+        branchStock, variantSku, variantBarcode,
       });
       m.close(); render(); ctx.refreshShell?.();
     };

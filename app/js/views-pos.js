@@ -3,7 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog } from './ui.js';
 import {
   state, sectionsForMode, sizesFor, stockOf, totalStock, productById,
   cartTotals, addLine, commitSale, sectionOf, fmtSize, can, createLayaway, applyCoupon,
-  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey,
+  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey, findByBarcode,
 } from './store.js';
 import { printTicket, ticketText } from './printer.js';
 
@@ -48,7 +48,23 @@ export function posView(ctx) {
   ctx.posApi = {
     addByCode(code) {
       const q = String(code).trim().toLowerCase();
-      const p = state.products.find((x) => (x.code || '').toLowerCase() === q || (x.name || '').toLowerCase() === q);
+      // 1) Código de la variante (talla / talla+color): cae exacto en el ticket
+      const hit = findByBarcode(code);
+      if (hit?.vkey) {
+        const { product, vkey } = hit;
+        const parts = String(vkey).split('|');
+        const size = parts[0];
+        const color = parts[1] || '';
+        if (stockOf(product, vkey, state.currentBranch) <= 0
+            && Number(product?.branchStock?.[state.currentBranch]?.[vkey] || 0) <= 0) {
+          toast('Sin stock en ' + vkey);
+          return false;
+        }
+        add(product, size, color);
+        return true;
+      }
+      // 2) Código o nombre del producto
+      const p = hit?.product || state.products.find((x) => (x.code || '').toLowerCase() === q || (x.name || '').toLowerCase() === q);
       if (!p) { toast('Código no encontrado: ' + code); return false; }
       const sizes = sizesFor(p.section);
       if (sizes.length === 1) { add(p, sizes[0]); }

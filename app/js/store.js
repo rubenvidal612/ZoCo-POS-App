@@ -381,6 +381,34 @@ export function variantsOf(p) {
 export function availableVariants(p, branchId = state.currentBranch) {
   return variantsOf(p).filter((v) => (Number(p?.branchStock?.[branchId]?.[v.key]) || 0) > 0);
 }
+
+/**
+ * Busca por código escaneado: primero el código del producto, luego el de
+ * cada variante (talla / talla+color). Devuelve { product, vkey }.
+ */
+export function findByBarcode(raw) {
+  const q = String(raw || '').trim();
+  if (!q) return null;
+  const low = q.toLowerCase();
+  for (const p of state.products || []) {
+    if (p.code && String(p.code).toLowerCase() === low) return { product: p, vkey: null };
+  }
+  for (const p of state.products || []) {
+    const bars = p.variantBarcode || {};
+    for (const [vk, code] of Object.entries(bars)) {
+      if (code && String(code).toLowerCase() === low) return { product: p, vkey: vk };
+    }
+    const skus = p.variantSku || {};
+    for (const [vk, sku] of Object.entries(skus)) {
+      if (sku && String(sku).toLowerCase() === low) return { product: p, vkey: vk };
+    }
+  }
+  for (const p of state.products || []) {
+    if (p.name && String(p.name).toLowerCase() === low) return { product: p, vkey: null };
+  }
+  return null;
+}
+
 /* ================= Unidades y cantidades fraccionadas (P1) ================= */
 export const UNITS = {
   pza: { label: 'Pieza', short: 'pza', step: 1 },
@@ -1290,7 +1318,9 @@ export function cancelLayaway(id) {
   l.items.forEach((it) => {
     const p = productById(it.productId);
     const b = p?.branchStock?.[l.branchId];
-    if (b && b[it.size] != null) b[it.size] = Number(b[it.size]) + it.qty;
+    // Misma clave con la que se descontó al crear el apartado (incluye color).
+    const k = it.vkey || it.size;
+    if (b && b[k] != null) b[k] = round3(Number(b[k]) + Number(it.qty || 0));
   });
   l.status = 'cancelled';
   emit();
