@@ -108,8 +108,9 @@ export async function claimInvites() {
     if (!r.ok) return { ok: false, claimed: 0, error: (await r.text()).slice(0, 160) };
     const rows = await r.json();
     const claimed = Array.isArray(rows) ? rows.length : 0;
-    if (claimed) logOauth('invitacion', 'aceptadas: ' + claimed);
-    return { ok: true, claimed };
+    const companyId = claimed ? rows[0].company_id : '';
+    if (claimed) logOauth('invitacion', 'aceptadas: ' + claimed + ' | empresa=' + companyId);
+    return { ok: true, claimed, companyId };
   } catch (e) { return { ok: false, claimed: 0, error: e.message }; }
 }
 

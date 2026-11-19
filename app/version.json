@@ -1,7 +1,9 @@
 {
-    "version":  "2.61.0",
+    "version":  "2.62.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Version discreta visible dentro de la app (abajo del menu)"
+                  "Respaldo: descargar y restaurar todo el negocio desde Configuracion",
+                  "Ya nunca arranca en demo si hay datos guardados",
+                  "La invitacion te mete directo a la empresa que te invito"
               ]
 }

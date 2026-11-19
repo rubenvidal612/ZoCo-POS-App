@@ -18,6 +18,7 @@ import {
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
+  importBackup, backupFileName, markBackupDone, lastBackupAt,
 } from './store.js';
 import { ticketHTML } from './views-pos.js';
 import { exportSales, exportProducts, exportPayroll, exportExpenses } from './exports.js';
@@ -1011,6 +1012,21 @@ export function settingsView(ctx) {
           </div>
         </div>
       </div>
+      <div class="panel" data-sec="Respaldo">
+        <div class="panel-head"><h2>Respaldo de tu negocio</h2></div>
+        <div style="padding:16px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
+            Descarga una copia de <b>todo</b> tu negocio (productos, ventas, clientes, sucursales, movimientos).
+            Guárdala en tu computadora o en la nube. Si algo sale mal, la restauras aquí mismo.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" id="bk-download">Descargar respaldo</button>
+            <button class="btn ghost sm" id="bk-restore">Restaurar respaldo…</button>
+          </div>
+          <input id="bk-file" type="file" accept="application/json,.json" style="display:none">
+          <div class="hint" id="bk-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
       <div class="panel" data-sec="Equipo">
         <div class="panel-head"><h2>Equipo (empleados)</h2></div>
         <div style="padding:16px">
@@ -1598,6 +1614,59 @@ export function settingsView(ctx) {
       $('#ac-pass2', root).value = '';
       toast('Contraseña guardada ✓ Ya puedes entrar con tu correo y contraseña');
     };
+  }
+
+  // ===== Respaldo: descargar / restaurar =====
+  const bkDl = $('#bk-download', root);
+  if (bkDl) {
+    const bkMsg = (t, bad) => {
+      const e = $('#bk-msg', root);
+      if (!e) return;
+      e.textContent = t;
+      e.style.color = bad ? 'var(--danger)' : 'var(--ok,#059669)';
+    };
+    const prev = lastBackupAt();
+    if (prev) bkMsg('Último respaldo: ' + new Date(prev).toLocaleString('es-MX'));
+
+    bkDl.onclick = () => {
+      try {
+        const text = exportBackup();
+        const blob = new Blob([text], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = backupFileName();
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+        markBackupDone();
+        const kb = Math.round(blob.size / 1024);
+        bkMsg('✓ Respaldo descargado (' + kb + ' KB). Guárdalo en un lugar seguro.');
+      } catch (e) { bkMsg('No se pudo crear el respaldo: ' + e.message, true); }
+    };
+
+    const fileInput = $('#bk-file', root);
+    const bkRestore = $('#bk-restore', root);
+    if (bkRestore && fileInput) {
+      bkRestore.onclick = () => fileInput.click();
+      fileInput.onchange = async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const ok = await confirmDialog({
+          title: 'Restaurar respaldo',
+          message: 'Se reemplazarán los datos actuales por los del archivo. Se guarda una copia de lo actual por si acaso.',
+          okText: 'Restaurar', danger: true,
+        });
+        if (!ok) { fileInput.value = ''; return; }
+        try {
+          const text = await f.text();
+          const r = importBackup(text);
+          if (!r.ok) { bkMsg(r.msg || 'No se pudo restaurar', true); fileInput.value = ''; return; }
+          bkMsg('✓ Restaurado: ' + (r.empresa || 'negocio') + ' · ' + r.productos + ' productos. Recargando…');
+          setTimeout(() => location.reload(), 900);
+        } catch (err) { bkMsg('Error al leer el archivo: ' + err.message, true); }
+        fileInput.value = '';
+      };
+    }
   }
 
   // ===== Equipo: invitar empleados por correo =====

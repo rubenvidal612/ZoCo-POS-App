@@ -926,7 +926,13 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return seed();
     const s = JSON.parse(raw);
-    if (!s.products) return seed();
+    // NUNCA caer a demo teniendo datos guardados: si falta products pero hay
+    // otra señal de negocio, se reconstruye el arreglo vacío y se sigue.
+    const tieneNegocio = Array.isArray(s.products) || Array.isArray(s.sales)
+      || Array.isArray(s.customers) || (s.company && s.company.name)
+      || Array.isArray(s.users);
+    if (!tieneNegocio) return seed();
+    if (!Array.isArray(s.products)) s.products = [];
     // Si la migración falla por datos raros, se usa el estado tal cual:
     // preferimos un estado sin migrar antes que arrancar vacío (pérdida de datos).
     let migrated;
@@ -1040,6 +1046,49 @@ export function currentUser() {
   }
   return null;
 }
+/* ================= Respaldo (descargar / restaurar) ================= */
+const BACKUP_META = 'zoco.backup.last';
+
+/** Nombre de archivo sugerido: zoco-respaldo-2026-11-19.json */
+export function backupFileName() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  const negocio = String(state.company?.name || 'zoco').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'zoco';
+  return `respaldo-${negocio}-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.json`;
+}
+
+export function markBackupDone() {
+  try { localStorage.setItem(BACKUP_META, new Date().toISOString()); } catch {}
+}
+export function lastBackupAt() {
+  try { return localStorage.getItem(BACKUP_META) || ''; } catch { return ''; }
+}
+
+/** Restaura un respaldo: valida, guarda copia de seguridad y reemplaza el estado. */
+export function importBackup(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { return { ok: false, msg: 'El archivo no es un JSON válido' }; }
+  const datos = parsed?.datos || parsed?.data || parsed;
+  if (!datos || typeof datos !== 'object') return { ok: false, msg: 'El respaldo está vacío' };
+  const pareceNegocio = Array.isArray(datos.products) || Array.isArray(datos.sales)
+    || Array.isArray(datos.customers) || datos.company;
+  if (!pareceNegocio) return { ok: false, msg: 'El archivo no parece un respaldo de ZoCo' };
+
+  // Copia de seguridad de lo actual antes de reemplazar
+  try {
+    const prev = localStorage.getItem(KEY);
+    if (prev) localStorage.setItem('zoco.pos.antes-de-restaurar', prev);
+  } catch {}
+
+  const merged = Array.isArray(datos.products) ? datos : { ...datos, products: datos.products || [] };
+  Object.keys(state).forEach((k) => { delete state[k]; });
+  Object.assign(state, merged);
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  try { window.dispatchEvent(new CustomEvent('zoco:save')); } catch {}
+  return { ok: true, empresa: state.company?.name || '', productos: (state.products || []).length };
+}
+
 export function login(email, pass) {
   const u = state.users.find((x) => x.email.toLowerCase() === String(email).toLowerCase().trim() && x.pass === String(pass));
   if (!u || !u.active) return { ok: false, msg: 'Correo o contraseña incorrectos' };

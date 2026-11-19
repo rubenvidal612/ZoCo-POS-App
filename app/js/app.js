@@ -602,7 +602,11 @@ bootOAuth().then(async (oauth) => {
         // como empleado, debo entrar a ESA empresa y no crear una nueva.
         try {
           const inv = await claimInvites();
-          if (inv?.claimed) toast('Te uniste a la empresa de tu invitación');
+          if (inv?.claimed) {
+            toast('Te uniste a la empresa de tu invitación');
+            // Entrar directo a la empresa que me invitó (no a otra)
+            if (inv.companyId) alignCompany({ ok: true, company: inv.companyId });
+          }
         } catch (e) { logOauth('invitacion', 'error: ' + e.message); }
         try { alignCompany(await ensureCompany(gname)); } catch (e) { logOauth('empresa', 'no se pudo: ' + e.message); }
         try {
