@@ -747,6 +747,18 @@ export function reportsView() {
         <table><thead><tr><th>#</th><th>Producto</th><th>Importe</th></tr></thead>
         <tbody>${topList.length ? topList.map(([n, v], i) => `<tr><td>${i + 1}</td><td class="t-strong">${esc(n)}</td><td class="mono">${money(v)}</td></tr>`).join('')
           : `<tr><td colspan="3"><div class="cart-empty">Haz una venta para ver datos aquí.</div></td></tr>`}</tbody></table>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Devoluciones, mermas y traspasos</h2>
+          <div class="sp"></div>
+          <select id="mov-period" style="height:32px;border:1px solid var(--line);border-radius:8px;font-size:12px;padding:0 8px">
+            <option value="today">Hoy</option>
+            <option value="week" selected>7 días</option>
+            <option value="month">Mes</option>
+            <option value="all">Todo</option>
+          </select>
+        </div>
+        <div style="padding:14px 18px" id="mov-body"></div>
       </div>`;
 
     const gs = root.querySelector('#goal-scope');
@@ -788,6 +800,63 @@ export function reportsView() {
       };
     };
     gs.onchange = paintGoal; gp.onchange = paintGoal; paintGoal();
+
+    /* ---- Devoluciones, mermas y traspasos ---- */
+    const paintMov = () => {
+      const box = root.querySelector('#mov-body');
+      const per = root.querySelector('#mov-period')?.value || 'week';
+      if (!box) return;
+      const now = Date.now();
+      const desde = per === 'today' ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })()
+        : per === 'week' ? now - 7 * 864e5
+        : per === 'month' ? now - 30 * 864e5
+        : 0;
+      const inRange = (iso) => new Date(iso).getTime() >= desde;
+
+      const rets = (state.returns || []).filter((r) => inRange(r.date));
+      const adjs = (state.adjustments || []).filter((a) => inRange(a.date));
+      const mermas = adjs.filter((a) => a.type === 'merma');
+      const ajustes = adjs.filter((a) => a.type !== 'merma');
+      const trfs = (state.transfers || []).filter((t) => inRange(t.date));
+
+      const sumRet = rets.reduce((a, r) => a + Number(r.total || 0), 0);
+      const sumMerma = mermas.reduce((a, m) => a + Math.abs(Number(m.cost || 0)), 0);
+      const qtyMerma = mermas.reduce((a, m) => a + Math.abs(Number(m.qty || 0)), 0);
+      const qtyTrf = trfs.reduce((a, t) => a + Math.abs(Number(t.qty || 0)), 0);
+
+      const porMotivo = {};
+      mermas.forEach((m) => { const k = m.reason || 'Sin motivo'; porMotivo[k] = (porMotivo[k] || 0) + Math.abs(Number(m.cost || 0)); });
+      const motivos = Object.entries(porMotivo).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+      box.innerHTML = `
+        <div class="kpis" style="margin-bottom:12px">
+          <div class="kpi"><div class="l">Devoluciones</div><div class="v">${money(sumRet)}</div><div class="s">${rets.length} movimiento(s)</div></div>
+          <div class="kpi"><div class="l">Mermas</div><div class="v">${money(sumMerma)}</div><div class="s">${qtyMerma} pza(s) perdidas</div></div>
+          <div class="kpi"><div class="l">Traspasos</div><div class="v">${qtyTrf}</div><div class="s">${trfs.length} movimiento(s)</div></div>
+          <div class="kpi"><div class="l">Ajustes</div><div class="v">${ajustes.length}</div><div class="s">correcciones de inventario</div></div>
+        </div>
+        ${motivos.length ? `<div class="pay-head" style="margin:8px 0 6px">Mermas por motivo</div>
+          <table><thead><tr><th>Motivo</th><th>Costo</th></tr></thead><tbody>
+          ${motivos.map(([k, v]) => `<tr><td class="t-strong">${esc(k)}</td><td class="mono">${money(v)}</td></tr>`).join('')}
+          </tbody></table>` : ''}
+        ${rets.length ? `<div class="pay-head" style="margin:14px 0 6px">Últimas devoluciones</div>
+          <table><thead><tr><th>Fecha</th><th>Motivo</th><th>Importe</th></tr></thead><tbody>
+          ${rets.slice(0, 8).map((r) => `<tr><td>${new Date(r.date).toLocaleDateString('es-MX')}</td>
+            <td>${esc(r.reason || '—')}</td><td class="mono">${money(r.total || 0)}</td></tr>`).join('')}
+          </tbody></table>` : ''}
+        ${trfs.length ? `<div class="pay-head" style="margin:14px 0 6px">Últimos traspasos</div>
+          <table><thead><tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Ruta</th></tr></thead><tbody>
+          ${trfs.slice(0, 8).map((t) => {
+            const f = (state.branches || []).find((b) => b.id === t.from)?.name || t.from;
+            const to = (state.branches || []).find((b) => b.id === t.to)?.name || t.to;
+            return `<tr><td>${new Date(t.date).toLocaleDateString('es-MX')}</td><td class="t-strong">${esc(t.name)} ${esc(t.size || '')}</td>
+              <td class="mono">${t.qty}</td><td>${esc(f)} → ${esc(to)}</td></tr>`;
+          }).join('')}
+          </tbody></table>` : ''}
+        ${(!rets.length && !adjs.length && !trfs.length) ? '<div class="cart-empty">Sin movimientos en este periodo.</div>' : ''}`;
+    };
+    const movSel = root.querySelector('#mov-period');
+    if (movSel) { movSel.onchange = paintMov; paintMov(); }
   }
   render();
   return { root, refresh: render };

@@ -1,10 +1,9 @@
 {
-    "version":  "2.57.0",
+    "version":  "2.58.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Fotos en las compras (se guardan comprimidas)",
-                  "Todas las imagenes se comprimen mas: max 900px y ~90 KB",
-                  "Se permite pagar de mas: queda como saldo a favor, no como deuda",
-                  "Si la nube esta vacia, tus datos se suben solos al entrar"
+                  "Reportes: nuevo panel de devoluciones, mermas y traspasos con filtro de periodo",
+                  "Cuentas por pagar permite saldo a favor",
+                  "Fotos comprimidas y fotos en compras"
               ]
 }
