@@ -1,7 +1,8 @@
 {
-    "version":  "2.46.4",
+    "version":  "2.47.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Aviso visible cuando Google no regresa a la app, con la URL exacta a configurar"
+                  "Sin cache en HTML/JS/CSS: las actualizaciones llegan al instante",
+                  "El login muestra la version real (leida del servidor)"
               ]
 }

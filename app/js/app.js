@@ -105,7 +105,7 @@ function paintLogin() {
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
         </div>
         <div id="lg-alt" class="login-alt"></div>
-        <div class="login-ver">v2.46.2 · <button type="button" id="lg-hard">Forzar actualización</button></div>
+        <div class="login-ver"><span id="lg-ver">v…</span> · <button type="button" id="lg-hard">Forzar actualización</button></div>
       </form>
     </div>`;
 
@@ -149,6 +149,11 @@ function paintLogin() {
       $('#lg-err').textContent = r.ok ? '📬 Revisa tu correo para crear tu contraseña.' : 'No se pudo enviar: ' + (r.error || '');
     };
   };
+
+  fetch('./version.json?t=' + Date.now()).then((r) => r.json()).then((v) => {
+    const el = document.querySelector('#lg-ver');
+    if (el && v?.version) el.textContent = 'v' + v.version;
+  }).catch(() => {});
 
   const oauthBox = document.querySelector('#lg-oauth');
   if (oauthBox && oauthNotice) { oauthBox.style.display = 'block'; oauthBox.textContent = oauthNotice; }
