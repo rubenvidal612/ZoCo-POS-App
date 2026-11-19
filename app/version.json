@@ -1,9 +1,9 @@
 {
-    "version":  "2.44.1",
+    "version":  "2.45.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "El login no muestra ningun correo ni contrasena",
-                  "Datos de ejemplo usan dueno@zoco.app (ya no el correo del propietario)",
-                  "La contrasena del usuario se oculta con boton de ojo"
+                  "El boton de Google cambia a \"Crear cuenta con Google\" al registrarse",
+                  "Si el correo no tiene contrasena, aparece boton para crear/cambiar contrasena",
+                  "Sin botones duplicados en el login"
               ]
 }

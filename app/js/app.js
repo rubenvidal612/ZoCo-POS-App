@@ -103,6 +103,7 @@ function paintLogin() {
           <button type="button" id="lg-forgot">¿Olvidaste tu contraseña?</button>
           <button type="button" id="lg-magic">Entrar sin contraseña</button>
         </div>
+        <div id="lg-alt" class="login-alt"></div>
       </form>
     </div>`;
 
@@ -112,14 +113,39 @@ function paintLogin() {
   };
 
   let mode = 'login';
-  $('#lg-register').onclick = () => {
-    mode = mode === 'login' ? 'register' : 'login';
+  const paintMode = () => {
     $('#lg-name-wrap').style.display = mode === 'register' ? 'block' : 'none';
     $('#lg-register').textContent = mode === 'register' ? '← Ya tengo cuenta' : 'Crear cuenta nueva';
     $('#lg-main').textContent = mode === 'register' ? 'Crear mi cuenta' : 'Entrar';
     $('#lg-title').textContent = mode === 'register' ? 'Crea tu cuenta' : 'Bienvenido a ZoCo';
-    $('#lg-sub').textContent = mode === 'register' ? 'Toma 30 segundos y empiezas a vender.' : 'Entra con tu cuenta para usar tu punto de venta.';
+    $('#lg-sub').textContent = mode === 'register'
+      ? 'Con tu correo o con Google. Toma 30 segundos.'
+      : 'Entra con tu cuenta para usar tu punto de venta.';
+    const g = $('#lg-google');
+    if (g) g.lastChild.textContent = mode === 'register' ? ' Crear cuenta con Google' : ' Continuar con Google';
     $('#lg-err').textContent = '';
+    const alt = $('#lg-alt');
+    if (alt) alt.innerHTML = '';
+  };
+  $('#lg-register').onclick = () => {
+    mode = mode === 'login' ? 'register' : 'login';
+    paintMode();
+  };
+  paintMode();
+
+  /** Acciones de ayuda cuando el acceso por correo no procede (cuenta de Google). */
+  const offerGoogle = (msg) => {
+    $('#lg-err').textContent = msg;
+    const alt = $('#lg-alt');
+    if (!alt) return;
+    alt.innerHTML = `<button type="button" class="btn ghost sm" id="lg-alt-p" style="width:100%;margin-top:6px">Crear / cambiar mi contraseña</button>`;
+    $('#lg-alt-p').onclick = async () => {
+      const email = $('#lg-email').value.trim();
+      if (!email) { $('#lg-err').textContent = 'Escribe tu correo arriba'; return; }
+      $('#lg-err').textContent = 'Enviando enlace…';
+      const r = await sendRecovery(email);
+      $('#lg-err').textContent = r.ok ? '📬 Revisa tu correo para crear tu contraseña.' : 'No se pudo enviar: ' + (r.error || '');
+    };
   };
 
   if (!sbReady()) {
@@ -201,7 +227,7 @@ function paintLogin() {
         } else if (low.includes('not confirmed') || low.includes('email not confirmed')) {
           msg = '📬 Falta confirmar tu correo. Revisa tu bandeja (y spam) y vuelve a intentar.';
         }
-        $('#lg-err').textContent = msg;
+        offerGoogle(msg);
         return;
       }
 
