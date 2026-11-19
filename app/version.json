@@ -1,7 +1,8 @@
 {
-    "version":  "2.51.0",
+    "version":  "2.52.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nuevo panel \"Mi cuenta y contrasena\" en Configuracion para crear/cambiar tu contrasena en la nube"
+                  "Corregido: las cuentas de Google ya no se descartan al arrancar (no tienen contrasena local)",
+                  "Falso aviso del Site URL eliminado cuando Google vuelve con codigo"
               ]
 }

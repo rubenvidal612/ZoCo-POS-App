@@ -814,9 +814,12 @@ function migrate(s) {
   if (tk.footerEnd == null) tk.footerEnd = '';
   if (tk.showBrand == null) tk.showBrand = true;
 
-  // Repara usuarios perdidos o incompletos (sin correo o contraseña)
+  // Repara usuarios perdidos o incompletos.
+  // OJO: las cuentas creadas con Google no tienen contraseña local, así que
+  // NO se descartan: solo se exige correo.
   if (!Array.isArray(s.users)) s.users = [];
-  s.users = s.users.filter((u) => u && u.email && u.pass);
+  s.users = s.users.filter((u) => u && u.email);
+  s.users.forEach((u) => { if (u.pass == null) u.pass = ''; });
   if (!s.users.length) {
     s.users = [{
       id: 'u-owner',

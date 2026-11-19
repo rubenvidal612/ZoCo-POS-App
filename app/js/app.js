@@ -544,7 +544,7 @@ bootOAuth().then(async (oauth) => {
   // ¿Se intentó Google y volvimos SIN tokens? Casi siempre es la URL de Supabase.
   try {
     const pend = sessionStorage.getItem('zoco.oauth.pending');
-    if (pend && !(location.hash || '').includes('access_token') && !(location.hash || '').includes('error')) {
+    if (pend && !(location.hash || '').includes('access_token') && !(location.hash || '').includes('error') && !(location.search || '').includes('code=') && !(location.search || '').includes('error')) {
       sessionStorage.removeItem('zoco.oauth.pending');
       oauthNotice = 'Google no regresó a esta dirección. En Supabase → Authentication → URL Configuration pon: Site URL = ' + location.origin + ' y Redirect URLs = ' + location.origin + '/**';
     } else if (pend) {
@@ -568,15 +568,17 @@ bootOAuth().then(async (oauth) => {
       } else {
         const user = res.user;
 
-        if (res.created) {
-          state.users.push(user);
-          try { emit(); } catch {}
-        }
+        // El usuario SIEMPRE debe estar en memoria; si el arranque lo descartó
+        // (cuentas de Google sin contraseña local), se vuelve a agregar.
+        if (!Array.isArray(state.users)) state.users = [];
+        if (!state.users.some((u) => u.id === user.id)) state.users.push(user);
+        if (!user.active) user.active = true;
+        try { emit(); } catch {}
 
         // 1) Sesión local PRIMERO: si algo de la nube falla, ya quedaste dentro.
         try { localStorage.setItem('zoco.session', JSON.stringify({ userId: user.id, at: Date.now() })); } catch {}
         state.user = user;
-        logOauth('sesion', 'guardada para ' + user.id);
+        logOauth('sesion', 'guardada para ' + user.id + ' | usuarios en memoria: ' + state.users.length);
         route = 'inicio';
 
         // 2) Enriquecimiento (no bloquea el acceso si falla)
