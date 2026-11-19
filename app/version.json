@@ -1,8 +1,7 @@
 {
-    "version":  "2.47.0",
+    "version":  "2.47.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Sin cache en HTML/JS/CSS: las actualizaciones llegan al instante",
-                  "El login muestra la version real (leida del servidor)"
+                  "Registro visible del intento de Google en el login (diagnostico)"
               ]
 }

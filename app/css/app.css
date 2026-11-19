@@ -1613,3 +1613,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 /* Aviso de retorno de Google */
 .login-oauth{margin:2px 0 8px;padding:10px 12px;border-radius:12px;background:#FEF3C7;border:1px solid #FCD34D;
   color:#92400E;font-size:12px;line-height:1.5;font-weight:600;text-align:left}
+/* Diagnostico de Google en el login */
+.login-diag{display:none;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#0F172A;color:#E2E8F0;
+  font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-all;text-align:left;max-height:150px;overflow:auto}
+.login-diag b{color:#FDBA74}

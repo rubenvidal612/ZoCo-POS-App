@@ -128,6 +128,14 @@ export function cloudSignOut() {
 }
 
 /* ================= Google (OAuth) ================= */
+export function logOauth(step, detail = '') {
+  try {
+    const k = 'zoco.oauth.log';
+    const arr = JSON.parse(localStorage.getItem(k) || '[]');
+    arr.push({ t: new Date().toISOString().slice(11, 19), step, detail: String(detail).slice(0, 170) });
+    localStorage.setItem(k, JSON.stringify(arr.slice(-12)));
+  } catch {}
+}
 export function signInWithGoogle() {
   if (!sbReady()) return false;
   try { sessionStorage.setItem('zoco.oauth.pending', String(Date.now())); } catch {}
@@ -141,6 +149,8 @@ export function signInWithGoogle() {
 /** Lee el #access_token que Supabase devuelve al volver de Google. */
 export async function handleOAuthReturn() {
   const hash = location.hash || '';
+  logOauth('vuelta', 'hash=' + (hash ? hash.slice(0, 40) + '…' : 'vacío') + ' | search=' + (location.search || 'vacío'));
+  if (location.search.includes('code=')) logOauth('flujo', 'PKCE (?code=) no soportado por este login');
   if (!hash.includes('access_token=')) {
     // Supabase devuelve el motivo cuando algo falla (redirect no permitido, etc.)
     if (hash.includes('error')) {
@@ -202,6 +212,7 @@ export async function handleOAuthReturn() {
     user.email = claims.email || '';
   }
 
+  logOauth('token', 'id=' + user.id + ' | email=' + (user.email || '(sin correo)') + (user._fromToken ? ' | leido del token' : ' | verificado en red'));
   saveCloudSession({ access_token, refresh_token, expires_in, user, token_type: 'bearer' });
   history.replaceState(null, '', location.pathname + (location.search || ''));
   return { ok: true, user };
@@ -323,6 +334,7 @@ export async function googleSignIn(guser) {
     try { return JSON.parse(localStorage.getItem('zoco.pos.v1') || 'null'); } catch { return null; }
   })();
   const users = Array.isArray(st?.users) ? st.users : [];
+  logOauth('local', 'usuarios=' + users.length + ' | busca=' + email);
   let user = users.find((u) => u.active !== false && String(u.email || '').toLowerCase() === email);
   let created = false;
 
