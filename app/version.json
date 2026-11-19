@@ -1,8 +1,8 @@
 {
-    "version":  "2.58.1",
+    "version":  "2.59.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Proteccion: la nube vacia ya no puede borrar el negocio local",
-                  "Si lo local es mas nuevo que la nube, no se sobreescribe"
+                  "Arreglado: mermas, traspasos y devoluciones se perdian al recargar",
+                  "Reportes: panel de devoluciones, mermas y traspasos"
               ]
 }

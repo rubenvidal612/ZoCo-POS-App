@@ -893,6 +893,16 @@ function load() {
     const s = JSON.parse(raw);
     if (!s.products) return seed();
     const migrated = migrate(s);
+    // Red de seguridad: si la migración no devolvió alguna colección,
+    // se conserva la que ya estaba guardada (nunca perder movimientos).
+    [
+      'sales', 'returns', 'adjustments', 'transfers', 'purchases', 'suppliers',
+      'expenses', 'cashMovements', 'layaways', 'coupons', 'commissions', 'cuts',
+      'customers', 'users', 'products', 'branches', 'consumptions', 'productions',
+      'referrals', 'personal',
+    ].forEach((k) => {
+      if (migrated[k] == null && s[k] != null) migrated[k] = s[k];
+    });
     // guarda reparaciones (usuarios, etc.) de inmediato
     try { localStorage.setItem(KEY, JSON.stringify(migrated)); } catch {}
     return migrated;
