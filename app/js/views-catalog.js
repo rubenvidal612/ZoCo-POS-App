@@ -43,6 +43,7 @@ export function productsView(ctx) {
           <div class="search" style="max-width:280px"><span>🔍</span>
             <input id="pq" placeholder="Artículo, código o talla…"><span class="k">F3</span></div>
           <div class="ph-tools">
+            <button class="btn ghost sm" id="px-photos" title="Buscar fotos faltantes en bases abiertas">📷 Traer fotos</button>
             <button class="btn ghost sm" id="imp">⬆ Importar</button>
             <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
             <button class="btn ghost sm" id="adj">↺ Merma</button>
@@ -600,6 +601,33 @@ export function productsView(ctx) {
   if (expBtn) expBtn.onclick = () => { const n = exportProducts(); toast(n + ' productos exportados a Excel'); };
   const impBtn = root.querySelector('#imp');
   if (impBtn) impBtn.onclick = () => openImportModal(() => { emit(); render(); });
+
+  // Traer fotos faltantes desde las bases abiertas (máx. 20 por tanda, 1 cada 4s)
+  const pxBtn = root.querySelector('#px-photos');
+  if (pxBtn) {
+    pxBtn.onclick = async () => {
+      const faltan = (state.products || []).filter((p) => !p.image && /^\d{8,14}$/.test(String(p.code || '').trim()));
+      if (!faltan.length) { toast('No hay productos con código numérico sin foto'); return; }
+      const lote = faltan.slice(0, 20);
+      pxBtn.disabled = true;
+      const { lookupBarcode } = await import('./lookup.js');
+      let puestas = 0;
+      for (let i = 0; i < lote.length; i++) {
+        pxBtn.textContent = `📷 ${i + 1}/${lote.length}…`;
+        try {
+          const r = await lookupBarcode(lote[i].code);
+          if (r?.image) { lote[i].image = r.image; puestas++; emit(); }
+        } catch {}
+        await new Promise((s) => setTimeout(s, 4200)); // cortesía: ~14 consultas/min
+      }
+      pxBtn.disabled = false;
+      pxBtn.textContent = '📷 Traer fotos';
+      render();
+      toast(puestas
+        ? `${puestas} foto(s) agregadas de ${lote.length} intentos`
+        : 'No se encontraron fotos para esos códigos');
+    };
+  }
 
   render();
   return { root, refresh: render, openCreate: () => editProduct(null) };

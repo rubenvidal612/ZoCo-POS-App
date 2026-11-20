@@ -1,8 +1,9 @@
 {
-    "version":  "2.66.0",
+    "version":  "2.67.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Al escanear un codigo desconocido: busca en bases abiertas (nombre, marca, foto) y permite crearlo al instante",
-                  "Anti-duplicado: si el codigo ya existe, avisa en vez de crear otro"
+                  "Importar: los productos con el mismo codigo se ACTUALIZAN (ya no se duplican) y eliges reemplazar o sumar existencia",
+                  "Importar: acepta columna Foto (URL)",
+                  "Boton Traer fotos: busca fotos faltantes en bases abiertas"
               ]
 }

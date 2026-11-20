@@ -145,6 +145,7 @@ export function buildProducts(table, mapping, opts = {}) {
       section,
       code: get('sku') || (name.slice(0, 3).toUpperCase().replace(/\s/g, '') + '-' + Math.floor(Math.random() * 900 + 100)),
       color: get('color'),
+      image: String(get('image') || '').trim(),
       active: !pending,
       catalog: !pending,
       pendingReview: pending,
@@ -192,11 +193,12 @@ export function downloadTemplate(kind) {
 export function openImportModal(onDone, seedText) {
   let table = { headers: [], rows: [] };
   let mapping = {};
-  let opts = { section: state.company.mode === 'shoe' ? 'dama' : state.company.mode === 'boutique' ? 'ropa' : 'general' };
+  let opts = { section: state.company.mode === 'shoe' ? 'dama' : state.company.mode === 'boutique' ? 'ropa' : 'general', stockMode: 'reemplazar' };
 
   const fields = [
     ['name', 'Nombre'], ['price', 'Precio'], ['cost', 'Costo'], ['sku', 'SKU'],
     ['qty', 'Cantidad'], ['category', 'Categoría'], ['color', 'Color'], ['size', 'Talla'],
+    ['image', 'Foto (URL)'],
   ];
 
   const m = modal({
@@ -222,6 +224,13 @@ export function openImportModal(onDone, seedText) {
         </div>
 
         <div id="imp-map" style="margin-top:14px"></div>
+        <div class="field" style="margin-top:12px"><label>Si el producto ya existe (mismo código)</label>
+          <select id="imp-stockmode">
+            <option value="reemplazar">Reemplazar la existencia con la del archivo</option>
+            <option value="sumar">Sumar la cantidad del archivo al stock actual</option>
+          </select>
+          <div class="hint">Los productos con el mismo SKU/código se actualizan, no se duplican.</div>
+        </div>
         <div id="imp-preview" style="margin-top:12px"></div>
       </div>`,
     foot: `<button class="btn ghost sm" data-close>Cancelar</button>
@@ -232,6 +241,8 @@ export function openImportModal(onDone, seedText) {
   if (seedText) { try { m.root.querySelector('#imp-paste').value = seedText; } catch {} }
   const prevEl = m.root.querySelector('#imp-preview');
   const goBtn = m.root.querySelector('#imp-go');
+  const stockSel = m.root.querySelector('#imp-stockmode');
+  if (stockSel) stockSel.onchange = () => { opts.stockMode = stockSel.value; };
 
   m.root.querySelectorAll('[data-tpl]').forEach((b) => b.onclick = () => downloadTemplate(b.dataset.tpl));
   if (seedText) setTimeout(() => analyze(seedText), 50);
@@ -333,17 +344,58 @@ export function openImportModal(onDone, seedText) {
   goBtn.onclick = () => {
     const { products, errors } = buildProducts(table, mapping, opts);
     const batchId = 'imp' + Date.now();
-    products.forEach((p) => { p.importBatch = batchId; });
-    state.products.push(...products);
+    // ===== Anti-duplicados: si el código ya existe, se ACTUALIZA =====
+    const norm = (v) => String(v || '').trim().toLowerCase();
+    const idxCodigo = new Map();
+    (state.products || []).forEach((p) => {
+      const c = norm(p.code);
+      if (c) idxCodigo.set(c, p);
+    });
+    const nuevos = [];
+    const actualizados = [];
+    products.forEach((p) => {
+      const clave = norm(p.code);
+      const existente = clave ? idxCodigo.get(clave) : null;
+      if (!existente) {
+        p.importBatch = batchId;
+        nuevos.push(p);
+        if (clave) idxCodigo.set(clave, p);
+        return;
+      }
+      // Actualiza precio/costo/nombre y, si viene, la existencia
+      if (Number(p.price) > 0) existente.price = Number(p.price);
+      if (Number(p.cost) > 0) existente.cost = Number(p.cost);
+      if (p.name && !p.pendingReview) existente.name = p.name;
+      if (p.image) existente.image = p.image;
+      if (p.section) existente.section = p.section;
+      if (p.color) existente.color = p.color;
+      const stockNuevo = p.branchStock?.[state.currentBranch] || null;
+      if (stockNuevo && Object.keys(stockNuevo).length) {
+        existente.branchStock = existente.branchStock || {};
+        const actual = existente.branchStock[state.currentBranch] || {};
+        if (opts?.stockMode === 'sumar') {
+          Object.entries(stockNuevo).forEach(([k, v]) => { actual[k] = Number(actual[k] || 0) + Number(v || 0); });
+        } else {
+          Object.entries(stockNuevo).forEach(([k, v]) => { actual[k] = Number(v || 0); });
+        }
+        existente.branchStock[state.currentBranch] = actual;
+      }
+      actualizados.push(existente);
+    });
+
+    state.products.push(...nuevos);
     recordImport({
       id: batchId,
       fileName: (m.root.querySelector('#imp-file')?.files?.[0]?.name) || 'archivo pegado',
-      ids: products.map((p) => p.id),
+      ids: nuevos.map((p) => p.id),
       source: 'excel',
     });
     emit();
     m.close();
-    toast(products.length + ' productos importados' + (errors.length ? ' · ' + errors.length + ' omitidos' : ''));
+    const partes = [];
+    if (nuevos.length) partes.push(nuevos.length + ' nuevos');
+    if (actualizados.length) partes.push(actualizados.length + ' actualizados');
+    toast((partes.join(' · ') || 'Sin cambios') + (errors.length ? ' · ' + errors.length + ' omitidos' : ''));
     onDone?.();
   };
 }
