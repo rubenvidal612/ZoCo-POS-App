@@ -46,19 +46,21 @@ function guardarCache(code, data) {
  * 3) Bases abiertas (una por una, con límite)
  * Devuelve { found, source, name, brand, category, quantity, image, local }
  */
-export async function lookupBarcode(rawCode) {
+export async function lookupBarcode(rawCode, { skipLocal = false } = {}) {
   const code = String(rawCode || '').trim();
   if (!code) return { found: false, error: 'Código vacío' };
 
-  // 1) ¿Ya lo tiene el negocio?
-  const local = findByBarcode(code);
-  if (local?.product) {
-    return {
-      found: true, local: true, source: 'Tu catálogo',
-      name: local.product.name, brand: local.product.brand || '',
-      category: local.product.section || '', quantity: '',
-      image: local.product.image || '', product: local.product, vkey: local.vkey || null,
-    };
+  // 1) ¿Ya lo tiene el negocio? (solo se usa si tiene foto; si no, se busca fuera)
+  if (!skipLocal) {
+    const local = findByBarcode(code);
+    if (local?.product && local.product.image) {
+      return {
+        found: true, local: true, source: 'Tu catálogo',
+        name: local.product.name, brand: local.product.brand || '',
+        category: local.product.section || '', quantity: '',
+        image: local.product.image, product: local.product, vkey: local.vkey || null,
+      };
+    }
   }
 
   // 2) Caché del dispositivo

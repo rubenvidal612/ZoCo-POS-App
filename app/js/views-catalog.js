@@ -615,7 +615,7 @@ export function productsView(ctx) {
       for (let i = 0; i < lote.length; i++) {
         pxBtn.textContent = `📷 ${i + 1}/${lote.length}…`;
         try {
-          const r = await lookupBarcode(lote[i].code);
+          const r = await lookupBarcode(lote[i].code, { skipLocal: true });
           if (r?.image) { lote[i].image = r.image; puestas++; emit(); }
         } catch {}
         await new Promise((s) => setTimeout(s, 4200)); // cortesía: ~14 consultas/min
