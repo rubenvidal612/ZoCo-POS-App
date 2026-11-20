@@ -1,8 +1,8 @@
 {
-    "version":  "2.65.0",
+    "version":  "2.66.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Reportes: ventas por periodo y sucursal, con metodos de pago, ultimos dias y exportacion CSV",
-                  "Configuracion de folios, historial de cortes Z y saldo a favor aplicable"
+                  "Al escanear un codigo desconocido: busca en bases abiertas (nombre, marca, foto) y permite crearlo al instante",
+                  "Anti-duplicado: si el codigo ya existe, avisa en vez de crear otro"
               ]
 }

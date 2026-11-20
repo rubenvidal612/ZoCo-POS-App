@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZoCo · Registro inteligente (mockup)</title>
+<style>
+  :root{
+    --brand:#F97316; --brand-2:#FB923C; --navy:#0F172A; --navy-2:#1E293B;
+    --line:#E2E8F0; --muted:#64748B; --text:#0F172A; --ok:#059669; --warn:#B45309;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#F1F5F9;color:var(--text)}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 18px 60px}
+  h1.page{font-size:20px;margin:0 0 4px}
+  p.page{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+
+  /* tarjeta de app */
+  .phone{background:var(--navy);border-radius:26px;padding:14px;box-shadow:0 24px 60px rgba(15,23,42,.35)}
+  .screen{background:#F8FAFC;border-radius:16px;overflow:hidden;min-height:520px;display:flex;flex-direction:column}
+  .topbar{background:var(--navy);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .topbar .logo{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    display:grid;place-items:center;font-weight:900;font-size:14px;color:#fff}
+  .topbar b{font-size:13.5px}
+  .topbar small{color:#94A3B8;font-size:11px;display:block}
+  .body{padding:14px;flex:1}
+  .label{font-size:10.5px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin:0 0 6px}
+  .scan{display:flex;gap:8px}
+  .scan input{flex:1;height:44px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:14px;font-weight:700}
+  .scan button{width:44px;height:44px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-size:18px;cursor:pointer}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:14px}
+  .found{display:flex;gap:12px}
+  .thumb{width:74px;height:74px;border-radius:12px;background:linear-gradient(135deg,#FEE2E2,#FED7AA);
+    display:grid;place-items:center;font-size:26px;flex-shrink:0;position:relative;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .tag{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px}
+  .tag.ok{background:#D1FAE5;color:#065F46}
+  .tag.warn{background:#FEF3C7;color:#92400E}
+  .tag.src{background:#E0E7FF;color:#3730A3}
+  .pname{font-size:14.5px;font-weight:800;margin:2px 0 2px;line-height:1.25}
+  .pbrand{font-size:11.5px;color:var(--muted)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .fld label{display:block;font-size:10.5px;font-weight:800;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  .fld input{width:100%;height:38px;border:1.5px solid var(--line);border-radius:10px;padding:0 10px;font-size:13.5px;font-weight:700}
+  .actions{display:flex;gap:8px;margin-top:12px}
+  .btn{flex:1;height:42px;border:0;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
+  .btn.primary{background:var(--brand);color:#fff}
+  .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+  .btn.sm{height:34px;font-size:12px;flex:none;padding:0 12px}
+  .noimg{display:grid;place-items:center;gap:6px;background:#FEF3C7;border:1.5px dashed #FCD34D;border-radius:14px;
+    padding:16px;margin-top:12px;text-align:center}
+  .noimg b{font-size:12.5px;color:#92400E}
+  .noimg span{font-size:11px;color:#B45309}
+  .cam{display:flex;gap:8px;margin-top:10px}
+  .cam .btn{height:38px;font-size:12px}
+  .hint{font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.45}
+  .logo-note{display:flex;align-items:center;gap:8px;background:#F8FAFC;border:1px solid var(--line);
+    border-radius:12px;padding:8px 10px;margin-top:10px}
+  .logo-box{width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:16px}
+  .logo-note b{font-size:11.5px;display:block}
+  .logo-note small{font-size:10px;color:var(--muted)}
+  .caption{text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px;font-weight:700}
+  .src{margin-top:12px;font-size:9.5px;color:#94A3B8;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page">Registro inteligente de productos · propuesta visual</h1>
+  <p class="page">Así se vería al escanear un código de barras en ZoCo. Tres estados: encontrado con foto, encontrado sin foto, y no encontrado.</p>
+
+  <div class="grid">
+
+    <!-- ESTADO 1: encontrado con foto -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="topbar"><div class="logo">Z</div><div><b>Registrar producto</b><small>Vender → producto nuevo</small></div></div>
+        <div class="body">
+          <p class="label">Código de barras</p>
+          <div class="scan"><input value="3017620422003"><button>⛶</button></div>
+
+          <div class="card">
+            <div class="found">
+              <div class="thumb"><img alt="foto producto" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='74' height='74'><rect width='74' height='74' fill='%23FDE68A'/><circle cx='37' cy='30' r='14' fill='%2378350F'/><rect x='22' y='46' width='30' height='20' rx='4' fill='%2378350F'/></svg>"></div>
+              <div style="flex:1">
+                <span class="tag ok">✓ Encontrado</span>
+                <div class="pname">Nutella</div>
+                <div class="pbrand">Ferrero · Untables</div>
+                <span class="tag src" style="margin-top:6px">datos: Open Food Facts</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="fld"><label>Costo</label><input value="0"></div>
+              <div class="fld"><label>Precio</label><input value="0"></div>
+            </div>
+            <div class="row">
+              <div class="fld"><label>Existencia</label><input value="1"></div>
+              <div class="fld"><label>Sección</label><input value="Abarrotes"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn ghost">Cambiar foto</button>
+              <button class="btn primary">Guardar producto</button>
+            </div>
+          </div>
+
+          <div class="logo-note">
+            <div class="logo-box">🏷️</div>
+            <div><b>Logotipo de la marca</b><small>Opcional, aparte de la foto</small></div>
+          </div>
+
+          <p class="hint">La foto viene de la base abierta. Si no te gusta, toma la tuya: siempre se ve mejor.</p>
+        </div>
+      </div></div>
+      <div class="caption">1 · Encontrado con foto</div>
+    </div>
+
+    <!-- ESTADO 2: encontrado sin foto -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="topbar"><div class="logo">Z</div><div><b>Registrar producto</b><small>Vender → producto nuevo</small></div></div>
+        <div class="body">
+          <p class="label">Código de barras</p>
+          <div class="scan"><input value="7501055363513"><button>⛶</button></div>
+
+          <div class="card">
+            <div class="found">
+              <div class="thumb" style="background:#F1F5F9;color:#94A3B8;font-size:24px">?</div>
+              <div style="flex:1">
+                <span class="tag warn">Sin foto</span>
+                <div class="pname">Ades coco</div>
+                <div class="pbrand">ades · Bebidas</div>
+              </div>
+            </div>
+
+            <div class="noimg">
+              <b>Este producto no trae fotografía</b>
+              <span>Tómale una ahora y queda en tu catálogo</span>
+              <div class="cam">
+                <button class="btn primary">📷 Tomar foto</button>
+                <button class="btn ghost">Elegir archivo</button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="fld"><label>Costo</label><input value="0"></div>
+              <div class="fld"><label>Precio</label><input value="0"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary">Guardar producto</button>
+            </div>
+          </div>
+
+          <p class="hint">Nunca mostramos imagen rota ni cuadro vacío: si no hay foto, te ofrecemos tomarla.</p>
+        </div>
+      </div></div>
+      <div class="caption">2 · Encontrado sin foto</div>
+    </div>
+
+    <!-- ESTADO 3: no encontrado -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="topbar"><div class="logo">Z</div><div><b>Registrar producto</b><small>Vender → producto nuevo</small></div></div>
+        <div class="body">
+          <p class="label">Código de barras</p>
+          <div class="scan"><input value="7798123456789"><button>⛶</button></div>
+
+          <div class="card">
+            <div class="found">
+              <div class="thumb" style="background:#FEE2E2;color:#B91C1C;font-size:22px">!</div>
+              <div style="flex:1">
+                <span class="tag" style="background:#FEE2E2;color:#991B1B">No encontrado</span>
+                <div class="pname">Captúralo tú</div>
+                <div class="pbrand">Código nuevo para este negocio</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="fld" style="grid-column:1/-1"><label>Nombre</label><input placeholder="Ej. Zapato escolar negro"></div>
+            </div>
+            <div class="row">
+              <div class="fld"><label>Costo</label><input value="0"></div>
+              <div class="fld"><label>Precio</label><input value="0"></div>
+            </div>
+            <div class="row">
+              <div class="fld"><label>Talla</label><input placeholder="25"></div>
+              <div class="fld"><label>Color</label><input placeholder="Negro"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn ghost">📷 Foto</button>
+              <button class="btn primary">Guardar y vender</button>
+            </div>
+          </div>
+
+          <p class="hint">Se guarda al instante y cae al ticket. Si el código ya existe, ZoCo te avisa en vez de duplicarlo.</p>
+        </div>
+      </div></div>
+      <div class="caption">3 · No encontrado (captura rápida)</div>
+    </div>
+
+  </div>
+
+  <div class="src">Datos de Open Food Facts (ODbL) · imágenes CC BY-SA · límite 15 consultas/min por negocio</div>
+</div>
+</body>
+</html>

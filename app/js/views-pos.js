@@ -1,11 +1,12 @@
 // Flujo de venta ZoCo: Vender → Carrito → Pago → Efectivo → Éxito
-import { $, el, money, esc, toast, modal, confirmDialog } from './ui.js';
+import { $, el, money, esc, toast, modal, confirmDialog, readImageCompressed } from './ui.js';
 import {
   state, sectionsForMode, sizesFor, stockOf, totalStock, productById,
   cartTotals, addLine, commitSale, sectionOf, fmtSize, can, createLayaway, applyCoupon,
-  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey, findByBarcode,
+  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey, findByBarcode, upsertProduct,
 } from './store.js';
 import { printTicket, ticketText } from './printer.js';
+import { lookupBarcode, LOOKUP_CREDIT } from './lookup.js';
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
@@ -65,7 +66,11 @@ export function posView(ctx) {
       }
       // 2) Código o nombre del producto
       const p = hit?.product || state.products.find((x) => (x.code || '').toLowerCase() === q || (x.name || '').toLowerCase() === q);
-      if (!p) { toast('Código no encontrado: ' + code); return false; }
+      if (!p) {
+        // No está en el catálogo: se busca en las bases abiertas y se ofrece crearlo
+        openQuickCreate(code);
+        return false;
+      }
       const sizes = sizesFor(p.section);
       if (sizes.length === 1) { add(p, sizes[0]); }
       else {
@@ -75,6 +80,114 @@ export function posView(ctx) {
       }
       return true;
     },
+  };
+
+  /* ---------------- Registrar producto escaneando ---------------- */
+  const openQuickCreate = (code) => {
+    const secs = sectionsForMode();
+    const m = modal({
+      title: 'Registrar producto',
+      wide: true,
+      body: `<div id="qc-body"><div class="hint" style="padding:8px 0">Buscando <b>${esc(code)}</b>…</div></div>`,
+      foot: `<button class="btn ghost" data-close>Cancelar</button>
+             <button class="btn" id="qc-save" disabled>Guardar y agregar</button>`,
+    });
+    const body = m.root.querySelector('#qc-body');
+    const saveBtn = m.root.querySelector('#qc-save');
+    let foto = '';
+    let buscado = null;
+
+    const paint = (info) => {
+      const hay = info?.found;
+      const nombre = (info?.name || '').replace(/"/g, '&quot;');
+      body.innerHTML = `
+        <div class="qc-found">
+          <div class="qc-thumb">${info?.image
+            ? `<img src="${esc(info.image)}" alt="">`
+            : `<span>${hay ? '?' : '!'}</span>`}</div>
+          <div style="flex:1;min-width:0">
+            <span class="qc-tag ${hay ? (info.image ? 'ok' : 'warn') : 'no'}">
+              ${hay ? (info.image ? 'Encontrado' : 'Sin foto') : 'No encontrado'}
+            </span>
+            <div class="qc-name">${hay ? esc(info.name) : 'Captúralo tú'}</div>
+            <div class="qc-sub">${hay
+              ? esc([info.brand, info.category].filter(Boolean).join(' · ') || 'Sin marca')
+              : 'Código nuevo para este negocio'}</div>
+            ${hay ? `<div class="qc-credit">${esc(LOOKUP_CREDIT)}</div>` : ''}
+          </div>
+        </div>
+        ${hay && !info.image ? `<div class="qc-noimg"><b>Este producto no trae fotografía</b>
+          <span>Tómale una ahora y queda en tu catálogo</span></div>` : ''}
+        <div class="field" style="margin-top:12px"><label>Nombre</label>
+          <input id="qc-name" value="${nombre}" placeholder="Ej. Zapato escolar negro"></div>
+        <div class="row2">
+          <div class="field"><label>Sección</label>
+            <select id="qc-sec">${secs.map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join('')}</select></div>
+          <div class="field"><label>Se vende por</label>
+            <select id="qc-unit">${Object.entries(UNITS).map(([k, u]) => `<option value="${k}">${esc(u.label)}</option>`).join('')}</select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Costo</label><input id="qc-cost" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="field"><label>Precio</label><input id="qc-price" type="number" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Existencia</label><input id="qc-qty" type="number" step="1" value="1"></div>
+          <div class="field"><label>Foto (opcional)</label><input id="qc-img" type="file" accept="image/*"></div>
+        </div>
+        <div id="qc-prev" style="margin-top:8px"></div>`;
+
+      body.querySelector('#qc-img').onchange = async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        try {
+          const r = await readImageCompressed(f);
+          foto = r.dataUrl;
+          body.querySelector('#qc-prev').innerHTML =
+            `<img src="${r.dataUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
+             <div class="hint">${Math.round(r.bytes / 1024)} KB · ${r.width}×${r.height}</div>`;
+        } catch (err) { toast(err.message); }
+      };
+      saveBtn.disabled = false;
+      const nom = body.querySelector('#qc-name');
+      nom.focus();
+      nom.select();
+    };
+
+    lookupBarcode(code).then((info) => { buscado = info; paint(info); })
+      .catch(() => { buscado = { found: false }; paint(buscado); });
+
+    saveBtn.onclick = () => {
+      const name = (body.querySelector('#qc-name').value || '').trim();
+      const price = Number(body.querySelector('#qc-price').value) || 0;
+      const cost = Number(body.querySelector('#qc-cost').value) || 0;
+      const qty = Math.max(0, Number(body.querySelector('#qc-qty').value) || 0);
+      const section = body.querySelector('#qc-sec').value;
+      if (!name) { toast('Escribe el nombre del producto'); return; }
+      if (price <= 0) { toast('Falta el precio'); return; }
+      // Anti-duplicado: si el código ya existe, no se crea otro
+      const ya = findByBarcode(code);
+      if (ya?.product) {
+        toast('Ese código ya existe: ' + ya.product.name);
+        m.close();
+        return;
+      }
+      const sizes = sizesFor(section);
+      const talla = fmtSize(sizes[0]);
+      const stock = {};
+      if (qty > 0) stock[talla] = qty;
+      const branchStock = { [state.currentBranch]: stock };
+      upsertProduct({
+        name, code: String(code).trim(), price, cost, section,
+        sellBy: body.querySelector('#qc-unit').value || 'pza',
+        colors: [], branchStock,
+        image: foto || (buscado?.image || ''),
+        catalog: true,
+      });
+      const nuevo = state.products.find((x) => String(x.code) === String(code).trim());
+      m.close();
+      if (nuevo) { add(nuevo, sizes[0]); toast('Producto agregado: ' + name); }
+      render();
+    };
   };
 
   /* ---------------- SELL ---------------- */
