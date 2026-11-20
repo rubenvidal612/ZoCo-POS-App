@@ -12,7 +12,7 @@ import {
   layawayPayment, cancelLayaway, upsertCoupon, registerSummary, upsertExpense, payExpense,
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
-  addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf,
+  addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
@@ -613,43 +613,9 @@ export function productsView(ctx) {
         okText: 'Agregar ' + lista.length,
       });
       if (!ok) return;
-      const branchId = state.currentBranch || (state.branches[0] || {}).id;
-      const porCodigo = new Map();
-      (state.products || []).forEach((p) => { const k = String(p.code || '').trim().toLowerCase(); if (k) porCodigo.set(k, p); });
-      let nuevos = 0; let actualizados = 0;
-      lista.forEach((it, i) => {
-        const clave = String(it.code || '').trim().toLowerCase();
-        const existe = clave ? porCodigo.get(clave) : null;
-        if (existe) {
-          if (it.image && !existe.image) existe.image = it.image;
-          actualizados += 1;
-          return;
-        }
-        const sizes = sizesFor(it.section);
-        const stock = {};
-        sizes.forEach((s) => { stock[fmtSize(s)] = 0; });
-        const p = {
-          id: 'base' + Date.now() + i,
-          name: it.name,
-          code: it.code || ('BASE-' + (i + 1)),
-          brand: it.brand || '',
-          price: 0,
-          cost: 0,
-          section: it.section,
-          colors: [],
-          image: it.image || '',
-          active: true,
-          catalog: true,
-          isBase: true,
-          branchStock: branchId ? { [branchId]: stock } : {},
-        };
-        state.products.push(p);
-        if (clave) porCodigo.set(clave, p);
-        nuevos += 1;
-      });
-      emit();
+      const r = addBaseCatalog(lista, { removeDemo: true });
       render();
-      toast(nuevos + ' productos agregados' + (actualizados ? ' · ' + actualizados + ' ya existían' : '') + ' · ponles precio');
+      toast(r.nuevos + ' productos agregados' + (r.actualizados ? ' · ' + r.actualizados + ' ya existían' : '') + ' · ponles precio');
     };
   }
   const impBtn = root.querySelector('#imp');
@@ -1611,7 +1577,19 @@ export function settingsView(ctx) {
                <button class="btn sm" id="demo-load">Cargar ejemplos</button>
                ${state.products.length ? '<button class="btn sm" id="demo-replace" style="background:var(--danger)">Reemplazar TODO</button>' : ''}`,
       });
-      m.root.querySelector('#demo-load').onclick = () => {
+      m.root.querySelector('#demo-load').onclick = async () => {
+        // Para abarrotes se carga el catálogo base completo (103 con foto)
+        if (mode === 'abarrotes') {
+          try {
+            const { CATALOGO_ABARROTES } = await import('./catalog-abarrotes.js');
+            const r = addBaseCatalog(CATALOGO_ABARROTES, { removeDemo: true });
+            m.close();
+            toast(r.nuevos + ' productos de abarrotes cargados (con foto) · ponles precio');
+            ctx.refreshShell?.();
+            location.hash = '#/productos';
+            return;
+          } catch { /* si falla, cae al demo normal */ }
+        }
         const n = loadDemoForMode(mode, { replace: true });
         m.close();
         toast(n + ' productos de ejemplo cargados · tus productos se conservaron');

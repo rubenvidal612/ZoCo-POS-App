@@ -1051,6 +1051,57 @@ export function currentUser() {
   }
   return null;
 }
+/* ================= Catálogo base del giro ================= */
+/** Inserta productos del catálogo base; por defecto quita los ejemplos DEMO. */
+export function addBaseCatalog(list, { removeDemo = true } = {}) {
+  const items = Array.isArray(list) ? list : [];
+  if (!items.length) return { nuevos: 0, actualizados: 0 };
+  const branchId = state.currentBranch || (state.branches[0] || {}).id;
+
+  if (removeDemo) state.products = (state.products || []).filter((p) => !p.isDemo);
+
+  const porCodigo = new Map();
+  (state.products || []).forEach((p) => {
+    const k = String(p.code || '').trim().toLowerCase();
+    if (k) porCodigo.set(k, p);
+  });
+  let nuevos = 0;
+  let actualizados = 0;
+
+  items.forEach((it, i) => {
+    const clave = String(it.code || '').trim().toLowerCase();
+    const existe = clave ? porCodigo.get(clave) : null;
+    if (existe) {
+      if (it.image && !existe.image) existe.image = it.image;
+      if (!existe.brand && it.brand) existe.brand = it.brand;
+      actualizados += 1;
+      return;
+    }
+    const sizes = sizesFor(it.section);
+    const stock = {};
+    sizes.forEach((s) => { stock[fmtSize(s)] = 0; });
+    const p = {
+      id: 'base' + Date.now() + i,
+      name: it.name,
+      code: it.code || ('BASE-' + (i + 1)),
+      brand: it.brand || '',
+      price: 0,
+      cost: 0,
+      section: it.section,
+      colors: [],
+      image: it.image || '',
+      active: true,
+      catalog: true,
+      isBase: true,
+      branchStock: branchId ? { [branchId]: stock } : {},
+    };
+    state.products.push(p);
+    if (clave) porCodigo.set(clave, p);
+    nuevos += 1;
+  });
+  emit();
+  return { nuevos, actualizados };
+}
 /* ================= Respaldo (descargar / restaurar) ================= */
 const BACKUP_META = 'zoco.backup.last';
 

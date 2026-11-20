@@ -1,7 +1,8 @@
 {
-    "version":  "2.73.0",
+    "version":  "2.73.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Catalogo base de abarrotes: 103 productos tipicos con foto y codigo de barras (Productos \u003e Catalogo base)"
+                  "Al cambiar a Abarrotes, \"Cargar ejemplos\" ahora carga los 103 productos con foto (ya no solo 4)",
+                  "El catalogo base quita los productos DEMO viejos"
               ]
 }
