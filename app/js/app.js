@@ -655,37 +655,6 @@ async function maybeDailyNotice() {
     toast('💰 Hoy puedes gastar ' + money(p.disponible_hoy ?? p.presupuesto_diario_recomendado));
   } catch {}
 }
-/* ===== Evitar que el navegador recargue al jalar hacia abajo (celular) =====
-   CSS ya lo cubre en Chrome; este guardia cubre Safari/iOS y contenedores. */
-function installNoPullToRefresh() {
-  let startY = 0;
-  let startX = 0;
-  const dentroDeScroll = (nodo) => {
-    let n = nodo;
-    while (n && n !== document.body && n !== document.documentElement) {
-      const st = getComputedStyle(n);
-      const oy = st.overflowY;
-      if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 2) {
-        return true; // hay una lista con scroll: nunca bloquear el gesto
-      }
-      n = n.parentElement;
-    }
-    return false;
-  };
-  document.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1) return;
-    startY = e.touches[0].clientY;
-    startX = e.touches[0].clientX;
-  }, { passive: true });
-  document.addEventListener('touchmove', (e) => {
-    if (e.touches.length !== 1) return;
-    const dy = e.touches[0].clientY - startY;
-    const dx = Math.abs(e.touches[0].clientX - startX);
-    if (dy <= 6 || dx > dy) return;                       // solo gesto vertical hacia abajo
-    const enTope = (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
-    if (enTope && !dentroDeScroll(e.target) && e.cancelable) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-}
-try { installNoPullToRefresh(); } catch {}
+/* Nota: el gesto de recargar (pull-to-refresh) se evita solo con CSS
+   (overscroll-behavior-y: contain). NO se interceptan eventos táctiles:
+   hacerlo rompía el scroll en algunos teléfonos. */

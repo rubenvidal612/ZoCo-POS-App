@@ -1,8 +1,7 @@
 {
-    "version":  "2.72.2",
+    "version":  "2.72.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Al cambiar de giro: opcion \"Reemplazar TODO\" para quitar tus productos anteriores y cargar los del nuevo giro",
-                  "Scroll: el gesto ya no se bloquea dentro de listas"
+                  "Se quito el bloqueo de gestos que impedia hacer scroll en algunos telefonos"
               ]
 }
