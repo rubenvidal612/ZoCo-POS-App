@@ -459,7 +459,7 @@ export function myAffCode() {
 
 export function affiliateLink() {
   const code = myAffCode();
-  const base = location.origin + location.pathname.replace(/index\.html$/, '');
+  const base = location.origin + '/';
   return base + '?ref=' + encodeURIComponent(code);
 }
 

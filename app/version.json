@@ -1,7 +1,8 @@
 {
-    "version":  "2.70.2",
+    "version":  "2.70.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Afiliados: link de la landing con tu codigo y boton para copiar"
+                  "Afiliados: link de la landing con tu codigo y boton de copiar",
+                  "La landing conserva el ?ref= al registrarse"
               ]
 }
