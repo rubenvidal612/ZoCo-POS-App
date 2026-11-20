@@ -282,7 +282,7 @@ let cat = 'all', color = '', size = '', q = '';
 const favs = new Set(JSON.parse(localStorage.getItem('zoco.cat.favs') || '[]'));
 
 function waNumber() {
-  const raw = state?.company?.phone || state?.settings?.whatsapp || '';
+  const raw = state?.settings?.whatsapp || state?.company?.whatsapp || state?.company?.phone || '';
   const digits = String(raw).replace(/\D/g, '');
   return digits ? (digits.length === 10 ? '52' + digits : digits) : '';
 }

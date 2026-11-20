@@ -1033,6 +1033,11 @@ export function settingsView(ctx) {
         <div style="padding:16px">
           <div class="field"><label>Nombre comercial</label><input id="c-name" value="${esc(state.company.name)}"></div>
           <div class="field"><label>RFC / Identificación</label><input id="c-rfc" value="${esc(state.company.legalId || '')}" placeholder="Opcional"></div>
+          <div class="field">
+            <label>WhatsApp del catálogo</label>
+            <input id="c-wa" value="${esc(state.settings?.whatsapp || state.company?.phone || '')}" placeholder="5215512345678" inputmode="tel">
+            <div class="hint">Es el número que recibe los pedidos cuando un cliente da clic en <b>Comprar</b> en tu catálogo. Escríbelo con lada de país (México: <b>52</b> + 10 dígitos). Ej. 5215512345678</div>
+          </div>
           <div class="field"><label>Giro del negocio</label>
             <select id="c-mode">
               ${Object.entries(MODES).map(([k, m]) => `<option value="${k}" ${state.company.mode === k ? 'selected' : ''}>${m.label}</option>`).join('')}
@@ -1490,6 +1495,16 @@ export function settingsView(ctx) {
   $('#save-co', root).onclick = () => {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
     state.company.legalId = $('#c-rfc', root).value.trim();
+    // WhatsApp del catálogo: se guardan solo dígitos, con lada de país
+    const waInput = $('#c-wa', root);
+    if (waInput) {
+      let d = String(waInput.value || '').replace(/\D/g, '');
+      if (d.length === 10) d = '52' + d;          // México sin lada de país
+      if (d.length === 12 && d.startsWith('52')) d = '521' + d.slice(2); // móvil MX
+      state.settings = state.settings || {};
+      state.settings.whatsapp = d;
+      waInput.value = d;
+    }
     const mode = $('#c-mode', root).value;
     const cambioGiro = mode !== state.company.mode;
     if (cambioGiro) state.company.mode = mode;
