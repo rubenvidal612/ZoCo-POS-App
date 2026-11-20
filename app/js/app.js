@@ -379,7 +379,8 @@ function paintShell() {
       return;
     }
     if (b.dataset.r === 'catalogo') {
-      window.open('/catalogo.html', '_blank');
+      const cid = state.currentCompany || 'default';
+      window.open('/catalogo?c=' + encodeURIComponent(cid), '_blank');
       return;
     }
     if (b.dataset.r === 'instalar') { showInstallCard(true); return; }

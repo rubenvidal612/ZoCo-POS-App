@@ -278,6 +278,7 @@ document.addEventListener('click', (e) => { if (!e.target.closest('.theme-wrap')
 applyTheme(localStorage.getItem('zoco.cat.theme') || 'claro');
 
 let state = null;
+let PUBLIC_MODE = false;
 let cat = 'all', color = '', size = '', q = '';
 const favs = new Set(JSON.parse(localStorage.getItem('zoco.cat.favs') || '[]'));
 
@@ -293,10 +294,35 @@ function waLink(text) {
 }
 
 async function load() {
-  try {
-    const r = await fetch('/api/state?c=default', { cache: 'no-store' });
-    if (r.ok) state = await r.json();
-  } catch {}
+  // 1) Catálogo público (funciona desde cualquier celular)
+  const paramC = new URLSearchParams(location.search).get('c') || '';
+  const tryPublic = async (id) => {
+    if (!id) return null;
+    try {
+      const r = await fetch('/api/catalog?c=' + encodeURIComponent(id), { cache: 'no-store' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      if (!j || !j.ok || !Array.isArray(j.products)) return null;
+      return j;
+    } catch { return null; }
+  };
+  const pub = await tryPublic(paramC);
+  if (pub) {
+    state = {
+      company: { name: pub.company?.name || 'ZoCo', phone: '', theme: pub.company?.theme, mode: pub.company?.mode },
+      settings: { whatsapp: pub.whatsapp || '', ticket: pub.ticket || {} },
+      products: pub.products.map((p) => ({ ...p, active: true, catalog: true })),
+      branches: [], currentBranch: '',
+    };
+    PUBLIC_MODE = true;
+  }
+  // 2) Servidor local, 3) memoria del navegador
+  if (!state) {
+    try {
+      const r = await fetch('/api/state?c=default', { cache: 'no-store' });
+      if (r.ok) state = await r.json();
+    } catch {}
+  }
   if (!state) { try { state = JSON.parse(localStorage.getItem('zoco.pos.v1') || 'null'); } catch {} }
   if (!state || !Array.isArray(state.products)) {
     $('#grid').innerHTML = '<div class="empty">No hay catálogo disponible.<br><small>Configura tu inventario en ZoCo POS.</small></div>';

@@ -1,7 +1,8 @@
 {
-    "version":  "2.71.1",
+    "version":  "2.72.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Configuracion: campo WhatsApp del catalogo; los pedidos llegan a ese numero"
+                  "Catalogo en linea publico: ahora carga desde cualquier celular (solo productos y WhatsApp, nada mas)",
+                  "El link del catalogo incluye el codigo del negocio"
               ]
 }
