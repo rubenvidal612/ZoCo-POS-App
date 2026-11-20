@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZoCo POS · Demo sin registro</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/zoco-192.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F172A">
+<meta name="robots" content="noindex">
+<script>
+  // Marca de demo ANTES de cargar la app: aísla el almacenamiento y desactiva
+  // servidor/nube. Todo vive en zoco.demo.v1 del navegador.
+  window.__ZOCO_DEMO__ = true;
+</script>
+<link rel="stylesheet" href="./css/tokens.css?v=8">
+<link rel="stylesheet" href="./css/app.css?v=43">
+<style>
+  .demo-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;gap:10px;
+    padding:10px 14px;background:#0F172A;color:#fff;border-top:2px solid #F97316;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;flex-wrap:wrap;
+    box-shadow:0 -8px 24px rgba(15,23,42,.28)
+  }
+  .demo-bar .d-tag{display:inline-flex;align-items:center;gap:6px;background:#F97316;color:#fff;
+    font-size:11px;font-weight:900;letter-spacing:.5px;padding:4px 10px;border-radius:999px}
+  .demo-bar .d-txt{font-size:12.5px;color:#CBD5E1;flex:1;min-width:150px}
+  .demo-bar button{border:0;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer}
+  .demo-bar .d-reset{background:#1E293B;color:#E2E8F0}
+  .demo-bar .d-cta{background:#F97316;color:#fff}
+  .demo-bar .d-login{background:transparent;color:#94A3B8;text-decoration:underline;padding:8px 4px}
+  body.demo-on{padding-bottom:64px}
+  @media (max-width:640px){
+    .demo-bar{gap:6px;padding:8px 10px}
+    .demo-bar .d-txt{display:none}
+    .demo-bar button{flex:1}
+    body.demo-on{padding-bottom:76px}
+  }
+</style>
+</head>
+<body class="demo-on">
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<div class="demo-bar" id="demo-bar">
+  <span class="d-tag">● MODO DEMO</span>
+  <span class="d-txt">Estás probando ZoCo con una zapatería de ejemplo. Nada se guarda en tu cuenta.</span>
+  <button class="d-reset" id="demo-reset">↺ Reiniciar demo</button>
+  <button class="d-cta" id="demo-signup">Crear mi cuenta</button>
+  <button class="d-login" id="demo-login">Ya tengo cuenta</button>
+</div>
+
+<script src="./js/config.js"></script>
+<script type="module">
+  import { buildDemoState } from './js/demo-data.js';
+
+  const KEY = 'zoco.demo.v1';
+  const SKEY = 'zoco.demo.session';
+
+  const seed = () => {
+    const data = buildDemoState();
+    // El usuario del demo inicia sesión automáticamente (sin registro).
+    data.user = data.users[0];
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      localStorage.setItem(SKEY, JSON.stringify({
+        userId: 'u-demo', at: Date.now(),
+        user: { id: 'u-demo', name: 'Demo Dueño', email: 'demo@zoco.app', role: 'OWNER' },
+      }));
+    } catch (e) { console.warn('demo seed', e); }
+  };
+
+  // Si es la primera visita (o quedó incompleto), se siembra
+  let listo = false;
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      listo = !!(parsed && Array.isArray(parsed.products) && parsed.products.length);
+    }
+  } catch { listo = false; }
+  if (!listo) seed();
+
+  document.getElementById('demo-reset').onclick = () => {
+    try {
+      localStorage.removeItem(KEY);
+      localStorage.removeItem(SKEY);
+      localStorage.removeItem('zoco.sync.dirty');
+    } catch {}
+    seed();
+    location.reload();
+  };
+  document.getElementById('demo-signup').onclick = () => { location.href = '/?registro=1'; };
+  document.getElementById('demo-login').onclick = () => { location.href = '/'; };
+
+  // Arranca la app real en modo demo
+  import('./js/app.js');
+</script>
+</body>
+</html>

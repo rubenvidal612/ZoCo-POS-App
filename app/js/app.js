@@ -121,6 +121,11 @@ function paintLogin() {
   };
 
   let mode = 'login';
+  // /?registro=1 abre directo en "Crear cuenta" (viene desde el demo)
+  try {
+    const q = new URLSearchParams(location.search || '');
+    if (q.get('registro') === '1' || q.get('modo') === 'registro') mode = 'register';
+  } catch {}
   const paintMode = () => {
     $('#lg-name-wrap').style.display = mode === 'register' ? 'block' : 'none';
     $('#lg-register').textContent = mode === 'register' ? '← Ya tengo cuenta' : 'Crear cuenta nueva';

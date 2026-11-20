@@ -1,9 +1,9 @@
 {
-    "version":  "2.67.1",
+    "version":  "2.68.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Importar: los productos con el mismo codigo se ACTUALIZAN (ya no se duplican) y eliges reemplazar o sumar existencia",
-                  "Importar: acepta columna Foto (URL)",
-                  "Boton Traer fotos: busca fotos faltantes en bases abiertas"
+                  "Demo interactivo sin registro en /demo (zapateria con fotos, tallas, colores, clientes, ventas y caja abierta)",
+                  "Aislado por navegador: no toca datos reales ni la nube",
+                  "Boton \"Probar demo sin registro\" en la landing"
               ]
 }

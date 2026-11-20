@@ -1,8 +1,11 @@
 // Estado + persistencia (localStorage) + API del servidor
 import { uid } from './ui.js';
 
-const KEY = 'zoco.pos.v1';
-const SKEY = 'zoco.session';
+// Modo demo: datos aislados por navegador y sin tocar servidor ni nube.
+const DEMO = (typeof window !== 'undefined') && window.__ZOCO_DEMO__ === true;
+
+const KEY = DEMO ? 'zoco.demo.v1' : 'zoco.pos.v1';
+const SKEY = DEMO ? 'zoco.demo.session' : 'zoco.session';
 
 /* ================= Rampas de tallas ================= */
 export const SECTIONS = {
@@ -987,6 +990,7 @@ function save() {
 
 let serverOff = false;
 async function pushToServer() {
+  if (DEMO) return;                 // el demo nunca escribe en el servidor
   if (serverOff) return;            // en Vercel no hay servidor local: se usa Supabase
   try {
     const r = await fetch('/api/state?c=' + encodeURIComponent(state.currentCompany || 'default'), {
@@ -999,6 +1003,7 @@ async function pushToServer() {
 }
 
 export async function hydrate() {
+  if (DEMO) return 'demo';          // el demo no consulta el servidor
   try {
     const r = await fetch('/api/state?c=' + encodeURIComponent(state.currentCompany || 'default'), { cache: 'no-store' });
     if (r.ok) {

@@ -148,6 +148,7 @@ function schedulePush() {
 
 /** Arranca: sube cambios, escucha online/offline y sincroniza cada 45 s. */
 export function startSync() {
+  if (window.__ZOCO_DEMO__) return;   // el demo no sincroniza con la nube
   if (!sbReady()) return;
 
   // cualquier cambio local marca pendiente y programa subida
