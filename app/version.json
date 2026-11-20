@@ -1,9 +1,7 @@
 {
-    "version":  "2.68.1",
+    "version":  "2.68.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Demo interactivo sin registro en /demo (zapateria con fotos, tallas, colores, clientes, ventas y caja abierta)",
-                  "Aislado por navegador: no toca datos reales ni la nube",
-                  "Boton \"Probar demo sin registro\" en la landing"
+                  "Demo: tallas correctas por giro, arranca en Vender y sin avisos que estorben"
               ]
 }

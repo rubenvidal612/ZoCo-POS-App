@@ -36,14 +36,29 @@ const COLORS = {
   Beige: '#D9C7A7',
 };
 
-const SIZES = ['22', '23', '24', '25', '26', '27'];
+/** Tallas reales de cada sección (deben coincidir con SECTIONS del store). */
+function rank(from, to) {
+  const out = [];
+  for (let v = from; v <= to + 1e-9; v += 0.5) out.push(Number.isInteger(v) ? String(v) : v.toFixed(1));
+  return out;
+}
+const SIZE_SETS = {
+  dama: rank(22, 27),
+  infantil: rank(12, 21.5),
+  caballero: rank(22, 30),
+  escolar: rank(1, 6.5),
+  bolsas: ['Único'],
+  carteras: ['Único'],
+};
 
 function buildShoe(id, name, code, price, cost, section, colors, stockPorTalla) {
+  const sizes = SIZE_SETS[section] || SIZE_SETS.dama;
   const branchStock = { b1: {}, b2: {} };
-  colors.forEach((c) => {
-    SIZES.forEach((s, i) => {
-      const base = stockPorTalla[i] ?? 2;
-      branchStock.b1[`${s}|${c}`] = Math.max(0, base - (c === colors[0] ? 0 : 1));
+  colors.forEach((c, ci) => {
+    sizes.forEach((s, i) => {
+      const base = stockPorTalla[i % stockPorTalla.length] ?? 2;
+      const ajuste = ci === 0 ? 0 : 1;
+      branchStock.b1[`${s}|${c}`] = Math.max(0, base - ajuste);
       branchStock.b2[`${s}|${c}`] = Math.max(0, Math.round(base / 2));
     });
   });
@@ -91,7 +106,7 @@ export function buildDemoState() {
     {
       id: 'ds1', code: '1-1000', date: haceDias(2), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'María López', customerId: 'dc1', note: '',
-      items: [item(products[0], '24', 'Negro', 1, 499)],
+      items: [item(products[0], '3', 'Negro', 1, 499)],
       subtotal: 499, discount: 0, total: 499,
       method: 'cash', payments: null, fiscalMode: 'interno',
       received: 500, change: 1, status: 'done', cancelReason: null, cancelledAt: null,
@@ -99,7 +114,7 @@ export function buildDemoState() {
     {
       id: 'ds2', code: 'F-5000', date: haceDias(1), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'Jorge Ramírez', customerId: 'dc2', note: '',
-      items: [item(products[1], '26', 'Blanco', 1, 799), item(products[5], '23', 'Azul', 1, 399)],
+      items: [item(products[1], '25', 'Blanco', 1, 799), item(products[5], '15', 'Azul', 1, 399)],
       subtotal: 1198, discount: 0, total: 1198,
       method: 'debit', payments: null, fiscalMode: 'fiscal',
       received: 1198, change: 0, status: 'done', cancelReason: null, cancelledAt: null,
@@ -107,7 +122,7 @@ export function buildDemoState() {
     {
       id: 'ds3', code: '1-1001', date: new Date(now - 3 * 3600e3).toISOString(), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'Sofía Herrera', customerId: 'dc3', note: '',
-      items: [item(products[3], '25', 'Beige', 2, 449)],
+      items: [item(products[3], '24', 'Beige', 2, 449)],
       subtotal: 898, discount: 50, total: 848,
       method: 'cash', payments: null, fiscalMode: 'interno',
       received: 900, change: 52, status: 'done', cancelReason: null, cancelledAt: null,

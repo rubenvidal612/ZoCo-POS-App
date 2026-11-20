@@ -631,10 +631,10 @@ bootOAuth().then(async (oauth) => {
   }
   paintShell();
   logOauth('shell', currentUser() ? 'con usuario ' + currentUser().email : 'sin usuario');
-    setTimeout(() => initInstallPrompt(), 1200);
+    setTimeout(() => { if (!window.__ZOCO_DEMO__) initInstallPrompt(); }, 1200);
     setTimeout(() => maybeDailyNotice(), 2500);
     window.addEventListener('zoco:cloud-bootstrapped', () => { try { toast('Tus datos se subieron a la nube ✓'); } catch {} });
-    setTimeout(() => { if (!window.__ZOCO_DEMO__) startUpdateWatcher(); initNotifPill(); watchServiceWorker(); startSync(); }, 2000);
+    setTimeout(() => { if (!window.__ZOCO_DEMO__) { startUpdateWatcher(); initNotifPill(); } watchServiceWorker(); startSync(); }, 2000);
     // Refresca la suscripción push si el usuario ya dio permiso
     if ('Notification' in window && Notification.permission === 'granted') {
       setTimeout(() => subscribePush(), 3000);
