@@ -1058,7 +1058,9 @@ export function addBaseCatalog(list, { removeDemo = true } = {}) {
   if (!items.length) return { nuevos: 0, actualizados: 0 };
   const branchId = state.currentBranch || (state.branches[0] || {}).id;
 
-  if (removeDemo) state.products = (state.products || []).filter((p) => !p.isDemo);
+  // Al cargar el catálogo base de un giro se quitan los ejemplos y los
+  // catálogos base anteriores (de otro giro). Los productos propios NO se tocan.
+  if (removeDemo) state.products = (state.products || []).filter((p) => !p.isDemo && !p.isBase);
 
   const porCodigo = new Map();
   (state.products || []).forEach((p) => {
