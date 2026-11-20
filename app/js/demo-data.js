@@ -97,6 +97,42 @@ export function buildDemoState() {
     { id: 'dc4', name: 'Luis Fernández', phone: '555-221-7788', email: 'luis@ejemplo.com', balance: 0, creditLimit: 0, notes: '' },
   ];
 
+  // ===== Proveedores y compras de ejemplo (módulo Compras) =====
+  const suppliers = [
+    { id: 'dsup1', name: 'Distribuidora del Valle', phone: '555-700-1122', email: 'ventas@delvalle.mx', notes: 'Entrega martes y jueves' },
+    { id: 'dsup2', name: 'Calzado León', phone: '555-700-3344', email: 'pedidos@calzadoleon.mx', notes: 'Mínimo 6 pares por modelo' },
+    { id: 'dsup3', name: 'Importadora Sur', phone: '555-700-5566', email: '', notes: '' },
+  ];
+
+  const poItem = (p, size, color, qty, received, cost) => ({
+    productId: p.id, vkey: `${size}|${color}`, qty, received, cost,
+  });
+
+  const purchases = [
+    {
+      id: 'dpo1', folio: 'OC-9000', supplierId: 'dsup1', date: haceDias(12), branchId: 'b1',
+      status: 'received', items: [poItem(products[0], '3', 'Negro', 12, 12, 260)],
+      total: 3120, paid: 3120, creditApplied: 0,
+      payments: [{ at: haceDias(10), amount: 3120, note: 'Transferencia' }],
+      note: 'Pedido de temporada escolar', photo: null,
+    },
+    {
+      id: 'dpo2', folio: 'OC-9001', supplierId: 'dsup2', date: haceDias(6), branchId: 'b1',
+      status: 'partial',
+      items: [poItem(products[2], '25', 'Café', 8, 5, 720), poItem(products[4], '26', 'Negro', 6, 0, 520)],
+      total: 8880, paid: 3000, creditApplied: 0,
+      payments: [{ at: haceDias(4), amount: 3000, note: 'Anticipo' }],
+      note: 'Faltan 3 pares de la bota', photo: null,
+    },
+    {
+      id: 'dpo3', folio: 'OC-9002', supplierId: 'dsup3', date: haceDias(1), branchId: 'b1',
+      status: 'ordered', items: [poItem(products[1], '25', 'Blanco', 10, 0, 420)],
+      total: 4200, paid: 0, creditApplied: 0,
+      payments: [],
+      note: 'Por recibir esta semana', photo: null,
+    },
+  ];
+
   const item = (p, size, color, qty, price) => ({
     productId: p.id, name: p.name, size, vkey: `${size}|${color}`, color,
     colorVariant: color, price: price ?? p.price, qty, unit: 'pza',
@@ -164,8 +200,9 @@ export function buildDemoState() {
     user: null,
     products,
     customers,
-    suppliers: [],
-    purchases: [],
+    suppliers,
+    purchases,
+    supplierCredits: {},
     sales,
     returns: [],
     adjustments: [],

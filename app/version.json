@@ -1,7 +1,8 @@
 {
-    "version":  "2.68.2",
+    "version":  "2.69.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Demo: tallas correctas por giro, arranca en Vender y sin avisos que estorben"
+                  "Demo con Compras (proveedores, ordenes parciales y por pagar) y Agente IA funcionando",
+                  "Landing: nueva seccion \"Pruébalo sin registrarte\" con accesos directos al demo"
               ]
 }
