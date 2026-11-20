@@ -69,6 +69,7 @@ function buildShoe(id, name, code, price, cost, section, colors, stockPorTalla) 
     image: shoePhoto(COLORS[colors[0]] || '#1F2937', colors[0]),
     active: true,
     catalog: true,
+    isDemo: true,
     sellBy: 'pza',
     stockHistory: [],
     branchStock,

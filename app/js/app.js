@@ -666,7 +666,7 @@ function installNoPullToRefresh() {
       const st = getComputedStyle(n);
       const oy = st.overflowY;
       if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 2) {
-        if (n.scrollTop > 0) return true; // ya está desplazado: scroll normal
+        return true; // hay una lista con scroll: nunca bloquear el gesto
       }
       n = n.parentElement;
     }

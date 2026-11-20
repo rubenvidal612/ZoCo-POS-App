@@ -1549,18 +1549,38 @@ export function settingsView(ctx) {
             Solo reemplazan a otros ejemplos. <b>Tus productos reales no se tocan.</b>
           </div>
           <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) en total y ${demoCount()} de ejemplo.</div>
+          ${state.products.length ? `<div class="hint" style="margin-top:10px">
+            ¿Quieres que <b>tus ${state.products.length} productos actuales</b> (por ejemplo zapatos) se quiten para empezar limpio con este giro?
+            Se guarda una copia por si te arrepientes.</div>` : ''}
         </div>`,
         foot: `<button class="btn ghost sm" data-close>Mantener mi catálogo</button>
                <button class="btn ghost sm" id="demo-blank">Empezar en blanco</button>
-               <button class="btn sm" id="demo-load">Cargar ejemplos</button>`,
+               <button class="btn sm" id="demo-load">Cargar ejemplos</button>
+               ${state.products.length ? '<button class="btn sm" id="demo-replace" style="background:var(--danger)">Reemplazar TODO</button>' : ''}`,
       });
       m.root.querySelector('#demo-load').onclick = () => {
         const n = loadDemoForMode(mode, { replace: true });
         m.close();
-        toast(n + ' productos de ejemplo cargados');
+        toast(n + ' productos de ejemplo cargados · tus productos se conservaron');
         ctx.refreshShell?.();
         location.hash = '#/productos';
       };
+      m.root.querySelector('#demo-replace')?.addEventListener('click', async () => {
+        const ok = await confirmDialog({
+          title: 'Reemplazar todo el catálogo',
+          message: `Se quitarán tus ${state.products.length} productos actuales y se cargarán los ejemplos de ${MODES[mode]?.label || mode}. Se guarda una copia en Respaldo por si te arrepientes.`,
+          okText: 'Sí, reemplazar', danger: true,
+        });
+        if (!ok) return;
+        try { localStorage.setItem('zoco.pos.antes-de-cambiar-giro', localStorage.getItem('zoco.pos.v1') || ''); } catch {}
+        state.products = [];
+        emit();
+        const n = loadDemoForMode(mode, { replace: false });
+        m.close();
+        toast('Catálogo reemplazado: ' + n + ' productos de ' + (MODES[mode]?.label || mode));
+        ctx.refreshShell?.();
+        location.hash = '#/productos';
+      });
       m.root.querySelector('#demo-blank').onclick = () => {
         state.products = [];
         emit();
