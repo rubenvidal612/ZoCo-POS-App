@@ -1,7 +1,7 @@
 {
-    "version":  "2.70.1",
+    "version":  "2.70.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Celular: ya no se recarga la app al jalar hacia abajo sin querer"
+                  "Afiliados: link de la landing con tu codigo y boton para copiar"
               ]
 }

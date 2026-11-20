@@ -3231,6 +3231,16 @@ export function affiliatesView(ctx) {
             <input id="aff-link" readonly>
             <button class="btn sm" id="aff-copy">Copiar</button>
           </div>
+          <div style="margin-top:14px">
+            <div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px">Link de la landing (presentación)</div>
+            <div class="aff-linkbox">
+              <input id="aff-landing" readonly>
+              <button class="btn ghost sm" id="aff-landing-copy">Copiar</button>
+            </div>
+            <div class="hint" style="margin-top:6px">
+              Este link abre la página de presentación con tu código: puedes mandarlo a quien quieras para que primero conozca ZoCo.
+            </div>
+          </div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button class="btn sm" id="aff-wa" style="background:#25D366">WhatsApp</button>
             <button class="btn ghost sm" id="aff-share">Compartir…</button>
@@ -3300,6 +3310,24 @@ export function affiliatesView(ctx) {
   const link = affiliateLink();
   $('#aff-code', root).textContent = code;
   $('#aff-link', root).value = link;
+
+  // Link de la landing con el código de afiliado
+  const landingUrl = location.origin + '/landing?ref=' + encodeURIComponent(code);
+  const landingInput = $('#aff-landing', root);
+  if (landingInput) landingInput.value = landingUrl;
+  const landingCopy = $('#aff-landing-copy', root);
+  if (landingCopy) {
+    landingCopy.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(landingUrl);
+        toast('Link de la landing copiado');
+      } catch {
+        landingInput.select();
+        document.execCommand('copy');
+        toast('Link de la landing copiado');
+      }
+    };
+  }
 
   const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
   const paint = () => {
