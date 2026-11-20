@@ -307,8 +307,8 @@ export function productsView(ctx) {
             ${p.image
               ? `<img src="${p.image}" style="width:34px;height:34px;border-radius:9px;object-fit:cover">`
               : `<div style="width:34px;height:34px;border-radius:9px;background:${p.color};display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">${esc(sectionOf(p).label.slice(0, 2).toUpperCase())}</div>`}
-            <div><div class="t-strong">${esc(p.name)}${p.isDemo ? ` <span class="badge grey" style="font-size:9px">DEMO</span>` : ""}</div>
-            <div style="font-size:11.5px;color:var(--muted)">${esc(p.code)}</div></div>
+            <div><div class="t-strong">${esc(p.name)}${p.isDemo ? ` <span class="badge grey" style="font-size:9px">DEMO</span>` : ""}${p.isBase ? ` <span class="badge" style="font-size:9px">BASE</span>` : ""}</div>
+            <div style="font-size:11.5px;color:var(--muted)">${p.brand ? `<b style="color:var(--brand-700,#C2410C)">${esc(p.brand)}</b> · ` : ''}${esc(p.code)}</div></div>
           </div>
         </td>
         <td>${esc(sectionOf(p).label)}</td>
@@ -350,6 +350,7 @@ export function productsView(ctx) {
       body: `
         <div class="row2">
           <div class="field"><label>Nombre</label><input id="f-name" value="${esc(p?.name || '')}" placeholder="Ej. Nike Air Zoom"></div>
+          <div class="field"><label>Marca (opcional)</label><input id="f-brand" value="${esc(p?.brand || '')}" placeholder="Ej. Coca-Cola"></div>
           <div class="field"><label>Código / SKU</label><input id="f-code" value="${esc(p?.code || '')}" placeholder="AIR-100"></div>
           <div class="field"><label>Color / Variante</label><input id="f-color" value="${esc(p?.color || '')}" placeholder="Negro, Rojo…"></div>
           <div class="field"><label>Sección</label>
@@ -496,6 +497,7 @@ export function productsView(ctx) {
 
     m.root.querySelector('#save').onclick = () => {
       const name = m.root.querySelector('#f-name').value.trim();
+      const marca = (m.root.querySelector('#f-brand')?.value || '').trim();
       const price = Number(m.root.querySelector('#f-price').value) || 0;
       if (!name) { toast('Falta el nombre'); return; }
       if (price <= 0) { toast('Falta el precio'); return; }
@@ -543,7 +545,7 @@ export function productsView(ctx) {
       const extra = {};
       m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
-        id: p?.id, name, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
+        id: p?.id, name, brand: marca, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
         sellBy: m.root.querySelector('#f-unit')?.value || 'pza', colors,
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,

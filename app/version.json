@@ -1,8 +1,9 @@
 {
-    "version":  "2.73.1",
+    "version":  "2.74.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Al cambiar a Abarrotes, \"Cargar ejemplos\" ahora carga los 103 productos con foto (ya no solo 4)",
-                  "El catalogo base quita los productos DEMO viejos"
+                  "Catalogo base con 108 productos de marcas mexicanas (Coca-Cola, Bimbo, Lala, Sabritas, Zote...) y 106 con foto",
+                  "La lista de productos muestra la marca debajo del nombre",
+                  "El editor de producto ya tiene campo Marca"
               ]
 }
