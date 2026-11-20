@@ -196,7 +196,7 @@
 <header>
   <div class="bar">
     <button class="burger" id="burger" aria-label="Menú">☰</button>
-    <div class="logo">Zo<span>Co</span></div>
+    <div class="logo" id="brandLogo">Zo<span>Co</span></div>
     <div class="searchbox">
       <span style="color:var(--muted)">🔍</span>
       <input id="q" placeholder="Buscar productos, marca o modelo…">
@@ -218,7 +218,7 @@
   <div class="hero-in">
     <div>
       <h1>Encuentra tu<br>próximo favorito</h1>
-      <p>Calzado y accesorios para todos los días</p>
+      <p id="heroSub">Calzado y accesorios para todos los días</p>
     </div>
     <div class="hero-art" id="heroArt"></div>
   </div>
@@ -328,7 +328,24 @@ async function load() {
     $('#grid').innerHTML = '<div class="empty">No hay catálogo disponible.<br><small>Configura tu inventario en ZoCo POS.</small></div>';
     return;
   }
-  document.title = (state.company?.name || 'ZoCo') + ' · Catálogo';
+  const tienda = (state.company?.name || 'ZoCo').trim();
+  document.title = tienda + ' · Catálogo';
+  // El nombre de la tienda manda en el catálogo (nada de "ZoCo" fijo)
+  try {
+    const logo = document.getElementById('brandLogo');
+    if (logo && tienda) {
+      const partes = tienda.split(/\s+/);
+      if (partes.length > 1) {
+        logo.innerHTML = partes.slice(0, -1).join(' ') + ' <span>' + partes[partes.length - 1] + '</span>';
+      } else {
+        logo.innerHTML = tienda.length > 3
+          ? tienda.slice(0, -2) + '<span>' + tienda.slice(-2) + '</span>'
+          : tienda;
+      }
+    }
+    const sub = document.getElementById('heroSub');
+    if (sub && tienda) sub.textContent = 'Bienvenido a ' + tienda;
+  } catch {}
   $('#wa-link-top').href = waLink('Hola, vi su catálogo y quiero información');
   $('#wa-top').href = $('#wa-link-top').href;
   $('#wa-mob').href = $('#wa-link-top').href;

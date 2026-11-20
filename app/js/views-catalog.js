@@ -1037,6 +1037,11 @@ export function settingsView(ctx) {
             <label>WhatsApp del catálogo</label>
             <input id="c-wa" value="${esc(state.settings?.whatsapp || state.company?.phone || '')}" placeholder="5215512345678" inputmode="tel">
             <div class="hint">Es el número que recibe los pedidos cuando un cliente da clic en <b>Comprar</b> en tu catálogo. Escríbelo con lada de país (México: <b>52</b> + 10 dígitos). Ej. 5215512345678</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button class="btn sm" id="cat-share" type="button">Compartir catálogo</button>
+              <button class="btn ghost sm" id="cat-open" type="button">Abrir catálogo</button>
+            </div>
+            <div class="hint" id="cat-link-hint" style="margin-top:8px"></div>
           </div>
           <div class="field"><label>Giro del negocio</label>
             <select id="c-mode">
@@ -1491,6 +1496,29 @@ export function settingsView(ctx) {
     document.documentElement.dataset.mode = e.target.checked ? 'dark' : '';
     ctx.persist();
   };
+
+  // ===== Compartir / abrir el catálogo público =====
+  const catLink = () => location.origin + '/catalogo?c=' + encodeURIComponent(state.currentCompany || 'default');
+  const catHint = $('#cat-link-hint', root);
+  if (catHint) catHint.innerHTML = 'Link público: <b>' + esc(catLink()) + '</b>';
+  $('#cat-open', root)?.addEventListener('click', () => window.open(catLink(), '_blank'));
+  $('#cat-share', root)?.addEventListener('click', async () => {
+    const url = catLink();
+    const tienda = state.company?.name || 'mi tienda';
+    const texto = 'Mira el catálogo de ' + tienda;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: texto, text: texto, url });
+        return;
+      }
+    } catch { /* el usuario canceló: seguimos con copiar */ }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('Link del catálogo copiado');
+    } catch {
+      window.prompt('Copia el link del catálogo:', url);
+    }
+  });
 
   $('#save-co', root).onclick = () => {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
