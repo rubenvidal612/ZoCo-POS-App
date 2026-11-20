@@ -95,7 +95,8 @@
   document.getElementById('demo-signup').onclick = () => { location.href = '/?registro=1'; };
   document.getElementById('demo-login').onclick = () => { location.href = '/'; };
 
-  // Arranca la app real en modo demo
+  // Arranca la app real en modo demo, directo en el punto de venta
+  if (!location.hash) location.hash = '#/vender';
   import('./js/app.js');
 </script>
 </body>
