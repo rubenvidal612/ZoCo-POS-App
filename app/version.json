@@ -1,8 +1,7 @@
 {
-    "version":  "2.70.3",
+    "version":  "2.71.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Afiliados: link de la landing con tu codigo y boton de copiar",
-                  "La landing conserva el ?ref= al registrarse"
+                  "Landing: seccion \"Sistema de afiliados\" con pasos, ingreso recurrente y tabla mes a mes"
               ]
 }

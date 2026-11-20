@@ -1,0 +1,55 @@
+<section id="afiliados" class="section bg"><div class="wrap two"><div>
+<span class="tag">Sistema de afiliados</span>
+<h2>Gana mes tras mes, no una sola vez.</h2>
+<p class="lead">No es un pago único por recomendar: cada negocio que refieras y siga activo te deja una <b>comisión recurrente todos los meses</b>. Elige el paquete, mueve los controles y mira cómo se acumula.</p>
+<div class="aff-steps">
+<div class="aff-step"><b>1</b><div><strong>Comparte tu link</strong><span>Con tu código ya incluido: landing o registro directo.</span></div></div>
+<div class="aff-step"><b>2</b><div><strong>El negocio se registra</strong><span>Queda ligado a tu código de forma automática.</span></div></div>
+<div class="aff-step"><b>3</b><div><strong>Cobras cada mes</strong><span>Mientras su plan siga activo, tu comisión se repite.</span></div></div>
+</div>
+<p class="tiny" style="margin-top:16px">El cálculo supone que incorporas la misma cantidad de clientes nuevos cada mes, todos permanecen activos y se mantiene la comisión mensual. No considera bajas, impuestos ni conversiones reales.</p>
+</div><div class="calc">
+<div class="field"><label for="plan">Paquete ZoCo</label><select id="plan"><option value="75">ZoCo Esencial — $199 MXN/mes</option><option value="150" selected>ZoCo Pro — $349 MXN/mes</option><option value="250">ZoCo Empresarial — $599 MXN/mes</option></select></div>
+<div class="field"><div class="row"><label for="clients">Clientes nuevos por mes</label><b id="clientValue">4</b></div><input type="range" min="1" max="100" value="4" id="clients"></div>
+<div class="field"><div class="row"><label for="month">Mes de simulación</label><b id="monthValue">12 / 12</b></div><input type="range" min="1" max="12" value="12" id="month"></div>
+<div class="field"><label for="currency">Moneda para visualizar</label><select id="currency"><option value="MXN">🇲🇽 Pesos mexicanos (MXN)</option><option value="USD">🇺🇸 Dólares (USD)</option></select></div>
+<div class="result"><div><small>Ingreso recurrente del mes</small><strong id="monthly"></strong></div><div><small>Acumulado hasta el mes elegido</small><strong id="total"></strong></div></div>
+<div class="aff-table-box"><div class="aff-table-head">Mes a mes</div><table class="aff-table"><thead><tr><th>Mes</th><th>Activos</th><th>De ese mes</th><th>Acumulado</th></tr></thead><tbody id="aff-table-body"></tbody></table></div>
+<p class="tiny" id="exchangeNote" style="margin-top:17px">Los importes de los planes y comisiones están establecidos en MXN.</p>
+<p class="tiny">Durante la beta gratuita no se generan comisiones pagaderas.</p>
+</div></div>
+<style>
+  .aff-steps{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+  .aff-step{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px}
+  .aff-step>b{flex:none;width:26px;height:26px;border-radius:999px;background:#F97316;color:#fff;display:grid;place-items:center;font-size:13px}
+  .aff-step strong{display:block;font-size:14.5px}
+  .aff-step span{display:block;font-size:12.5px;color:#64748B;line-height:1.45;margin-top:2px}
+  .aff-table-box{margin-top:18px;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;background:#fff}
+  .aff-table-head{font-size:11px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:#64748B;padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#F8FAFC}
+  .aff-table{width:100%;border-collapse:collapse;font-size:13px}
+  .aff-table th{text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#94A3B8;padding:8px 12px;border-bottom:1px solid #E2E8F0}
+  .aff-table th:first-child,.aff-table td:first-child{text-align:left}
+  .aff-table td{padding:7px 12px;text-align:right;border-bottom:1px solid #F1F5F9;font-variant-numeric:tabular-nums}
+  .aff-table tr:last-child td{border-bottom:0}
+  .aff-table tr.is-now td{background:#FFF7ED;font-weight:800;color:#9A3412}
+  .aff-table .up{color:#059669;font-weight:700}
+</style>
+<script>
+(function(){
+  var plan=document.getElementById('plan'),cli=document.getElementById('clients'),mon=document.getElementById('month'),cur=document.getElementById('currency'),body=document.getElementById('aff-table-body');
+  if(!plan||!body) return;
+  var RATE=18;
+  function fmt(n){return new Intl.NumberFormat('es-MX',{style:'currency',currency:cur.value,maximumFractionDigits:cur.value==='MXN'?0:2}).format(cur.value==='USD'?n/RATE:n)}
+  function paint(){
+    var c=+cli.value, m=+mon.value, com=+plan.value, rows='', acum=0;
+    for(var i=1;i<=m;i++){
+      var activos=c*i, mes=activos*com; acum+=mes;
+      rows+='<tr'+(i===m?' class="is-now"':'')+'><td>Mes '+i+'</td><td>'+activos+'</td><td>'+fmt(mes)+'</td><td class="up">'+fmt(acum)+'</td></tr>';
+    }
+    body.innerHTML=rows;
+  }
+  [plan,cli,mon,cur].forEach(function(el){el.addEventListener('input',paint);el.addEventListener('change',paint);});
+  paint();
+})();
+</script>
+</section>
