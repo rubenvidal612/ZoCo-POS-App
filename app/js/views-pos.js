@@ -273,7 +273,10 @@ export function posView(ctx) {
           ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
           ${inCart ? `<b class="sq-badge">${inCart}</b>` : ''}
         </div>
-        <div class="sq-price">${money(p.price)}</div>
+        <div class="sq-price">${p.discount?.on && Number(p.discount.value) > 0
+          ? '<s style="opacity:.55;font-size:11px">' + money(p.price) + '</s> ' + money(Math.max(0, p.discount.type === 'amount' ? p.price - p.discount.value : p.price - (p.price * p.discount.value) / 100))
+            + ' <span style="background:#DC2626;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:999px">' + (p.discount.type === 'amount' ? ('-' + '$' + p.discount.value) : (p.discount.value + '%')) + '</span>'
+          : money(p.price)}</div>
         <div class="sq-name">${esc(p.name)}</div>
         ${avail.length ? '' : '<div class="sq-out">AGOTADO</div>'}
       </button>`;

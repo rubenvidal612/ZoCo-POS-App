@@ -1,8 +1,9 @@
 {
-    "version":  "2.75.1",
+    "version":  "2.76.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Catalogos base de FARMACIA (99) y PAPELERIA (98) con marcas mexicanas e ilustracion por producto",
-                  "El boton de catalogo base carga el que corresponde a tu giro"
+                  "Editar producto: la foto sale al inicio del formulario (con boton Quitar)",
+                  "Descuento por producto: porcentaje o monto, con precio final a la vista",
+                  "El descuento se ve en la lista y en las tarjetas del punto de venta, y se aplica al cobrar"
               ]
 }

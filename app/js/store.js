@@ -1301,6 +1301,23 @@ export function transferStock(productId, size, fromId, toId, qty, note) {
 
 /* ================= Carrito ================= */
 export function makeCart() { return { lines: [], discount: 0, coupon: null }; }
+/** Precio de venta con el descuento del producto aplicado. */
+export function salePriceOf(p) {
+  const base = Number(p?.price) || 0;
+  const d = p?.discount;
+  if (!d || !d.on) return base;
+  const v = Number(d.value) || 0;
+  if (v <= 0) return base;
+  const out = d.type === 'amount' ? base - v : base - (base * v) / 100;
+  return round2(Math.max(0, out));
+}
+
+/** Texto corto del descuento: "-20%" o "-$50". */
+export function discountLabel(p) {
+  const d = p?.discount;
+  if (!d || !d.on || !(Number(d.value) > 0)) return '';
+  return d.type === 'amount' ? '-$' + (Number(d.value) || 0) : '-' + (Number(d.value) || 0) + '%';
+}
 export function cartTotals(cart) {
   const subtotal = cart.lines.reduce((a, l) => a + l.price * l.qty, 0);
   const discount = Math.min(cart.discount || 0, subtotal);
@@ -1324,7 +1341,7 @@ export function addLine(cart, product, size, qty = 1, color = '') {
   if (round3(available) + 1e-9 < amount) {
     return { ok: false, msg: 'Sin stock suficiente (quedan ' + fmtQty(available, unit) + ')' };
   }
-  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), vkey, price: product.price, qty: round3(amount), unit, color: color || product.color, colorVariant: (product.colors || []).length ? color : '' });
+  cart.lines.push({ key, productId: product.id, name: product.name, size: fmtSize(size), vkey, price: salePriceOf(product), qty: round3(amount), unit, color: color || product.color, colorVariant: (product.colors || []).length ? color : '' });
   return { ok: true };
 }
 

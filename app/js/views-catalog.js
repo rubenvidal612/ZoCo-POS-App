@@ -314,7 +314,13 @@ export function productsView(ctx) {
         <td>${esc(sectionOf(p).label)}</td>
         <td>${withStock}/${sizes.length}</td>
         <td class="mono"><span class="zoco-stock-pill">${totalStock(p)}</span></td>
-        <td class="mono t-strong">${Number(p.price) > 0 ? money(p.price) : '<span class="badge grey">Pendiente</span>'}</td>
+        <td class="mono t-strong">${Number(p.price) > 0
+          ? (p.discount?.on && Number(p.discount.value) > 0
+            ? '<div style="font-size:10.5px;color:var(--muted);text-decoration:line-through">' + money(p.price) + '</div>'
+              + '<div>' + money(Math.max(0, p.discount.type === 'amount' ? p.price - p.discount.value : p.price - (p.price * p.discount.value) / 100)) + '</div>'
+              + '<span class="badge" style="font-size:9px;background:#FEE2E2;color:#991B1B">' + (p.discount.type === 'amount' ? ('-' + '$' + p.discount.value) : (p.discount.value + '%')) + '</span>'
+            : money(p.price))
+          : '<span class="badge grey">Pendiente</span>'}</td>
         <td>${p.catalog ? '<span class="badge ok">Sí</span>' : '<span class="badge grey">No</span>'}</td>
         <td class="zoco-products-actions">
           <button class="btn ghost sm" data-kdx="${p.id}" style="height:30px" title="Kardex">📋</button>
@@ -348,6 +354,21 @@ export function productsView(ctx) {
       wide: true,
       title: p ? 'Editar producto' : 'Nuevo producto',
       body: `
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+          <div id="f-img-prev" style="width:118px;height:118px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2,#F1F5F9);display:grid;place-items:center;overflow:hidden;flex-shrink:0">
+            ${p?.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:30px;color:var(--muted)">📷</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:8px">FOTO DEL PRODUCTO</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <label class="btn ghost sm" style="cursor:pointer;margin:0">Subir foto
+                <input id="f-img" type="file" accept="image/*" style="display:none">
+              </label>
+              ${p?.image ? '<button type="button" class="btn ghost sm" id="f-img-del">Quitar</button>' : ''}
+            </div>
+            <div class="hint" style="margin-top:8px">Se comprime automáticamente (máx 1200px).</div>
+          </div>
+        </div>
         <div class="row2">
           <div class="field"><label>Nombre</label><input id="f-name" value="${esc(p?.name || '')}" placeholder="Ej. Nike Air Zoom"></div>
           <div class="field"><label>Marca (opcional)</label><input id="f-brand" value="${esc(p?.brand || '')}" placeholder="Ej. Coca-Cola"></div>
@@ -360,6 +381,20 @@ export function productsView(ctx) {
             <div class="hint" style="margin-top:4px">Pieza = normal · kg/L/ml/m = venta a granel</div></div>
           <div class="field"><label>Precio de venta</label><input id="f-price" type="number" step="0.01" value="${p?.price ?? ''}" placeholder="0.00"></div>
           <div class="field"><label>Costo</label><input id="f-cost" type="number" step="0.01" value="${p?.cost ?? ''}" placeholder="0.00"></div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Descuento</label>
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:700;margin-bottom:8px">
+              <input type="checkbox" id="f-disc-on" ${p?.discount?.on ? 'checked' : ''}> Este producto tiene descuento
+            </label>
+            <div id="f-disc-box" style="display:${p?.discount?.on ? 'flex' : 'none'};gap:8px;align-items:center">
+              <select id="f-disc-type" style="flex:1">
+                <option value="percent" ${(p?.discount?.type || 'percent') === 'percent' ? 'selected' : ''}>Porcentaje (%)</option>
+                <option value="amount" ${p?.discount?.type === 'amount' ? 'selected' : ''}>Monto en pesos ($)</option>
+              </select>
+              <input id="f-disc-val" type="number" min="0" step="0.01" style="width:120px" value="${p?.discount?.value ?? ''}" placeholder="0">
+            </div>
+            <div class="hint" id="f-disc-prev" style="margin-top:8px"></div>
+          </div>
           <div class="field"><label>Visible en catálogo</label>
             <select id="f-cat"><option value="1" ${p?.catalog !== false ? 'selected' : ''}>Sí</option><option value="0" ${p?.catalog === false ? 'selected' : ''}>No</option></select></div>
         </div>
@@ -375,11 +410,6 @@ export function productsView(ctx) {
               </div>`).join('')}
           </div>
         </div>` : ''}
-        <div class="field"><label>Foto del producto</label>
-          <input id="f-img" type="file" accept="image/*">
-          <div id="f-img-prev" style="margin-top:8px">${p?.image ? `<img src="${p.image}" style="width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">` : ''}</div>
-          <div class="hint">Se comprime automáticamente al subir (máx 1200px).</div>
-        </div>
         ${state.company.mode === 'perfumeria' ? (() => {
           const opts = (sec) => state.products.filter((x) => x.section === sec && x.id !== p?.id);
           const sel = (id, list, cur) => `<select id="${id}"><option value="">— ninguno —</option>${list.map((x) => `<option value="${x.id}" ${cur === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>`;
@@ -484,7 +514,38 @@ export function productsView(ctx) {
     };
 
     let pendingImage = p?.image || null;
-    m.root.querySelector('#f-img').onchange = async (e) => {
+    // ===== Descuento del producto =====
+  const discOn = m.root.querySelector('#f-disc-on');
+  const discBox = m.root.querySelector('#f-disc-box');
+  const discType = m.root.querySelector('#f-disc-type');
+  const discVal = m.root.querySelector('#f-disc-val');
+  const discPrev = m.root.querySelector('#f-disc-prev');
+  const pintarDescuento = () => {
+    if (!discOn) return;
+    if (discBox) discBox.style.display = discOn.checked ? 'flex' : 'none';
+    if (!discPrev) return;
+    const base = Number(m.root.querySelector('#f-price').value) || 0;
+    if (!discOn.checked) { discPrev.textContent = ''; return; }
+    const v = Number(discVal.value) || 0;
+    if (v <= 0) { discPrev.textContent = 'Escribe cuánto descuento quieres aplicar.'; return; }
+    const fin = discType.value === 'amount' ? base - v : base - (base * v) / 100;
+    discPrev.innerHTML = 'Precio normal <s>' + money(base) + '</s> → se vende en <b style="color:var(--brand-700,#C2410C)">' + money(Math.max(0, fin)) + '</b>';
+  };
+  if (discOn) {
+    discOn.onchange = pintarDescuento;
+    discType.onchange = pintarDescuento;
+    discVal.oninput = pintarDescuento;
+    m.root.querySelector('#f-price').oninput = pintarDescuento;
+    pintarDescuento();
+  }
+  m.root.querySelector('#f-img-del')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    pendingImage = '';
+    m.root.querySelector('#f-img-prev').innerHTML = '<span style="font-size:30px;color:var(--muted)">📷</span>';
+    ev.target.closest('button')?.remove();
+  });
+
+  m.root.querySelector('#f-img').onchange = async (e) => {
       const f = e.target.files[0];
       if (!f) return;
       try {
@@ -546,6 +607,11 @@ export function productsView(ctx) {
       m.root.querySelectorAll('[data-cf]').forEach((inp) => { extra[inp.dataset.cf] = inp.value.trim(); });
       upsertProduct({
         id: p?.id, name, brand: marca, price, image: pendingImage, extra, porMl, recipe, prepararAlVender,
+        discount: {
+          on: !!(m.root.querySelector('#f-disc-on')?.checked),
+          type: m.root.querySelector('#f-disc-type')?.value || 'percent',
+          value: Math.max(0, Number(m.root.querySelector('#f-disc-val')?.value) || 0),
+        },
         sellBy: m.root.querySelector('#f-unit')?.value || 'pza', colors,
         code: m.root.querySelector('#f-code').value.trim() || name.slice(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 900 + 100),
         color: m.root.querySelector('#f-color').value.trim() || p?.color,
@@ -2565,6 +2631,21 @@ export function usersView() {
     const m = modal({
       title: u ? 'Editar usuario' : 'Nuevo usuario',
       body: `
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+          <div id="f-img-prev" style="width:118px;height:118px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2,#F1F5F9);display:grid;place-items:center;overflow:hidden;flex-shrink:0">
+            ${p?.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:30px;color:var(--muted)">📷</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:8px">FOTO DEL PRODUCTO</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <label class="btn ghost sm" style="cursor:pointer;margin:0">Subir foto
+                <input id="f-img" type="file" accept="image/*" style="display:none">
+              </label>
+              ${p?.image ? '<button type="button" class="btn ghost sm" id="f-img-del">Quitar</button>' : ''}
+            </div>
+            <div class="hint" style="margin-top:8px">Se comprime automáticamente (máx 1200px).</div>
+          </div>
+        </div>
         <div class="row2">
           <div class="field"><label>Nombre</label><input id="u-n" value="${esc(u?.name || '')}"></div>
           <div class="field"><label>Correo</label><input id="u-e" type="email" value="${esc(u?.email || '')}"></div>
