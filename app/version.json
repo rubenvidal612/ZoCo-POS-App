@@ -1,9 +1,7 @@
 {
-    "version":  "2.70.0",
+    "version":  "2.70.1",
     "date":  "2026-11-10",
     "notes":  [
-                  "Landing: capturas reales de venta, compras y agente",
-                  "Landing: franja de 14 giros y preguntas frecuentes",
-                  "Landing: bloque beta con CTA y barra fija de demo en movil"
+                  "Celular: ya no se recarga la app al jalar hacia abajo sin querer"
               ]
 }
