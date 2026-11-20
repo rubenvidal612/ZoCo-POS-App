@@ -1,7 +1,7 @@
 {
-    "version":  "2.72.3",
+    "version":  "2.73.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Se quito el bloqueo de gestos que impedia hacer scroll en algunos telefonos"
+                  "Catalogo base de abarrotes: 103 productos tipicos con foto y codigo de barras (Productos \u003e Catalogo base)"
               ]
 }

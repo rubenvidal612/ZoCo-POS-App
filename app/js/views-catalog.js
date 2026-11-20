@@ -44,6 +44,7 @@ export function productsView(ctx) {
             <input id="pq" placeholder="Artículo, código o talla…"><span class="k">F3</span></div>
           <div class="ph-tools">
             <button class="btn ghost sm" id="px-photos" title="Buscar fotos faltantes en bases abiertas">📷 Traer fotos</button>
+            <button class="btn sm" id="cat-base" title="Productos típicos de abarrotes con foto">🛒 Catálogo base (100)</button>
             <button class="btn ghost sm" id="imp">⬆ Importar</button>
             <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
             <button class="btn ghost sm" id="adj">↺ Merma</button>
@@ -599,6 +600,58 @@ export function productsView(ctx) {
   };
   const expBtn = root.querySelector('#exp');
   if (expBtn) expBtn.onclick = () => { const n = exportProducts(); toast(n + ' productos exportados a Excel'); };
+  // ===== Cargar catálogo base del giro (productos típicos con foto) =====
+  const catBaseBtn = root.querySelector('#cat-base');
+  if (catBaseBtn) {
+    catBaseBtn.onclick = async () => {
+      const { CATALOGO_ABARROTES } = await import('./catalog-abarrotes.js');
+      const lista = CATALOGO_ABARROTES || [];
+      if (!lista.length) { toast('El catálogo base no está disponible'); return; }
+      const ok = await confirmDialog({
+        title: 'Catálogo base de abarrotes',
+        message: `Se agregarán ${lista.length} productos típicos con nombre, código y foto. Tú solo pones precios y existencias. Los productos que ya tengas con el mismo código se actualizan.`,
+        okText: 'Agregar ' + lista.length,
+      });
+      if (!ok) return;
+      const branchId = state.currentBranch || (state.branches[0] || {}).id;
+      const porCodigo = new Map();
+      (state.products || []).forEach((p) => { const k = String(p.code || '').trim().toLowerCase(); if (k) porCodigo.set(k, p); });
+      let nuevos = 0; let actualizados = 0;
+      lista.forEach((it, i) => {
+        const clave = String(it.code || '').trim().toLowerCase();
+        const existe = clave ? porCodigo.get(clave) : null;
+        if (existe) {
+          if (it.image && !existe.image) existe.image = it.image;
+          actualizados += 1;
+          return;
+        }
+        const sizes = sizesFor(it.section);
+        const stock = {};
+        sizes.forEach((s) => { stock[fmtSize(s)] = 0; });
+        const p = {
+          id: 'base' + Date.now() + i,
+          name: it.name,
+          code: it.code || ('BASE-' + (i + 1)),
+          brand: it.brand || '',
+          price: 0,
+          cost: 0,
+          section: it.section,
+          colors: [],
+          image: it.image || '',
+          active: true,
+          catalog: true,
+          isBase: true,
+          branchStock: branchId ? { [branchId]: stock } : {},
+        };
+        state.products.push(p);
+        if (clave) porCodigo.set(clave, p);
+        nuevos += 1;
+      });
+      emit();
+      render();
+      toast(nuevos + ' productos agregados' + (actualizados ? ' · ' + actualizados + ' ya existían' : '') + ' · ponles precio');
+    };
+  }
   const impBtn = root.querySelector('#imp');
   if (impBtn) impBtn.onclick = () => openImportModal(() => { emit(); render(); });
 
