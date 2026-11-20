@@ -606,11 +606,16 @@ export function productsView(ctx) {
   const catBaseBtn = root.querySelector('#cat-base');
   if (catBaseBtn) {
     catBaseBtn.onclick = async () => {
-      const { CATALOGO_ABARROTES } = await import('./catalog-abarrotes.js');
-      const lista = CATALOGO_ABARROTES || [];
+      const giro = state.company.mode;
+      let lista = [];
+      try {
+        if (giro === 'farmacia') lista = (await import('./catalog-farmacia.js')).CATALOGO_FARMACIA || [];
+        else if (giro === 'papeleria') lista = (await import('./catalog-papeleria.js')).CATALOGO_PAPELERIA || [];
+        else lista = (await import('./catalog-abarrotes.js')).CATALOGO_ABARROTES || [];
+      } catch { lista = []; }
       if (!lista.length) { toast('El catálogo base no está disponible'); return; }
       const ok = await confirmDialog({
-        title: 'Catálogo base de abarrotes',
+        title: 'Catálogo base de ' + (state.company.mode === 'farmacia' ? 'farmacia' : state.company.mode === 'papeleria' ? 'papelería' : 'abarrotes'),
         message: `Se agregarán ${lista.length} productos típicos con nombre, código y foto. Tú solo pones precios y existencias. Los productos que ya tengas con el mismo código se actualizan.`,
         okText: 'Agregar ' + lista.length,
       });
@@ -1581,12 +1586,16 @@ export function settingsView(ctx) {
       });
       m.root.querySelector('#demo-load').onclick = async () => {
         // Para abarrotes se carga el catálogo base completo (103 con foto)
-        if (mode === 'abarrotes') {
+        if (mode === 'abarrotes' || mode === 'farmacia' || mode === 'papeleria') {
           try {
-            const { CATALOGO_ABARROTES } = await import('./catalog-abarrotes.js');
-            const r = addBaseCatalog(CATALOGO_ABARROTES, { removeDemo: true });
+            const lista = mode === 'farmacia'
+              ? (await import('./catalog-farmacia.js')).CATALOGO_FARMACIA
+              : mode === 'papeleria'
+                ? (await import('./catalog-papeleria.js')).CATALOGO_PAPELERIA
+                : (await import('./catalog-abarrotes.js')).CATALOGO_ABARROTES;
+            const r = addBaseCatalog(lista, { removeDemo: true });
             m.close();
-            toast(r.nuevos + ' productos de abarrotes cargados (con foto) · ponles precio');
+            toast(r.nuevos + ' productos cargados · ponles precio');
             ctx.refreshShell?.();
             location.hash = '#/productos';
             return;

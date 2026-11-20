@@ -1,9 +1,8 @@
 {
-    "version":  "2.74.0",
+    "version":  "2.75.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Catalogo base con 108 productos de marcas mexicanas (Coca-Cola, Bimbo, Lala, Sabritas, Zote...) y 106 con foto",
-                  "La lista de productos muestra la marca debajo del nombre",
-                  "El editor de producto ya tiene campo Marca"
+                  "Catalogos base de FARMACIA (99) y PAPELERIA (98) con marcas mexicanas e ilustracion por producto",
+                  "El boton de catalogo base carga el que corresponde a tu giro"
               ]
 }
