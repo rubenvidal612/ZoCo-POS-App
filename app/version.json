@@ -1,8 +1,8 @@
 {
-    "version":  "2.69.0",
+    "version":  "2.69.1",
     "date":  "2026-11-10",
     "notes":  [
                   "Demo con Compras (proveedores, ordenes parciales y por pagar) y Agente IA funcionando",
-                  "Landing: nueva seccion \"Pruébalo sin registrarte\" con accesos directos al demo"
+                  "Landing: nueva seccion \"PruÃ©balo sin registrarte\" con accesos directos al demo"
               ]
 }
