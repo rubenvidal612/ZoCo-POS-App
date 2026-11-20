@@ -1,8 +1,9 @@
 {
-    "version":  "2.69.1",
+    "version":  "2.70.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Demo con Compras (proveedores, ordenes parciales y por pagar) y Agente IA funcionando",
-                  "Landing: nueva seccion \"PruÃ©balo sin registrarte\" con accesos directos al demo"
+                  "Landing: capturas reales de venta, compras y agente",
+                  "Landing: franja de 14 giros y preguntas frecuentes",
+                  "Landing: bloque beta con CTA y barra fija de demo en movil"
               ]
 }
