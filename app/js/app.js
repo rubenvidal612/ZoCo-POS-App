@@ -1,5 +1,5 @@
 // Shell + router + login de ZoCo POS
-import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession } from './store.js';
+import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
 import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
@@ -15,7 +15,7 @@ import { loadDemoForMode } from './store.js';
 import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth, claimInvites } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
-import { toast, $, el, money, esc } from './ui.js';
+import { toast, $, el, money, esc, modal } from './ui.js';
 
 // Aviso persistente del último intento de Google (se pinta en el login)
 let oauthNotice = '';
@@ -69,6 +69,7 @@ const ctx = {
   go(route, params) { if (params?.create) pendingCreate = true; location.hash = '#/' + route; },
   persist: () => emit(),
   refreshShell: () => paintShell(),
+  switchBranch,
 };
 
 let route = (location.hash.replace('#/', '') || 'inicio');
@@ -358,7 +359,7 @@ function paintShell() {
             ${isHome ? `<div class="tb-sub">Hola, ${u.name.split(' ')[0]} 👋</div>` : ''}
           </div>
           <div class="spacer"></div>
-          <div class="chip-branch" id="brnch"><span class="dot"></span>${br.name} ▾</div>
+          ${u.role === 'OWNER' ? `<button type="button" class="chip-branch" id="brnch"><span class="dot"></span>${esc(br.name)} ▾</button>` : `<div class="chip-branch"><span class="dot"></span>${esc(br.name)}</div>`}
           <div class="avatar">${initials}<span class="av-dot"></span></div>
         </header>
         <main class="content" id="content"></main>
@@ -390,7 +391,7 @@ function paintShell() {
     shellEl.classList.remove('mob-open');
     location.hash = '#/' + b.dataset.r;
   });
-  $('#brnch').onclick = switchBranch;
+  $('#brnch')?.addEventListener('click', switchBranch);
   // Versión discreta dentro de la app
   (() => {
     const badge = app.querySelector('#app-ver');
@@ -422,36 +423,34 @@ function paintShell() {
 }
 
 function switchBranch() {
-  if (!can('settings.edit') && !can('*')) { toast('No tienes permiso para cambiar de sucursal'); return; }
-  const others = state.branches.filter((b) => b.id !== state.currentBranch);
-  const m = document.createElement('div');
-  m.className = 'overlay';
-  m.innerHTML = `<div class="modal" style="width:420px;max-width:100%">
-      <div class="modal-head"><h3>Cambiar sucursal</h3><button class="icon-btn" data-close>✕</button></div>
-      <div class="modal-body">
-        <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Selecciona la sucursal. Se pedirá tu contraseña para confirmar.</div>
-        ${others.map((b, i) => `<button class="btn ghost sm" style="width:100%;justify-content:flex-start;margin-bottom:8px;${i === 0 ? 'border-color:var(--brand)' : ''}" data-b="${b.id}">🏬 ${b.name}</button>`).join('')}
-        <div class="field" style="margin-top:14px"><label>Contraseña</label><input type="password" id="pw" placeholder="••••"></div>
-      </div>
-      <div class="modal-foot"><button class="btn ghost sm" data-close>Cancelar</button>
-        <button class="btn sm" id="ok">Cambiar</button></div>
-    </div>`;
-  document.getElementById('modal-root').appendChild(m);
-  m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-close]')) m.remove(); });
-  let chosen = others[0]?.id;
-  m.querySelectorAll('[data-b]').forEach((b) => b.onclick = () => {
-    chosen = b.dataset.b;
-    m.querySelectorAll('[data-b]').forEach((x) => x.style.borderColor = 'var(--line)');
-    b.style.borderColor = 'var(--brand)';
+  if (currentUser()?.role !== 'OWNER') return;
+  if (cart.lines.length) {
+    toast('Termina o vacía la venta en curso antes de cambiar de sucursal');
+    return;
+  }
+
+  const branches = state.branches.filter((branch) => branch.id !== state.currentBranch);
+  const picker = modal({
+    title: 'Cambiar sucursal',
+    body: branches.length
+      ? `<div class="branch-picker">${branches.map((branch, index) =>
+        `<button type="button" class="btn ghost" data-branch-index="${index}">${esc(branch.name)}</button>`).join('')}</div>`
+      : '<p>No hay otras sucursales disponibles.</p>',
   });
-  m.querySelector('#ok').onclick = () => {
-    const pw = m.querySelector('#pw').value;
-    const u = currentUser();
-    if (u.pass !== pw && u.role !== 'OWNER') { toast('Contraseña incorrecta'); return; }
-    if (!pw) { toast('Escribe tu contraseña'); return; }
-    state.currentBranch = chosen; emit(); m.remove(); paintShell();
-    toast('Sucursal: ' + state.branches.find((b) => b.id === chosen).name);
-  };
+
+  picker.body.querySelectorAll('[data-branch-index]').forEach((button) => {
+    button.onclick = () => {
+      const selected = branches[Number(button.dataset.branchIndex)];
+      if (currentUser()?.role !== 'OWNER' || !state.branches.some((branch) => branch.id === selected.id)) {
+        picker.close();
+        return;
+      }
+      picker.close();
+      setBranch(selected.id);
+      paintShell();
+      toast('Sucursal: ' + selected.name);
+    };
+  });
 }
 
 function soonView(name) {

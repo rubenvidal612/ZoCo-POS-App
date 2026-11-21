@@ -1,6 +1,6 @@
 // Vista Inicio (home) — estilo ZoCo Classic
 import { el, money, esc, modal, toast } from './ui.js';
-import { state, totalStock, cashBreakdown, openRegister } from './store.js';
+import { state, totalStock, cashBreakdown, openRegister, branch, currentUser } from './store.js';
 import { openCutZ } from './views-inventory.js';
 
 const spark = (color) => `  <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
@@ -27,6 +27,8 @@ export function homeView(ctx) {
   const matchTab = (s) => tab === 'global' ? true : tab === 'fiscal' ? isCard(s) : !isCard(s);
 
   function render() {
+    const activeBranch = branch();
+    const isOwner = currentUser()?.role === 'OWNER';
     const now = new Date();
     const isToday = (d) => new Date(d).toDateString() === now.toDateString();
     const done = state.sales.filter((s) => s.status === 'done' && matchTab(s));
@@ -56,6 +58,7 @@ export function homeView(ctx) {
     root.classList.toggle('home-theme-original', mobileTheme !== 'visual');
     root.innerHTML = `
       <div class="home-theme-control">
+        ${isOwner && activeBranch ? `<button type="button" class="home-theme-toggle home-branch-toggle" id="home-branch-toggle" aria-haspopup="dialog" aria-label="Cambiar sucursal, actual: ${esc(activeBranch.name)}">Sucursal <span>${esc(activeBranch.name)}</span> <span aria-hidden="true">▾</span></button>` : ''}
         <button type="button" class="home-theme-toggle" id="home-theme-toggle" aria-expanded="false" aria-label="Cambiar estilo de Inicio">◉ <span>Estilo</span></button>
         <div class="home-theme-menu" id="home-theme-menu" hidden>
           <button type="button" data-home-theme="original" class="${mobileTheme === 'original' ? 'selected' : ''}">Original</button>
@@ -182,6 +185,7 @@ export function homeView(ctx) {
         </div>
       </div>`;
 
+    root.querySelector('#home-branch-toggle')?.addEventListener('click', ctx.switchBranch);
     root.querySelector('#home-theme-toggle').onclick = () => {
       const menu = root.querySelector('#home-theme-menu');
       menu.hidden = !menu.hidden;

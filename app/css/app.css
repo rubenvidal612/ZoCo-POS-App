@@ -1681,3 +1681,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:poi
 /* ===== Evitar el "jalar hacia abajo para recargar" en celular ===== */
 html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .shell, .main, .content, .view { overscroll-behavior-y: contain; }
+.home-theme-control{gap:8px}
+.home-theme-toggle.home-branch-toggle{display:inline-flex;align-items:center;gap:6px;min-width:0;min-height:44px;text-align:left}
+.home-branch-toggle span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.branch-picker{display:grid;gap:8px}
+.branch-picker .btn{justify-content:flex-start;text-align:left;white-space:normal}
