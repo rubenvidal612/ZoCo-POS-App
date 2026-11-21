@@ -106,6 +106,19 @@ export function homeView(ctx) {
         <button class="btn ghost" id="go-quick-customer">♙ Nuevo Cliente</button>
         <button class="btn ghost" id="go-quick-report">▥ Ver Reportes</button>
       </div>
+      ${isOwner && state.branches.length ? `
+      <section class="panel home-branch-sales" aria-labelledby="home-branch-sales-title">
+        <div class="panel-head"><h2 id="home-branch-sales-title">Ventas de hoy por sucursal</h2></div>
+        <ul class="home-branch-sales-list">
+          ${state.branches.map((branch) => {
+            const sales = todays.filter((sale) => sale.branchId === branch.id);
+            return `<li>
+              <div><h3>${esc(branch.name)}</h3><span>${sales.length} ${sales.length === 1 ? 'venta' : 'ventas'}</span></div>
+              <strong>${money(sum(sales))}</strong>
+            </li>`;
+          }).join('')}
+        </ul>
+      </section>` : ''}
       <div class="home-overview">
         <div class="panel home-payables"><div class="panel-head"><h2>Cuentas por pagar</h2><span class="badge grey">$0.00</span></div><p>Saldo actual considerando altas de stock, ventas y pagos.</p></div>
         <div class="home-kpi green"><span class="home-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="19" cy="20" r="1.5"/><path d="M2 3h3l3 13h12l2-9H6"/></svg></span><div class="home-kpi-text"><b>${todays.length}</b><span>Ventas Hoy</span></div></div>

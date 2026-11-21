@@ -438,6 +438,7 @@ function switchBranch() {
       : '<p>No hay otras sucursales disponibles.</p>',
   });
 
+  picker.root.classList.add('branch-picker-overlay');
   picker.body.querySelectorAll('[data-branch-index]').forEach((button) => {
     button.onclick = () => {
       const selected = branches[Number(button.dataset.branchIndex)];

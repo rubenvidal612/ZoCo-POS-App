@@ -1686,3 +1686,12 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .home-branch-toggle span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .branch-picker{display:grid;gap:8px}
 .branch-picker .btn{justify-content:flex-start;text-align:left;white-space:normal}
+
+.overlay.branch-picker-overlay{align-items:center;padding:16px}
+.branch-picker-overlay .modal{width:min(100%,420px);max-height:85vh;border-radius:18px}
+.home-branch-sales-list{list-style:none;margin:0;padding:0 14px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
+.home-branch-sales-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:14px;background:linear-gradient(135deg,#131c2e,#173266);color:#fff}
+.home-branch-sales-list h3{margin:0;font-size:14px;overflow-wrap:anywhere}
+.home-branch-sales-list span{color:#cbd9ef;font-size:12px}
+.home-branch-sales-list strong{font-size:clamp(15px,4vw,22px);white-space:nowrap;font-variant-numeric:tabular-nums}
+.home-theme-visual .home-branch-sales{order:4}
