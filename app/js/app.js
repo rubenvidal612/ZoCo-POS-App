@@ -66,7 +66,7 @@ const ctx = {
   cart,
   customer: '',
   customerId: null,
-  go(route, params) { if (params?.create) pendingCreate = true; location.hash = '#/' + route; },
+  go(route, params) { if (params?.create) pendingCreate = params.productDraft || {}; location.hash = '#/' + route; },
   persist: () => emit(),
   refreshShell: () => paintShell(),
   switchBranch,
@@ -481,7 +481,11 @@ function mount() {
     vender: guard('sales.sell', () => posView(ctx)),
     productos: guard('products.edit', () => {
       const v = productsView(ctx);
-      if (pendingCreate) { pendingCreate = false; setTimeout(() => v.openCreate(), 60); }
+      if (pendingCreate) {
+        const draft = pendingCreate;
+        pendingCreate = false;
+        setTimeout(() => v.openCreate(draft), 60);
+      }
       return v;
     }),
     ventas: () => salesView(ctx),

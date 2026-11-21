@@ -344,7 +344,7 @@ export function productsView(ctx) {
     });
   }
 
-  function editProduct(id) {
+  function editProduct(id, draft = {}) {
     const p = id ? state.products.find((x) => x.id === id) : null;
     const secs = sectionsForMode();
     const section = p?.section || secs[0][0];
@@ -370,7 +370,7 @@ export function productsView(ctx) {
           </div>
         </div>
         <div class="row2">
-          <div class="field"><label>Nombre</label><input id="f-name" value="${esc(p?.name || '')}" placeholder="Ej. Nike Air Zoom"></div>
+          <div class="field"><label>Nombre</label><input id="f-name" value="${esc(p?.name ?? draft.name ?? '')}" placeholder="Ej. Nike Air Zoom"></div>
           <div class="field"><label>Marca (opcional)</label><input id="f-brand" value="${esc(p?.brand || '')}" placeholder="Ej. Coca-Cola"></div>
           <div class="field"><label>Código / SKU</label><input id="f-code" value="${esc(p?.code || '')}" placeholder="AIR-100"></div>
           <div class="field"><label>Color / Variante</label><input id="f-color" value="${esc(p?.color || '')}" placeholder="Negro, Rojo…"></div>
@@ -379,7 +379,7 @@ export function productsView(ctx) {
           <div class="field"><label>Se vende por</label>
             <select id="f-unit">${Object.entries(UNITS).map(([k, u]) => `<option value="${k}" ${(p?.sellBy || 'pza') === k ? 'selected' : ''}>${esc(u.label)}${k !== 'pza' ? ' (' + u.short + ')' : ''}</option>`).join('')}</select>
             <div class="hint" style="margin-top:4px">Pieza = normal · kg/L/ml/m = venta a granel</div></div>
-          <div class="field"><label>Precio de venta</label><input id="f-price" type="number" step="0.01" value="${p?.price ?? ''}" placeholder="0.00"></div>
+          <div class="field"><label>Precio de venta</label><input id="f-price" type="number" step="0.01" value="${esc(p?.price ?? draft.price ?? '')}" placeholder="0.00"></div>
           <div class="field"><label>Costo</label><input id="f-cost" type="number" step="0.01" value="${p?.cost ?? ''}" placeholder="0.00"></div>
           <div class="field" style="grid-column:1/-1">
             <label>Descuento</label>
@@ -722,7 +722,7 @@ export function productsView(ctx) {
   }
 
   render();
-  return { root, refresh: render, openCreate: () => editProduct(null) };
+  return { root, refresh: render, openCreate: (draft) => editProduct(null, draft) };
 }
 
 /* ================= VENTAS ================= */

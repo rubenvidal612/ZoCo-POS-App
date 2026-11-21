@@ -682,12 +682,28 @@ export function posView(ctx) {
   function openQuickSale() {
     const m = modal({
       title: 'Vender producto no registrado',
-      body: `<div class="qs-amount"><span>$</span><input id="qv" type="number" min="0" step="0.01" placeholder="0" autofocus></div>
+      body: `<div class="qs-amount"><span>$</span><input id="qv" type="number" min="0" step="0.01" placeholder="0"></div>
              <div class="field" style="margin-top:14px"><label>Descripción</label>
-               <textarea id="qd" rows="3" placeholder="Ej. 545 rojo 5" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;resize:vertical"></textarea></div>`,
+               <textarea id="qd" rows="3" placeholder="Ej. 545 rojo 5" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;resize:vertical"></textarea></div>
+             ${can('products.edit') ? '<button type="button" class="btn ghost sm qs-inventory" id="qs-inventory">＋ Agregar producto al inventario</button>' : ''}`,
       foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Aceptar</button>`,
     });
-    setTimeout(() => m.root.querySelector('#qv')?.focus(), 60);
+    m.root.classList.add('quick-sale-overlay');
+    const priceInput = m.root.querySelector('#qv');
+    const descriptionInput = m.root.querySelector('#qd');
+    if (!isMobile()) setTimeout(() => priceInput.focus(), 60);
+    m.root.querySelector('#qs-inventory')?.addEventListener('click', () => {
+      if (!can('products.edit')) return;
+      const price = priceInput.valueAsNumber;
+      ctx.go('productos', {
+        create: true,
+        productDraft: {
+          name: descriptionInput.value.trim(),
+          price: Number.isFinite(price) && price >= 0 ? price : '',
+        },
+      });
+      m.close();
+    });
     m.root.querySelector('#ok').onclick = () => {
       const v = Number(m.root.querySelector('#qv').value) || 0;
       const d = m.root.querySelector('#qd').value.trim() || 'Venta Rápida';
