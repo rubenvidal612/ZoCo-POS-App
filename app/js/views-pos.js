@@ -40,6 +40,8 @@ export function posView(ctx) {
   let section = 'all';
   let method = 'cash';
   let received = 0;
+  let cashInput = '';
+  let cashAmountSuggested = false;
   let fiscalMode = 'interno';
   let lastSale = null;
 
@@ -541,7 +543,13 @@ export function posView(ctx) {
       const m = b.dataset.m;
       if (m === 'split') { screen = 'split'; render(); return; }
       method = m;
-      if (m === 'cash') { received = t.total; screen = 'cash'; render(); }
+      if (m === 'cash') {
+        received = t.total;
+        cashInput = received.toFixed(2);
+        cashAmountSuggested = true;
+        screen = 'cash';
+        render();
+      }
       else finishSale(m, t.total, t.total);
     });
   }
@@ -558,8 +566,12 @@ export function posView(ctx) {
         </header>
         <div class="cash-body">
           <div class="cash-total"><span>TOTAL</span><b>${money(t.total)}</b></div>
-          <div class="field"><label>Valor recibido</label>
-            <input id="recv" inputmode="decimal" value="${received.toFixed(2)}"></div>
+          <div class="field"><label for="recv">Valor recibido</label>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px">
+              <input id="recv" inputmode="decimal" value="${esc(cashInput)}">
+              <button type="button" class="btn ghost" id="recv-delete" aria-label="Borrar último dígito" title="Borrar último dígito">⌫</button>
+            </div>
+          </div>
           <div class="keypad" id="kp">
             ${['7', '8', '9', '4', '5', '6', '1', '2', '3', 'C', '0', '.'].map((k) => `<button class="key" data-k="${k}">${k}</button>`).join('')}
           </div>
@@ -571,21 +583,36 @@ export function posView(ctx) {
       </div>`;
 
     const recv = $('#recv', box);
-    recv.addEventListener('focus', () => recv.select());
+    recv.addEventListener('focus', () => { if (cashAmountSuggested) recv.select(); });
     const chg = $('#chg', box);
     const upd = () => {
-      received = Number(String(recv.value).replace(',', '.')) || 0;
+      cashInput = recv.value;
+      const amount = Number(cashInput.replace(',', '.'));
+      received = Number.isFinite(amount) ? amount : 0;
       const diff = received - t.total;
       chg.querySelector('b').textContent = money(Math.abs(diff));
       chg.querySelector('span').textContent = diff >= 0 ? 'Cambio' : 'Falta';
       chg.classList.toggle('bad', diff < 0);
     };
-    recv.addEventListener('input', upd); upd();
-    box.querySelectorAll('.key').forEach((b) => b.onclick = () => {
-      const k = b.dataset.k;
-      if (k === 'C') recv.value = '';
-      else if (k === '.') { if (!recv.value.includes('.')) recv.value += '.'; }
-      else recv.value = (recv.value === '0' ? '' : recv.value) + k;
+    recv.addEventListener('beforeinput', (event) => {
+      if (cashAmountSuggested && event.inputType.startsWith('insert')) recv.select();
+    });
+    recv.addEventListener('input', () => { cashAmountSuggested = false; upd(); });
+    upd();
+    $('#recv-delete', box).onclick = () => {
+      cashAmountSuggested = false;
+      recv.value = recv.value.slice(0, -1);
+      upd();
+    };
+    box.querySelectorAll('#kp .key').forEach((button) => button.onclick = () => {
+      const key = button.dataset.k;
+      if (cashAmountSuggested || key === 'C') recv.value = '';
+      cashAmountSuggested = false;
+      if (key === '.') {
+        if (!/[.,]/.test(recv.value)) recv.value = (recv.value || '0') + '.';
+      } else if (key !== 'C') {
+        recv.value = (recv.value === '0' ? '' : recv.value) + key;
+      }
       upd();
     });
     $('#back', box).onclick = () => { screen = 'pay'; render(); };
