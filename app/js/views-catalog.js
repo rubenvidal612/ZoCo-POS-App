@@ -429,13 +429,15 @@ export function productsView(ctx) {
         })() : ''}        <div class="field"><label>Colores / variantes (separados por coma)</label>
           <input id="f-colors" value="${esc((p?.colors ?? (draft.color ? [draft.color] : [])).join(', '))}" placeholder="Ej. Negro, Blanco, Rosa">
           <div class="hint">Si agregas colores, el inventario se maneja por talla + color.</div></div>
+        <div id="f-size-stock">
         <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
         <div class="size-grid" id="f-sizes">
           ${sizes.map((s) => `<div style="text-align:center">
             <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:3px">${fmtSize(s)}</div>
             <input class="sz-in" data-size="${fmtSize(s)}" type="number" min="0" step="1"
-              value="${p ? stockOf(p, s) : !draft.color && draft.size === fmtSize(s) ? 1 : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
+              value="${p ? stockOf(p, s) : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
           </div>`).join('')}
+        </div>
         </div>
         <div id="f-codes" style="margin-top:14px"></div>
         <div id="f-variants"></div>`,
@@ -450,6 +452,7 @@ export function productsView(ctx) {
       const colors = (m.root.querySelector('#f-colors').value || '').split(',').map((c) => c.trim()).filter(Boolean);
       const sec = m.root.querySelector('#f-sec').value;
       const sizes = sizesFor(sec);
+      m.root.querySelector('#f-size-stock').hidden = colors.length > 0;
       if (!colors.length) { box.innerHTML = ''; return; }
       box.innerHTML = `<div class="field" style="margin:14px 0 6px"><label>Inventario por talla + color</label></div>` +
         colors.map((c) => `
@@ -458,7 +461,7 @@ export function productsView(ctx) {
             <div class="size-grid">
               ${sizes.map((s) => {
                 const vk = variantKey(s, c);
-                const val = p?.branchStock?.[state.currentBranch]?.[vk] ?? (!p && sec === draft.section && draft.size === fmtSize(s) && c === draft.color ? 1 : 0);
+                const val = p?.branchStock?.[state.currentBranch]?.[vk] ?? 0;
                 return `<div style="text-align:center">
                   <div style="font-size:10.5px;font-weight:800;color:var(--text-2);margin-bottom:2px">${fmtSize(s)}</div>
                   <input data-vsize="${esc(vk)}" data-vkey="${esc(vk)}" type="number" min="0" step="1" value="${val}"

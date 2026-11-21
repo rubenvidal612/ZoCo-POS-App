@@ -83,7 +83,9 @@ export function posView(ctx) {
   };
 
   /* ---------------- Registrar producto escaneando ---------------- */
+  const canAddInventory = () => can('products.edit') && can('stock.manage');
   const openQuickCreate = (code) => {
+    if (!canAddInventory()) { toast('Producto no registrado'); return; }
     const secs = sectionsForMode();
     const m = modal({
       title: 'Registrar producto',
@@ -157,6 +159,7 @@ export function posView(ctx) {
       .catch(() => { buscado = { found: false }; paint(buscado); });
 
     saveBtn.onclick = () => {
+      if (!canAddInventory()) return;
       const name = (body.querySelector('#qc-name').value || '').trim();
       const price = Number(body.querySelector('#qc-price').value) || 0;
       const cost = Number(body.querySelector('#qc-cost').value) || 0;
@@ -695,8 +698,9 @@ export function posView(ctx) {
                  <div class="field"><label for="qs-section">Sección</label><select id="qs-section">${shoeSections.map(([id, section]) => `<option value="${esc(id)}">${esc(section.label)}</option>`).join('')}</select></div>
                  <div class="field"><label for="qs-size">Número</label><select id="qs-size"></select></div>
                </div>
+               <output id="qs-stock" class="hint" aria-live="polite" style="display:block;margin:8px 0"></output>
              </details>` : ''}
-             ${can('products.edit') ? '<button type="button" class="btn ghost sm qs-inventory" id="qs-inventory">＋ Agregar producto al inventario</button>' : ''}`,
+             ${canAddInventory() ? '<button type="button" class="btn ghost sm qs-inventory" id="qs-inventory">＋ Agregar producto al inventario</button>' : ''}`,
       foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Aceptar</button>`,
     });
     m.root.classList.add('quick-sale-overlay');
@@ -719,9 +723,31 @@ export function posView(ctx) {
       size: shoeSize?.value || '',
       section: shoeSection?.value || '',
     });
+    const stockOutput = m.root.querySelector('#qs-stock');
+    if (stockOutput) {
+      const normalize = (value) => String(value ?? '').trim().toLowerCase();
+      const showStock = () => {
+        const { model, color, size } = shoeDetails();
+        const product = model && state.products.find((item) => item.active !== false && normalize(item.code) === normalize(model));
+        if (!product) {
+          stockOutput.textContent = model ? 'Modelo no encontrado en inventario.' : 'Escribe el modelo para consultar existencias.';
+          return;
+        }
+        const variants = variantsOf(product);
+        const matching = variants.filter((variant) => (!size || variant.size === size)
+          && (!color || normalize(variant.color || product.color) === normalize(color)));
+        const qty = matching.reduce((total, variant) => total + stockOf(product, variant.key), 0);
+        stockOutput.textContent = `${product.name} · Existencia en esta sucursal: ${qty}`;
+      };
+      m.root.querySelector('#qs-model').addEventListener('input', showStock);
+      m.root.querySelector('#qs-color').addEventListener('input', showStock);
+      shoeSection.addEventListener('change', showStock);
+      shoeSize.addEventListener('change', showStock);
+      showStock();
+    }
     if (!isMobile()) setTimeout(() => priceInput.focus(), 60);
     m.root.querySelector('#qs-inventory')?.addEventListener('click', () => {
-      if (!can('products.edit')) return;
+      if (!canAddInventory()) return;
       const price = priceInput.valueAsNumber;
       const { model, color, size, section } = shoeDetails();
       ctx.go('productos', {
