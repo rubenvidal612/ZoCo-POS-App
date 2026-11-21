@@ -10,7 +10,7 @@ const SKEY = DEMO ? 'zoco.demo.session' : 'zoco.session';
 /* ================= Rampas de tallas ================= */
 export const SECTIONS = {
   // Zapatería
-  dama:      { label: 'Damas',     scale: 'shoe', from: 22, to: 27,   step: 0.5, mode: 'shoe' },
+  dama:      { label: 'Damas',     scale: 'shoe', from: 22, to: 30,   step: 0.5, mode: 'shoe' },
   infantil:  { label: 'Infantil',  scale: 'shoe', from: 12, to: 21.5, step: 0.5, mode: 'shoe' },
   caballero: { label: 'Caballero', scale: 'shoe', from: 22, to: 30,   step: 0.5, mode: 'shoe' },
   escolar:   { label: 'Escolar',   scale: 'us',   from: 1,  to: 6.5,  step: 0.5, mode: 'shoe' },

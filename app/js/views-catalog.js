@@ -347,7 +347,7 @@ export function productsView(ctx) {
   function editProduct(id, draft = {}) {
     const p = id ? state.products.find((x) => x.id === id) : null;
     const secs = sectionsForMode();
-    const section = p?.section || secs[0][0];
+    const section = p?.section || secs.find(([id]) => id === draft.section)?.[0] || secs[0][0];
     const sizes = sizesFor(section);
 
     const m = modal({
@@ -372,8 +372,8 @@ export function productsView(ctx) {
         <div class="row2">
           <div class="field"><label>Nombre</label><input id="f-name" value="${esc(p?.name ?? draft.name ?? '')}" placeholder="Ej. Nike Air Zoom"></div>
           <div class="field"><label>Marca (opcional)</label><input id="f-brand" value="${esc(p?.brand || '')}" placeholder="Ej. Coca-Cola"></div>
-          <div class="field"><label>Código / SKU</label><input id="f-code" value="${esc(p?.code || '')}" placeholder="AIR-100"></div>
-          <div class="field"><label>Color / Variante</label><input id="f-color" value="${esc(p?.color || '')}" placeholder="Negro, Rojo…"></div>
+          <div class="field"><label>Código / SKU</label><input id="f-code" value="${esc(p?.code ?? draft.code ?? '')}" placeholder="AIR-100"></div>
+          <div class="field"><label>Color / Variante</label><input id="f-color" value="${esc(p?.color ?? draft.color ?? '')}" placeholder="Negro, Rojo…"></div>
           <div class="field"><label>Sección</label>
             <select id="f-sec">${secs.map(([k, s]) => `<option value="${k}" ${k === section ? 'selected' : ''}>${esc(s.label)}</option>`).join('')}</select></div>
           <div class="field"><label>Se vende por</label>
@@ -427,14 +427,14 @@ export function productsView(ctx) {
             <label class="perf-check"><input type="checkbox" id="f-prepare" ${p?.prepararAlVender ? 'checked' : ''}> <b>Preparar al vender</b>: al cobrar, descuenta concentrado, alcohol y frasco</label>
           </div>`;
         })() : ''}        <div class="field"><label>Colores / variantes (separados por coma)</label>
-          <input id="f-colors" value="${esc((p?.colors || []).join(', '))}" placeholder="Ej. Negro, Blanco, Rosa">
+          <input id="f-colors" value="${esc((p?.colors ?? (draft.color ? [draft.color] : [])).join(', '))}" placeholder="Ej. Negro, Blanco, Rosa">
           <div class="hint">Si agregas colores, el inventario se maneja por talla + color.</div></div>
         <div class="field" style="margin-bottom:6px"><label>Inventario por talla</label></div>
         <div class="size-grid" id="f-sizes">
           ${sizes.map((s) => `<div style="text-align:center">
             <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:3px">${fmtSize(s)}</div>
             <input class="sz-in" data-size="${fmtSize(s)}" type="number" min="0" step="1"
-              value="${p ? stockOf(p, s) : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
+              value="${p ? stockOf(p, s) : !draft.color && draft.size === fmtSize(s) ? 1 : 0}" style="width:100%;height:36px;text-align:center;border:1px solid var(--line);border-radius:8px;font-weight:700">
           </div>`).join('')}
         </div>
         <div id="f-codes" style="margin-top:14px"></div>
@@ -458,7 +458,7 @@ export function productsView(ctx) {
             <div class="size-grid">
               ${sizes.map((s) => {
                 const vk = variantKey(s, c);
-                const val = p?.branchStock?.[state.currentBranch]?.[vk] ?? 0;
+                const val = p?.branchStock?.[state.currentBranch]?.[vk] ?? (!p && sec === draft.section && draft.size === fmtSize(s) && c === draft.color ? 1 : 0);
                 return `<div style="text-align:center">
                   <div style="font-size:10.5px;font-weight:800;color:var(--text-2);margin-bottom:2px">${fmtSize(s)}</div>
                   <input data-vsize="${esc(vk)}" data-vkey="${esc(vk)}" type="number" min="0" step="1" value="${val}"
@@ -503,8 +503,8 @@ export function productsView(ctx) {
         </details>`;
     };
     m.root.querySelector('#f-sec').addEventListener('change', () => setTimeout(paintCodes, 0));
-    paintCodes();
     paintVariants();
+    paintCodes();
     m.root.querySelector('#f-sec').onchange = (e) => {
       const sizes = sizesFor(e.target.value);
       m.root.querySelector('#f-sizes').innerHTML = sizes.map((s) => `<div style="text-align:center">

@@ -680,25 +680,56 @@ export function posView(ctx) {
 
   /* ---------------- QUICK SALE ---------------- */
   function openQuickSale() {
+    const shoeSections = state.company.mode === 'shoe'
+      ? sectionsForMode().filter(([, section]) => section.scale !== 'none') : [];
     const m = modal({
       title: 'Vender producto no registrado',
       body: `<div class="qs-amount"><span>$</span><input id="qv" type="number" min="0" step="0.01" placeholder="0"></div>
              <div class="field" style="margin-top:14px"><label>Descripción</label>
                <textarea id="qd" rows="3" placeholder="Ej. 545 rojo 5" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;resize:vertical"></textarea></div>
+             ${shoeSections.length ? `<details style="margin-top:12px">
+               <summary>Modelo, color y número (opcional)</summary>
+               <div class="field" style="margin-top:12px"><label for="qs-model">Modelo</label><input id="qs-model" placeholder="Ej. 545"></div>
+               <div class="field"><label for="qs-color">Color</label><input id="qs-color" placeholder="Ej. Rojo"></div>
+               <div class="row2">
+                 <div class="field"><label for="qs-section">Sección</label><select id="qs-section">${shoeSections.map(([id, section]) => `<option value="${esc(id)}">${esc(section.label)}</option>`).join('')}</select></div>
+                 <div class="field"><label for="qs-size">Número</label><select id="qs-size"></select></div>
+               </div>
+             </details>` : ''}
              ${can('products.edit') ? '<button type="button" class="btn ghost sm qs-inventory" id="qs-inventory">＋ Agregar producto al inventario</button>' : ''}`,
       foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Aceptar</button>`,
     });
     m.root.classList.add('quick-sale-overlay');
     const priceInput = m.root.querySelector('#qv');
     const descriptionInput = m.root.querySelector('#qd');
+    const shoeSection = m.root.querySelector('#qs-section');
+    const shoeSize = m.root.querySelector('#qs-size');
+    if (shoeSection) {
+      const paintSizes = () => {
+        const adult = ['dama', 'caballero'].includes(shoeSection.value);
+        shoeSize.innerHTML = '<option value="">Sin número</option>' + sizesFor(shoeSection.value).map((size) =>
+          `<option value="${fmtSize(size)}">${adult ? `MX ${size - 20} (${size} cm)` : fmtSize(size)}</option>`).join('');
+      };
+      shoeSection.addEventListener('change', paintSizes);
+      paintSizes();
+    }
+    const shoeDetails = () => ({
+      model: m.root.querySelector('#qs-model')?.value.trim() || '',
+      color: m.root.querySelector('#qs-color')?.value.trim().replaceAll(',', ' ') || '',
+      size: shoeSize?.value || '',
+      section: shoeSection?.value || '',
+    });
     if (!isMobile()) setTimeout(() => priceInput.focus(), 60);
     m.root.querySelector('#qs-inventory')?.addEventListener('click', () => {
       if (!can('products.edit')) return;
       const price = priceInput.valueAsNumber;
+      const { model, color, size, section } = shoeDetails();
       ctx.go('productos', {
         create: true,
         productDraft: {
-          name: descriptionInput.value.trim(),
+          name: descriptionInput.value.trim() || model,
+          code: model, color, size,
+          section: size ? section : '',
           price: Number.isFinite(price) && price >= 0 ? price : '',
         },
       });
@@ -706,9 +737,10 @@ export function posView(ctx) {
     });
     m.root.querySelector('#ok').onclick = () => {
       const v = Number(m.root.querySelector('#qv').value) || 0;
-      const d = m.root.querySelector('#qd').value.trim() || 'Venta Rápida';
+      const { model, color, size } = shoeDetails();
+      const d = [...new Set([descriptionInput.value.trim(), model, color].filter(Boolean))].join(' · ') || 'Venta Rápida';
       if (v <= 0) { toast('Escribe un valor mayor a 0'); return; }
-      cart.lines.push({ key: 'free_' + Date.now(), productId: null, name: d, size: 'Único', price: v, qty: 1, color: '#64748B' });
+      cart.lines.push({ key: 'free_' + Date.now(), productId: null, name: d, size: size || 'Único', price: v, qty: 1, color: '#64748B' });
       m.close(); screen = 'cart'; render();
     };
   }
