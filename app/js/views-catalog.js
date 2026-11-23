@@ -11,7 +11,7 @@ import {
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
   layawayPayment, cancelLayaway, upsertCoupon, registerSummary, upsertExpense, payExpense,
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
-  switchCompany, createCompany, MODES, CATEGORY_GROUPS, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
+  switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
@@ -1140,7 +1140,7 @@ export function settingsView(ctx) {
           </div>
           <div class="field"><label>Giro del negocio</label>
             <select id="c-mode">
-              ${Object.entries(MODES).map(([k, m]) => `<option value="${k}" ${state.company.mode === k ? 'selected' : ''}>${m.label}</option>`).join('')}
+              ${Object.entries(BUSINESS_FAMILIES).map(([k, family]) => `<option value="${k}" ${familyForMode(state.company.mode) === k ? 'selected' : ''}>${family.label}</option>`).join('')}
             </select>
             <div class="hint">Cada empresa elige su giro y secciones de catálogo.</div>
             <div id="c-category-groups" style="margin-top:12px"></div>
@@ -1620,17 +1620,15 @@ export function settingsView(ctx) {
   // Las categorías adicionales comparten el inventario y mantienen sus escalas originales.
   const categoryBox = $('#c-category-groups', root);
   const categoryMode = $('#c-mode', root);
-  let chosenCategories = Array.isArray(state.settings?.extraCategoryModes)
-    ? [...state.settings.extraCategoryModes] : [];
+  let chosenCategories = [
+    state.company.mode,
+    ...(Array.isArray(state.settings?.extraCategoryModes) ? state.settings.extraCategoryModes : [])
+  ];
   const renderCategories = () => {
-    const primary = categoryMode.value;
-    const related = (CATEGORY_GROUPS[primary] || []).filter(m => m !== primary);
-    if (!related.length) {
-      categoryBox.innerHTML = '';
-      return;
-    }
-    categoryBox.innerHTML = '<div style="font-weight:700;margin-bottom:7px">También vendo productos de:</div>'
-      + '<div class="hint" style="margin-bottom:9px">Activa categorías adicionales sin cambiar el giro principal ni borrar existencias.</div>'
+    const family = BUSINESS_FAMILIES[categoryMode.value];
+    const related = family?.modes || ['general'];
+    categoryBox.innerHTML = '<div style="font-weight:700;margin-bottom:7px">¿Qué vende o qué servicios ofrece tu negocio?</div>'
+      + '<div class="hint" style="margin-bottom:9px">Puedes elegir varias opciones. Cada producto conserva su talla, color y existencias.</div>'
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px">'
       + related.map(m => '<label style="display:flex;align-items:center;gap:9px;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2,#f8fafc)">'
         + '<input type="checkbox" data-extra-category="' + m + '" ' + (chosenCategories.includes(m) ? 'checked' : '') + '>'
@@ -1644,7 +1642,11 @@ export function settingsView(ctx) {
       };
     });
   };
-  categoryMode.addEventListener('change', renderCategories);
+  categoryMode.addEventListener('change', () => {
+    const family = BUSINESS_FAMILIES[categoryMode.value];
+    chosenCategories = [family.modes[0]];
+    renderCategories();
+  });
   renderCategories();
 
   $('#save-co', root).onclick = () => {
@@ -1660,7 +1662,10 @@ export function settingsView(ctx) {
       state.settings.whatsapp = d;
       waInput.value = d;
     }
-    const mode = $('#c-mode', root).value;
+    const family = BUSINESS_FAMILIES[categoryMode.value];
+    const enabled = family.modes.filter(m => chosenCategories.includes(m));
+    if (!enabled.length) { toast('Selecciona al menos una categoría de tu negocio'); return; }
+    const mode = enabled.includes(state.company.mode) ? state.company.mode : enabled[0];
     const cambioGiro = mode !== state.company.mode;
     if (cambioGiro) state.company.mode = mode;
     state.settings = state.settings || {};
