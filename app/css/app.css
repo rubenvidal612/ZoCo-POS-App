@@ -1766,3 +1766,12 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
     overflow-wrap:anywhere;text-overflow:clip;line-height:1.25;text-align:center;
   }
 }
+
+/* Inicio: fotos compactas en productos con stock bajo */
+.home-low-product{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.home-low-photo{width:54px;height:54px;flex:0 0 54px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:#eef2f7;color:#64748b}
+.home-low-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.home-low-photo span{font-size:23px;place-items:center;width:100%;height:100%}
+.home-low-item .home-low-name{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.3;text-overflow:clip}
+.home-low-item{gap:12px}
+@media(max-width:390px){.home-low-photo{width:46px;height:46px;flex-basis:46px}.home-low-product{gap:8px}.home-low-item{gap:6px}}
