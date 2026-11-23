@@ -1697,3 +1697,11 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .home-theme-visual .home-branch-sales{order:4}
 
 .qs-inventory{width:100%;min-height:44px;margin-top:12px}
+
+/* Cambio de giro: modal centrado y acciones legibles en teléfonos. */
+.mode-demo-overlay.overlay{align-items:center;justify-content:center;padding:16px}
+.mode-demo-overlay .modal{width:min(520px,100%);max-height:min(86dvh,720px);border-radius:18px;margin:auto}
+.mode-demo-overlay .modal-body{overflow-y:auto;min-height:0}
+.mode-demo-overlay .modal-foot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px}
+.mode-demo-overlay .modal-foot .btn{width:100%;min-width:0;min-height:48px;height:auto;white-space:normal;line-height:1.25;padding:10px 8px;text-align:center}
+@media(max-width:390px){.mode-demo-overlay.overlay{padding:10px}.mode-demo-overlay .modal-foot{gap:8px;padding:10px}.mode-demo-overlay .modal-foot .btn{font-size:12px}}
