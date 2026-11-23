@@ -39,6 +39,7 @@ const NAV_GROUPS = [
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
+      { id: 'food-demo', label: 'ZoCo Food (demo)', icon: '🍽', perm: 'settings.edit' },
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
@@ -379,6 +380,7 @@ function paintShell() {
       if (confirm('¿Cerrar sesión?')) { logout(); paintLogin(); }
       return;
     }
+    if (b.dataset.r === 'food-demo') { window.open('/food-preview.html', '_blank', 'noopener'); return; }
     if (b.dataset.r === 'catalogo') {
       const cid = state.currentCompany || 'default';
       window.open('/catalogo?c=' + encodeURIComponent(cid), '_blank');
