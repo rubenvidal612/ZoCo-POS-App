@@ -1513,7 +1513,49 @@ export function takeFolio(kind = 'interno') {
   return `${c.prefixInterno}-${n}`;
 }
 
-export function commitSale({ cart, method, received, customerName, note, customerId, payments, fiscalMode }) {
+
+// ZoCo Food: consume only after a completed POS sale, with an audit snapshot for reversal.
+function foodSalePlan(lines) {
+  if (state.company?.mode !== 'restaurante' || !state.food?.recipes?.length) return [];
+  const plan = new Map(), finished = new Map();
+  for (const line of lines) {
+    const recipe = state.food.recipes.find(r => r.productId && r.productId === line.productId);
+    if (!recipe || recipe.mode === 'none') continue;
+    const count = Number(line.qty);
+    if (!Number.isFinite(count) || count <= 0) throw new Error('Cantidad de platillo inválida');
+    if (recipe.mode === 'finished') {
+      finished.set(recipe.id, (finished.get(recipe.id) || 0) + count);
+    } else if (recipe.mode === 'recipe') {
+      if (!recipe.lines?.length) throw new Error('La receta de '+recipe.name+' no tiene ingredientes');
+      for (const item of recipe.lines) {
+        const amount = Number(item.qty) * count;
+        if (!Number.isFinite(amount) || amount <= 0) throw new Error('Cantidad de ingrediente inválida');
+        plan.set(item.id, (plan.get(item.id) || 0) + amount);
+      }
+    }
+  }
+  const changes = [];
+  for (const [id, qty] of plan) {
+    const ingredient = state.food.ingredients.find(i => i.id === id);
+    if (!ingredient || Number(ingredient.stock) + 1e-9 < qty) throw new Error('No hay suficiente '+(ingredient?.name || 'ingrediente')+' para preparar el pedido');
+    changes.push({type:'ingredient',id,qty});
+  }
+  for (const [id, qty] of finished) {
+    const recipe = state.food.recipes.find(r => r.id === id);
+    if (!recipe || Number(recipe.stock) + 1e-9 < qty) throw new Error('No quedan suficientes porciones de '+(recipe?.name||'platillo'));
+    changes.push({type:'finished',id,qty});
+  }
+  return changes;
+}
+function applyFoodSale(changes, direction) {
+  for (const change of changes || []) {
+    const item = change.type === 'ingredient' ? state.food?.ingredients?.find(i=>i.id===change.id) : state.food?.recipes?.find(r=>r.id===change.id);
+    if (item) item.stock = Math.round((Number(item.stock) + direction * change.qty) * 1000) / 1000;
+  }
+}
+
+export function commitSale({ cart: method, received, customerName, note, customerId, payments, fiscalMode }) {
+  const foodChanges = foodSalePlan(cart.lines);
   const t = cartTotals(cart);
   const hasSplit = Array.isArray(payments) && payments.length;
   const totalReceived = hasSplit ? payments.reduce((a, p) => a + p.amount, 0) : (received ?? t.total);
@@ -1536,6 +1578,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
     received: totalReceived, change: Math.max(0, totalReceived - t.total),
     status: 'done', cancelReason: null, cancelledAt: null,
   };
+  sale.foodStockChanges = foodChanges;
   sale.userId = state.user.id;
   sale.commission = commissionOf(sale);
   sale.items.forEach((l) => {
@@ -1553,6 +1596,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
     const c = state.customers.find((x) => x.id === customerId);
     if (c) c.balance = (c.balance || 0) + t.total;
   }
+  applyFoodSale(foodChanges, -1);
   state.sales.unshift(sale);
   // movimiento de caja por la parte en efectivo
   const cashPart = hasSplit ? payments.filter((p) => p.method === 'cash').reduce((a, p) => a + p.amount, 0) : (method === 'cash' ? t.total : 0);
@@ -1574,6 +1618,7 @@ export function cancelSale(saleId, reason) {
     const c = state.customers.find((x) => x.id === sale.customerId);
     if (c) c.balance = Math.max(0, (c.balance || 0) - sale.total);
   }
+  if (sale.foodStockChanges?.length) applyFoodSale(sale.foodStockChanges, 1);
   sale.status = 'cancelled';
   sale.cancelReason = reason || 'Sin motivo';
   sale.cancelledAt = new Date().toISOString();
