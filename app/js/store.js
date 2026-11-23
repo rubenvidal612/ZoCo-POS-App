@@ -1516,7 +1516,7 @@ export function takeFolio(kind = 'interno') {
 
 // ZoCo Food: consume only after a completed POS sale, with an audit snapshot for reversal.
 function foodSalePlan(lines) {
-  if (state.company?.mode !== 'restaurante' || !state.food?.recipes?.length) return [];
+  if (state.company?.mode !== 'restaurante' || !state.food?.recipes?.length) return {changes:[],warnings:[]};
   const plan = new Map(), finished = new Map();
   for (const line of lines) {
     const recipe = state.food.recipes.find(r => r.productId && r.productId === line.productId);
@@ -1534,18 +1534,18 @@ function foodSalePlan(lines) {
       }
     }
   }
-  const changes = [];
+  const changes = [], warnings = [];
   for (const [id, qty] of plan) {
     const ingredient = state.food.ingredients.find(i => i.id === id);
-    if (!ingredient || Number(ingredient.stock) + 1e-9 < qty) throw new Error('No hay suficiente '+(ingredient?.name || 'ingrediente')+' para preparar el pedido');
-    changes.push({type:'ingredient',id,qty});
+    if (!ingredient || Number(ingredient.stock) + 1e-9 < qty) warnings.push({name:ingredient?.name || 'Ingrediente sin registrar',required:qty,available:Math.max(0,Number(ingredient?.stock)||0)});
+    if (ingredient) changes.push({type:'ingredient',id,qty:Math.min(qty,Math.max(0,Number(ingredient.stock)||0))});
   }
   for (const [id, qty] of finished) {
     const recipe = state.food.recipes.find(r => r.id === id);
-    if (!recipe || Number(recipe.stock) + 1e-9 < qty) throw new Error('No quedan suficientes porciones de '+(recipe?.name||'platillo'));
-    changes.push({type:'finished',id,qty});
+    if (!recipe || Number(recipe.stock) + 1e-9 < qty) warnings.push({name:recipe?.name || 'Platillo sin registrar',required:qty,available:Math.max(0,Number(recipe?.stock)||0)});
+    if (recipe) changes.push({type:'finished',id,qty:Math.min(qty,Math.max(0,Number(recipe.stock)||0))});
   }
-  return changes;
+  return {changes,warnings};
 }
 function applyFoodSale(changes, direction) {
   for (const change of changes || []) {
@@ -1554,8 +1554,14 @@ function applyFoodSale(changes, direction) {
   }
 }
 
-export function commitSale({ cart: method, received, customerName, note, customerId, payments, fiscalMode }) {
-  const foodChanges = foodSalePlan(cart.lines);
+export function commitSale({ cart, method, received, customerName, note, customerId, payments, fiscalMode, allowFoodShortage = false }) {
+  const foodPlan = foodSalePlan(cart.lines);
+  if (foodPlan.warnings?.length && !allowFoodShortage) {
+    const err = new Error('Inventario insuficiente');
+    err.foodWarnings = foodPlan.warnings;
+    throw err;
+  }
+  const foodChanges = foodPlan.changes || [];
   const t = cartTotals(cart);
   const hasSplit = Array.isArray(payments) && payments.length;
   const totalReceived = hasSplit ? payments.reduce((a, p) => a + p.amount, 0) : (received ?? t.total);
@@ -1579,6 +1585,7 @@ export function commitSale({ cart: method, received, customerName, note, custome
     status: 'done', cancelReason: null, cancelledAt: null,
   };
   sale.foodStockChanges = foodChanges;
+  sale.foodStockWarnings = foodPlan.warnings || [];
   sale.userId = state.user.id;
   sale.commission = commissionOf(sale);
   sale.items.forEach((l) => {
