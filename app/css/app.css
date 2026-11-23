@@ -1738,3 +1738,31 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
   .posv .sell-wrap .sq-card{min-height:0}
   .posv .sell-wrap .sq-name{max-height:none;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 }
+
+/* POS: cada tarjeta reserva altura para foto, precio y nombre; ninguna foto puede tapar el pie. */
+@media(max-width:900px){
+  .posv .sell-wrap .pgrid.sq{align-items:stretch}
+  .posv .sell-wrap .sq-card{
+    display:grid!important;grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,auto) auto minmax(28px,auto);
+    align-content:start;align-items:start;gap:3px;
+    height:auto!important;min-height:0!important;aspect-ratio:auto!important;
+    overflow:hidden;box-sizing:border-box;padding:6px;
+  }
+  .posv .sell-wrap .sq-ph{
+    width:100%;height:auto!important;aspect-ratio:1/1;
+    min-height:0!important;max-height:none!important;
+    flex:none!important;overflow:hidden;position:relative;
+  }
+  .posv .sell-wrap .sq-ph img{display:block;width:100%!important;height:100%!important;object-fit:cover;position:absolute;inset:0}
+  .posv .sell-wrap .sq-price{
+    position:static!important;display:inline-block;justify-self:start;align-self:start;
+    margin:0!important;max-width:100%;white-space:normal;line-height:1.2;
+  }
+  .posv .sell-wrap .sq-name{
+    position:static!important;display:block!important;width:100%;
+    margin:0!important;min-height:26px;max-height:none!important;
+    overflow:visible!important;white-space:normal!important;
+    overflow-wrap:anywhere;text-overflow:clip;line-height:1.25;text-align:center;
+  }
+}
