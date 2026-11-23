@@ -35,16 +35,11 @@
   });
 </script>
 <link rel="stylesheet" href="./css/tokens.css?v=8">
-<link rel="stylesheet" href="./css/app.css?v=47">
+<link rel="stylesheet" href="./css/app.css?v=48">
 </head>
 <body>
 <div id="zoco-startup" role="status" aria-label="Iniciando ZoCo POS">
-  <div class="startup-content">
-    <img class="startup-mark" src="/zoco-icon.svg" alt="ZoCo">
-    <div class="startup-name">ZoCo</div><div class="startup-pos">POS</div>
-    <div class="startup-sub">Inventario · Ventas · Catálogo · Reportes</div>
-  </div>
-  <div class="startup-loading"><span class="startup-spinner"></span><span>Iniciando ZoCo...</span></div>
+  <div class="startup-fallback" aria-hidden="true"></div>
 </div>
 <div id="app"></div>
 <div id="modal-root"></div>
@@ -52,11 +47,8 @@
 <script>
   // Mantener visible la presentación al menos 2.5 s, sin ocultar errores de carga.
   (function () {
-    const originalArtwork = new Image();
-    originalArtwork.onload = () => document.getElementById('zoco-startup')?.classList.add('original-artwork');
-    originalArtwork.src = '/file_0000000045508212abb61c454ec385a8.png';
     const startedAt = performance.now();
-    const minDuration = 2500;
+    const minDuration = 4000;
     const app = document.getElementById('app');
     let ready = false;
     let hidden = false;
