@@ -623,7 +623,7 @@ export function posView(ctx) {
   }
 
   function finishSale(m, recv, total) {
-    const sale = commitSale({ cart, method: m, received: recv, customerName: ctx.customer, note: '', fiscalMode });
+    let sale;try { sale = commitSale({ cart, method: m, received: recv, customerName: ctx.customer, note: '', fiscalMode }); } catch(err) { toast(err.message || 'No se pudo registrar la venta'); return; }
     if (state.settings.saleNotifications && ['owner', 'admin'].includes(state.user.role)) notifySale(sale);
     lastSale = sale;
     cart.lines = []; cart.discount = 0;
@@ -841,7 +841,7 @@ export function posView(ctx) {
         { method: $('#sm1', box).value, amount: a },
         { method: $('#sm2', box).value, amount: rest },
       ];
-      const sale = commitSale({ cart, method: 'split', received: t.total, payments, customerName: ctx.customer, note: '', fiscalMode });
+      let sale;try { sale = commitSale({ cart, method: 'split', received: t.total, payments, customerName: ctx.customer, note: '', fiscalMode }); } catch(err) { toast(err.message || 'No se pudo registrar la venta'); return; }
       if (state.settings.saleNotifications && ['owner', 'admin'].includes(state.user.role)) notifySale(sale);
       lastSale = sale;
       cart.lines = []; cart.discount = 0;
