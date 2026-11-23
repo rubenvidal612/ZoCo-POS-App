@@ -159,16 +159,18 @@ export const MODES = {
 /* ================= Catálogos de ejemplo por giro ================= */
 const DEMOS = {
   shoe: [
-    ['Tenis Casual Blanco', 'dama', 690, 380],
-    ['Botín Piel Café', 'caballero', 980, 520],
-    ['Sandalia Playa', 'dama', 640, 330],
-    ['Zapato Escolar Negro', 'escolar', 450, 260],
+    ['Tenis Casual Blanco', 'dama', 690, 380, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=640'],
+    ['Botín Piel Café', 'caballero', 980, 520, 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=640'],
+    ['Sandalia Playa', 'dama', 640, 330, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=640'],
+    ['Zapato Escolar Negro', 'escolar', 450, 260, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=640'],
+    ['Bolsa de Mano', 'bolsas', 420, 210, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=640'],
   ],
   boutique: [
-    ['Blusa Manga Corta', 'ropa', 320, 160],
-    ['Vestido Verano', 'ropa', 590, 300],
-    ['Jeans Recto', 'ropa', 480, 250],
-    ['Bolsa de Mano', 'accesorios', 420, 210],
+    ['Blusa Manga Corta', 'ropa', 320, 160, 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=640'],
+    ['Vestido Verano', 'ropa', 590, 300, 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=640'],
+    ['Jeans Recto', 'ropa', 480, 250, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=640'],
+    ['Bolsa de Mano', 'accesorios', 420, 210, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=640'],
+    ['Tenis Casual', 'calzado', 690, 380, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=640'],
   ],
   abarrotes: [
     ['Refresco 600 ml', 'bebidas', 18, 12],
@@ -216,14 +218,18 @@ const DEMOS = {
     ['Jitomate (kg)', 'verdura', 28, 20],
   ],
   panaderia: [
-    ['Concha', 'pan', 12, 6],
-    ['Bolillo', 'pan', 5, 2],
-    ['Pastel de chocolate 1 kg', 'pastel', 320, 190],
+    ['Concha', 'pan', 12, 6, 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=640'],
+    ['Bolillo', 'pan', 5, 2, 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=640'],
+    ['Pastel de chocolate 1 kg', 'pastel', 320, 190, 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=640'],
+    ['Pan dulce surtido', 'pan', 15, 7, 'https://images.unsplash.com/photo-1608198093002-ad4e005484df?w=640'],
+    ['Pan integral', 'pan', 48, 26, 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=640'],
   ],
   dulceria: [
-    ['Paleta de caramelo', 'dulces', 10, 5],
-    ['Papas fritas', 'botanas', 18, 12],
-    ['Juguete sorpresa', 'juguetes_d', 45, 25],
+    ['Paleta de caramelo', 'dulces', 10, 5, 'https://images.unsplash.com/photo-1499195333224-3ce974eecb47?w=640'],
+    ['Papas fritas', 'botanas', 18, 12, 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=640'],
+    ['Juguete sorpresa', 'juguetes_d', 45, 25, 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=640'],
+    ['Chocolates', 'dulces', 35, 20, 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=640'],
+    ['Gomitas', 'dulces', 25, 14, 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=640'],
   ],
   cosmeticos: [
     ['Labial mate', 'maquillaje', 145, 70],
