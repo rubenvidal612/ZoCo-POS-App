@@ -4,6 +4,9 @@ import { state, emit } from './store.js';
 const CFG = 'zoco.supabase';
 const DIRTY = 'zoco.sync.dirty';
 const LAST = 'zoco.sync.last';
+let localChangeVersion = 0;
+let applyingRemote = false;
+let pushInFlight = null;
 
 export function sbConfig() {
   let local = {};
@@ -47,8 +50,14 @@ export const isDirty = () => { try { return localStorage.getItem(DIRTY) === '1';
 
 /** Sube el estado local a la nube (incrementa rev). */
 export async function pushCloud() {
+  if (pushInFlight) return pushInFlight;
+  pushInFlight = pushCloudOnce();
+  try { return await pushInFlight; } finally { pushInFlight = null; }
+}
+async function pushCloudOnce() {
   if (!sbReady()) return { ok: false, error: 'Sin configurar' };
   const c = company();
+  const versionAtStart = localChangeVersion;
   try {
     const cur = await fetch(`${sbConfig().url}/rest/v1/company_state?company_id=eq.${encodeURIComponent(c)}&select=rev`, { headers: headers() });
     const rows = await cur.json();
@@ -63,7 +72,8 @@ export async function pushCloud() {
       body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error((await r.text()).slice(0, 200));
-    markDirty(false);
+    if (versionAtStart === localChangeVersion) markDirty(false);
+    else markDirty(true);
     localStorage.setItem(LAST, new Date().toISOString());
     return { ok: true, rev };
   } catch (e) {
@@ -90,7 +100,8 @@ export async function pullCloud(force = false) {
     const row = rows[0];
     const remoteRev = Number(row.rev || 0);
     const localRev = Number(state.rev || 0);
-    if (!force && remoteRev <= localRev && !isDirty()) return { ok: true, skipped: true, rev: remoteRev };
+    if (isDirty()) return { ok: true, skipped: true, reason: 'cambios-locales-pendientes' };
+    if (!force && remoteRev <= localRev) return { ok: true, skipped: true, rev: remoteRev };
 
     // PROTECCIÓN: nunca reemplazar un negocio con datos por una nube vacía.
     const pRemote = peso(row.data);
@@ -107,7 +118,8 @@ export async function pullCloud(force = false) {
       Object.assign(state, row.data);
       state.rev = remoteRev;
       try { localStorage.setItem('zoco.pos.v1', JSON.stringify(state)); } catch {}
-      emit();
+      applyingRemote = true;
+      try { emit(); } finally { applyingRemote = false; }
     }
     return { ok: true, rev: remoteRev, updated_at: row.updated_at };
   } catch (e) {
@@ -122,6 +134,7 @@ export async function syncNow() {
     const up = await pushCloud();
     if (!up.ok) return up;
   }
+  if (isDirty()) return {ok:false,error:'Cambios pendientes de subir'};
   return pullCloud(true);
 }
 
@@ -152,13 +165,13 @@ export function startSync() {
   if (!sbReady()) return;
 
   // cualquier cambio local marca pendiente y programa subida
-  window.addEventListener('zoco:save', () => { markDirty(true); schedulePush(); });
-  window.addEventListener('online', () => { if (isDirty()) pushCloud(); else pullCloud(true); });
+  window.addEventListener('zoco:save', () => { if (applyingRemote) return; localChangeVersion++; markDirty(true); schedulePush(); });
+  window.addEventListener('online', () => { if (isDirty()) pushCloud(); else pullCloud(); });
 
   // primera bajada: trae lo que haya en la nube antes de permitir subir
   setTimeout(async () => {
     let pulled = null;
-    try { pulled = await pullCloud(); } catch {}
+    try { if (isDirty()) { pulled = await pushCloud(); } else { pulled = await pullCloud(); } } catch {}
     readyToPush = true;
     // Si la nube está vacía y este equipo ya tiene negocio, se sube solo.
     try {
@@ -177,6 +190,6 @@ export function startSync() {
   // red de seguridad: cada 45 s sube pendientes o baja cambios
   setInterval(() => {
     if (!navigator.onLine) return;
-    if (isDirty()) pushCloud(); else pullCloud(true);
+    if (isDirty()) pushCloud(); else pullCloud();
   }, 45000);
 }
