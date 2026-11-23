@@ -342,7 +342,10 @@ export function demoCount() {
   return (state.products || []).filter((p) => p.isDemo).length;
 }
 export function loadDemoForMode(mode, { replace = true } = {}) {
-  const demo = demoForMode(mode);
+  const allowedExtras = CATEGORY_GROUPS[mode] || [];
+  const extras = (Array.isArray(state.settings?.extraCategoryModes) ? state.settings.extraCategoryModes : [])
+    .filter((m) => m !== mode && allowedExtras.includes(m));
+  const demo = [mode, ...new Set(extras)].flatMap((m) => demoForMode(m));
   // replace = reemplaza SOLO los productos marcados DEMO; los reales se conservan
   const base = replace ? (state.products || []).filter((p) => !p.isDemo) : (state.products || []);
   state.products = [...base, ...demo];
