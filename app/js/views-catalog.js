@@ -280,7 +280,7 @@ export function productsView(ctx) {
     const stats = [
       ['Productos', all.length, '▦'],
       ['Con stock', all.filter(p => totalStock(p) > 0).length, '◈'],
-      ['Stock bajo', all.filter(p => totalStock(p) > 0 && totalStock(p) <= 3).length, '⚠'],
+      ['Stock bajo', all.filter(p => totalStock(p) > 0 && totalStock(p) <= (Number.isInteger(Number(state.settings?.lowStockThreshold)) && state.settings?.lowStockThreshold !== undefined ? Number(state.settings.lowStockThreshold) : 3)).length, '⚠'],
       ['Sin precio', all.filter(p => !(Number(p.price) > 0)).length, '◇'],
     ];
     root.querySelector('#product-stats').innerHTML = stats.map(([label, count, icon]) =>
@@ -1150,6 +1150,17 @@ export function settingsView(ctx) {
         </div>
       </div>
 
+      <div class="panel" data-sec="Inventario">
+        <div class="panel-head"><h2>Inventario · Alertas de stock bajo</h2></div>
+        <div style="padding:16px">
+          <div class="field"><label for="low-stock-limit">Avisar cuando el stock sea igual o menor a</label>
+            <input id="low-stock-limit" type="number" min="0" max="999999" step="1" inputmode="numeric" value="${Number.isInteger(Number(state.settings?.lowStockThreshold)) && state.settings?.lowStockThreshold !== undefined ? state.settings.lowStockThreshold : 3}">
+            <div class="hint">Ejemplo: con 10, los productos con 10 unidades o menos aparecerán como stock bajo. No cambia las existencias.</div>
+          </div>
+          <button class="btn sm" id="low-stock-save" type="button">Guardar límite</button>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head"><h2>Agente IA</h2><span class="badge info" style="margin-left:auto">Beta</span></div>
         <div style="padding:16px">
@@ -1648,6 +1659,18 @@ export function settingsView(ctx) {
     renderCategories();
   });
   renderCategories();
+
+  $('#low-stock-save', root).onclick = () => {
+    const input = $('#low-stock-limit', root);
+    const value = Number(input.value);
+    if (input.value.trim() === '' || !Number.isSafeInteger(value) || value < 0 || value > 999999) {
+      toast('Ingresa un número entero entre 0 y 999999'); return;
+    }
+    state.settings = state.settings || {};
+    state.settings.lowStockThreshold = value;
+    emit();
+    toast('Límite de stock bajo guardado: ' + value);
+  };
 
   $('#save-co', root).onclick = () => {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
