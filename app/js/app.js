@@ -244,14 +244,11 @@ function paintLogin() {
       localStorage.setItem('zoco.session', JSON.stringify({ userId: u.id, at: Date.now() }));
       state.user = u;
       state.superadmin = await amISuperadmin();
-      // cada cliente nuevo arranca con el demo de su giro (se puede quitar después)
-      if (!(state.products || []).length) {
-        try { loadDemoForMode(state.company.mode || 'shoe', { replace: true }); } catch {}
-      }
+      // El asistente de bienvenida permite elegir el giro y sus ejemplos.
       const refCode = pendingRef();
       if (refCode) { try { registerReferral({ code: refCode, email, name: $('#lg-name').value.trim() || email.split('@')[0] }); } catch {} }
       toast('Cuenta creada. ¡Bienvenido!');
-      setTimeout(() => toast('Configuración → Datos de prueba: borra el catálogo de ejemplo'), 2000);
+      setTimeout(openFirstBusinessSetup, 180);
       route = 'inicio'; location.hash = '#/inicio'; paintShell();
       return;
     }
@@ -628,6 +625,7 @@ bootOAuth().then(async (oauth) => {
         try { state.superadmin = await amISuperadmin(); } catch {}
         try { location.hash = '#/inicio'; } catch {}
         toast('Bienvenido, ' + (user.name || email));
+        if (res.created && !inv?.claimed) setTimeout(openFirstBusinessSetup, 300);
       }
     } catch (e) {
       logOauth('error', e.message);
