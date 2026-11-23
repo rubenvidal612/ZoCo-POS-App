@@ -1214,12 +1214,9 @@ export function settingsView(ctx) {
         </div>
       </div>
       <div class="panel" data-sec="Secciones y tallas">
-        <div class="panel-head"><h2>Secciones y tallas</h2></div>
+        <div class="panel-head"><h2 id="sec-panel-title">Secciones y tallas</h2></div>
         <div style="padding:16px">
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
-            Ajusta las secciones de tu giro y el rango de tallas de cada una.
-            Ejemplo: Damas de 20 a 28, o Ropa XS–XXL.
-          </div>
+          <div id="sec-panel-help" style="font-size:12.5px;color:var(--muted);margin-bottom:12px"></div>
           <div id="sec-list" class="sec-list"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
             <button class="btn sm" id="sec-save">Guardar cambios</button>
@@ -1860,6 +1857,14 @@ export function settingsView(ctx) {
   const paintSecs = () => {
     if (!secList) return;
     const secs = sectionsForModeNow();
+    const hasSizes = secs.some(([, s]) => s.scale && s.scale !== 'none');
+    const secTitle = hasSizes ? 'Secciones y tallas' : 'Secciones de productos';
+    const titleEl = $('#sec-panel-title', root);
+    if (titleEl) titleEl.textContent = secTitle;
+    const helpEl = $('#sec-panel-help', root);
+    if (helpEl) helpEl.textContent = hasSizes
+      ? 'Edita las secciones y configura las tallas disponibles en cada una. Por ejemplo: Damas del 20 al 28 o Ropa XS a XXL.'
+      : 'Organiza tus productos por secciones. Puedes cambiar sus nombres, quitar secciones o agregar nuevas.';
     secList.innerHTML = secs.map(([id, s]) => {
       const numeric = s.scale !== 'none' && s.scale !== 'alpha';
       return `<div class="sec-row" data-sid="${esc(id)}">
@@ -1876,7 +1881,7 @@ export function settingsView(ctx) {
                  <label>Hasta</label><input class="sec-to" type="number" step="0.5" value="${s.to}">
                  <label>Paso</label><input class="sec-step" type="number" step="0.5" value="${s.step}">
                </div>`
-            : `<div class="sec-range sec-none">Sin tallas (pieza única)</div>`}
+            : ``}
       </div>`;
     }).join('') || '<div class="hint">Sin secciones.</div>';
 
