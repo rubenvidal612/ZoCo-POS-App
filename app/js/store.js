@@ -1188,20 +1188,21 @@ export const sectionOf = (p) => {
   return { label: '—' };
 };
 /* Categorías adicionales del mismo negocio, sin cambiar IDs, tallas ni stock existente. */
-export const CATEGORY_GROUPS = {
-  shoe: ['shoe', 'boutique'],
-  boutique: ['boutique', 'shoe'],
-  panaderia: ['panaderia', 'dulceria', 'abarrotes'],
-  dulceria: ['dulceria', 'panaderia', 'abarrotes'],
-  abarrotes: ['abarrotes', 'panaderia', 'dulceria', 'fruteria'],
-  ferreteria: ['ferreteria', 'merceria', 'refaccionaria'],
-  merceria: ['merceria', 'ferreteria', 'refaccionaria'],
-  refaccionaria: ['refaccionaria', 'ferreteria', 'merceria'],
-  cosmeticos: ['cosmeticos', 'perfumeria'],
-  perfumeria: ['perfumeria', 'cosmeticos'],
-  muebleria: ['muebleria', 'floreria'],
-  floreria: ['floreria', 'muebleria'],
+export const BUSINESS_FAMILIES = {
+  comercios: { label: 'Tiendas y comercios', modes: ['abarrotes','panaderia','dulceria','fruteria','carniceria','papeleria'] },
+  moda: { label: 'Moda y accesorios', modes: ['shoe','boutique','joyeria','optica'] },
+  belleza: { label: 'Belleza y cuidado personal', modes: ['cosmeticos','perfumeria','barberia'] },
+  tecnologia: { label: 'Tecnología y electrónica', modes: ['electronica'] },
+  hogar: { label: 'Hogar y decoración', modes: ['muebleria','floreria'] },
+  herramientas: { label: 'Ferretería y refacciones', modes: ['ferreteria','refaccionaria','merceria'] },
+  salud: { label: 'Salud y mascotas', modes: ['farmacia','mascotas'] },
+  alimentos: { label: 'Restaurante y alimentos preparados', modes: ['restaurante'] },
+  otros: { label: 'Otros negocios', modes: ['general'] },
 };
+export const familyForMode = (mode) => Object.keys(BUSINESS_FAMILIES).find(k => BUSINESS_FAMILIES[k].modes.includes(mode)) || 'otros';
+export const CATEGORY_GROUPS = Object.fromEntries(
+  Object.values(BUSINESS_FAMILIES).flatMap(group => group.modes.map(mode => [mode, group.modes]))
+);
 export const enabledCategoryModes = () => {
   const primary = state.company?.mode || 'general';
   const allowed = CATEGORY_GROUPS[primary] || [primary];
