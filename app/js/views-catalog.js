@@ -44,7 +44,7 @@ export function productsView(ctx) {
             <input id="pq" placeholder="Artículo, código o talla…"><span class="k">F3</span></div>
           <div class="ph-tools">
             <button class="btn ghost sm" id="px-photos" title="Buscar fotos faltantes en bases abiertas">📷 Traer fotos</button>
-            <button class="btn sm" id="cat-base" title="Productos típicos de abarrotes con foto">🛒 Catálogo base (100)</button>
+            ${['abarrotes', 'farmacia', 'papeleria'].includes(state.company.mode) ? `<button class="btn sm" id="cat-base" title="Catálogo base del giro con fotos">🛒 Catálogo base</button>` : ''}
             <button class="btn ghost sm" id="imp">⬆ Importar</button>
             <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
             <button class="btn ghost sm" id="adj">↺ Merma</button>
