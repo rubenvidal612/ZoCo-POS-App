@@ -1653,6 +1653,7 @@ export function settingsView(ctx) {
                <button class="btn sm" id="demo-load">Cargar ejemplos</button>
                ${state.products.length ? '<button class="btn sm" id="demo-replace" style="background:var(--danger)">Reemplazar TODO</button>' : ''}`,
       });
+      m.root.classList.add('mode-demo-overlay');
       m.root.querySelector('#demo-load').onclick = async () => {
         // Para abarrotes se carga el catálogo base completo (103 con foto)
         if (mode === 'abarrotes' || mode === 'farmacia' || mode === 'papeleria') {
