@@ -63,5 +63,5 @@ export function integrationsView() {
         <a href="https://developers.envia.com/" target="_blank" rel="noopener noreferrer">Documentación oficial de Envia.com</a>
       </article>
     </div>`;
-  return root;
+  return { root };
 }
