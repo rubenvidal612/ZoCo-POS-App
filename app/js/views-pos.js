@@ -275,7 +275,7 @@ export function posView(ctx) {
       const inCart = cart.lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
       return `<button class="sq-card" data-id="${p.id}" ${avail.length ? '' : 'disabled'}>
         <div class="sq-ph" style="background:${colorGradient(p.color)}">
-          ${demoPhotoForProduct(p) ? `<img src="${demoPhotoForProduct(p)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
+          ${demoPhotoForProduct(p) ? `<img src="${esc(demoPhotoForProduct(p))}" loading="lazy" alt="${esc(p.name)}" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"><span style="display:none;position:absolute;inset:0;place-items:center">${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
           ${inCart ? `<b class="sq-badge">${inCart}</b>` : ''}
         </div>
         <div class="sq-price">${p.discount?.on && Number(p.discount.value) > 0
