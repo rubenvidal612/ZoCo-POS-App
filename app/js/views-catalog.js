@@ -13,7 +13,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
@@ -1671,7 +1671,10 @@ export function settingsView(ctx) {
     state.settings = state.settings || {};
     state.settings.extraCategoryModes = [...new Set(chosenCategories)]
       .filter(m => (CATEGORY_GROUPS[mode] || []).includes(m) && m !== mode);
-    toast('Datos guardados');
+    // Si ya se está usando el catálogo de demostración, completar automáticamente
+    // las nuevas categorías seleccionadas, sin tocar productos reales.
+    const demoAdded = demoCount() > 0 ? fillMissingDemoCategories() : 0;
+    toast(demoAdded ? 'Datos guardados · ' + demoAdded + ' ejemplos añadidos a las categorías' : 'Datos guardados');
     ctx.persist(); ctx.refreshShell?.();
 
     // Al cambiar de giro: ofrece cargar ejemplos de ese giro
