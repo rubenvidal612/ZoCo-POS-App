@@ -263,7 +263,7 @@ const DEMOS = {
   ],
   restaurante: [
     ['Hamburguesa clásica', 'platillos', 110, 55, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=640'],
-    ['Torta de pierna', 'platillos', 85, 40, 'https://images.unsplash.com/photo-1553909489-cd47e0ef937f?w=640'],
+    ['Torta de pierna', 'platillos', 85, 40, 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=640'],
     ['Pizza artesanal', 'platillos', 160, 75, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=640'],
     ['Café americano', 'bebidas_r', 35, 12, 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=640'],
     ['Rebanada de pastel', 'postres', 55, 25, 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=640'],
