@@ -397,6 +397,16 @@ export function demoCount() {
 export function fillMissingDemoCategories() {
   const modes = enabledCategoryModes();
   let added = 0;
+  let photosUpdated = 0;
+  // Catálogos DEMO antiguos pueden haberse guardado antes de incluir fotos.
+  // Completar imágenes únicamente en los productos de ejemplo existentes.
+  for (const p of (state.products || [])) {
+    if (!p.isDemo || p.image) continue;
+    for (const mode of modes) {
+      const row = (DEMOS[mode] || []).find(r => r[0] === p.name && r[1] === p.section);
+      if (row?.[4]) { p.image = row[4]; photosUpdated++; break; }
+    }
+  }
   for (const mode of modes) {
     const expected = DEMOS[mode] || DEMOS.general;
     const sections = new Set(expected.map(row => row[1]));
@@ -409,8 +419,8 @@ export function fillMissingDemoCategories() {
       added += missing.length;
     }
   }
-  if (added) emit();
-  return added;
+  if (added || photosUpdated) emit();
+  return added + photosUpdated;
 }
 
 export function loadDemoForMode(mode, { replace = true } = {}) {
