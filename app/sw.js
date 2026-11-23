@@ -1,5 +1,5 @@
 // Service worker: cache del shell para usar ZoCo sin internet
-const CACHE = 'zoco-shell-v148';
+const CACHE = 'zoco-shell-v149';
 const SHELL = [
   '/',
   '/index.html',
@@ -15,6 +15,14 @@ const SHELL = [
   '/js/store.js',
   '/js/ui.js',
   '/js/views-pos.js',
+  '/js/views-food.js',
+  '/js/sync.js',
+  '/js/auth.js',
+  '/js/notify.js',
+  '/js/install.js',
+  '/js/update.js',
+  '/js/views-admin.js',
+  '/js/camera.js',
   '/js/views-purchases.js',
   '/js/lookup.js',
   '/js/views-catalog.js',
@@ -48,7 +56,7 @@ self.addEventListener('fetch', (e) => {
     fetch(e.request)
       .then((res) => {
         const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+        if (res.ok && url.origin === self.location.origin) caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
         return res;
       })
       .catch(() => caches.match(e.request).then((cached) => cached || caches.match('/')))
