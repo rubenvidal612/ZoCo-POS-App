@@ -1705,3 +1705,18 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .mode-demo-overlay .modal-foot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px}
 .mode-demo-overlay .modal-foot .btn{width:100%;min-width:0;min-height:48px;height:auto;white-space:normal;line-height:1.25;padding:10px 8px;text-align:center}
 @media(max-width:390px){.mode-demo-overlay.overlay{padding:10px}.mode-demo-overlay .modal-foot{gap:8px;padding:10px}.mode-demo-overlay .modal-foot .btn{font-size:12px}}
+
+/* ZoCo POS · pantalla de inicio, no bloquea la aplicación. */
+#zoco-startup{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:white;text-align:center;background:linear-gradient(180deg,rgba(12,20,36,.65) 0%,rgba(12,20,36,.78) 56%,rgba(12,20,36,.86) 100%),url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=85') center/cover no-repeat,#101827;transition:opacity .35s ease,visibility .35s ease}
+#zoco-startup::before,#zoco-startup::after{content:"";position:absolute;left:-25%;width:150%;height:22%;background:linear-gradient(100deg,#ff9800,#f85c00);border-radius:50%;filter:drop-shadow(0 0 28px rgba(255,107,0,.18));pointer-events:none}
+#zoco-startup::before{top:-15%;transform:rotate(-8deg)}#zoco-startup::after{bottom:-17%;transform:rotate(-9deg)}
+#zoco-startup.startup-done{opacity:0;visibility:hidden;pointer-events:none}
+.startup-content{position:relative;z-index:1;display:flex;align-items:center;flex-direction:column;gap:9px;padding:24px}
+.startup-mark{width:clamp(100px,30vw,160px);height:auto;border-radius:25%}
+.startup-name{font-size:clamp(48px,15vw,82px);font-weight:850;line-height:1.1;letter-spacing:-2px}
+.startup-pos{font-size:17px;font-weight:850;letter-spacing:2px;border-radius:100px;padding:4px 25px;background:linear-gradient(120deg,#ff9500,#ff5e00)}
+.startup-sub{margin-top:10px;font-size:clamp(11px,3vw,16px);font-weight:650;line-height:1.5}
+.startup-loading{position:absolute;z-index:1;bottom:max(11vh,48px);display:flex;align-items:center;flex-direction:column;gap:15px;font-size:20px;font-weight:750}
+.startup-spinner{width:40px;height:40px;border-radius:50%;border:5px solid rgba(255,255,255,.3);border-top-color:#ff8100;animation:zoco-spin 1s linear infinite}
+@keyframes zoco-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.startup-spinner{animation:none}#zoco-startup{transition:none}}
