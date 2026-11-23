@@ -1,0 +1,21 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnóstico ZoCo</title><style>body{background:#0f172a;color:#fff;font:16px system-ui;margin:0;padding:24px}main{max-width:560px;margin:auto}section{background:#fff;color:#172033;border-radius:20px;padding:22px;margin-top:20px}button{background:#f97316;color:white;border:0;padding:14px;border-radius:12px;font-weight:700;width:100%;margin:8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}small{color:#64748b}</style></head><body><main><h1>ZoCo · Diagnóstico</h1><p>Esta página funciona sin cargar el punto de venta. No borra ventas ni datos.</p><section><h2>Estado de archivos</h2><pre id="log">Comprobando…</pre><button id="retry">Volver a comprobar</button><button id="repair">Reparar caché de aplicación (sin borrar datos)</button><small>La reparación solo desregistra el service worker y borra archivos descargados en Cache Storage. No toca localStorage ni IndexedDB.</small></section></main><script>
+const log=document.getElementById('log');
+async function check(){
+ const paths=['/index.html','/js/app.js','/js/views-integrations.js','/js/store.js','/js/views-catalog.js','/sw.js'];
+ const rows=[];
+ for(const path of paths){try{const r=await fetch(path+'?zoco_diag='+Date.now(),{cache:'no-store'});rows.push(path+' : HTTP '+r.status+' ('+r.headers.get('content-type')+')')}catch(e){rows.push(path+' : ERROR '+e.message)}}
+ rows.push('Service worker: '+(navigator.serviceWorker?.controller?.scriptURL||'sin controlador'));
+ log.textContent=rows.join('\n');
+}
+document.getElementById('retry').onclick=check;
+document.getElementById('repair').onclick=async()=>{
+ if(!confirm('¿Reparar únicamente los archivos en caché de ZoCo? No se borrarán ventas ni sesiones guardadas.'))return;
+ log.textContent='Reparando…';
+ try{
+ if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>new URL(r.scope).origin===location.origin).map(r=>r.unregister()));}
+ if('caches' in window){const names=await caches.keys();await Promise.all(names.filter(n=>n.startsWith('zoco-shell-')).map(n=>caches.delete(n)));}
+ log.textContent='Caché reparada. Cierra todas las pestañas de ZoCo y abre de nuevo https://zoco-pos.vercel.app/';
+ }catch(e){log.textContent='No se pudo reparar: '+e.message;}
+};
+check();
+</script></body></html>
