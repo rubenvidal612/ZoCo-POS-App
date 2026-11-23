@@ -698,7 +698,7 @@ export function resetSectionDef(id) {
 
 export function sectionsForModeNow() {
   const modeNow = state.company?.mode || 'general';
-  return Object.entries(SECTIONS).filter(([, s]) => (s.mode || 'general') === modeNow);
+  return Object.entries(SECTIONS).filter(([, s]) => enabledCategoryModes().includes(s.mode || 'general'));
 }
 export function sizesFor(sectionId) {
   const s = SECTIONS[sectionId];
@@ -1184,7 +1184,28 @@ export const sectionOf = (p) => {
   if (SECTIONS[alt]) return SECTIONS[alt];
   return { label: '—' };
 };
-export const sectionsForMode = () => Object.entries(SECTIONS).filter(([, s]) => s.mode === state.company.mode);
+/* Categorías adicionales del mismo negocio, sin cambiar IDs, tallas ni stock existente. */
+export const CATEGORY_GROUPS = {
+  shoe: ['shoe', 'boutique'],
+  boutique: ['boutique', 'shoe'],
+  panaderia: ['panaderia', 'dulceria', 'abarrotes'],
+  dulceria: ['dulceria', 'panaderia', 'abarrotes'],
+  abarrotes: ['abarrotes', 'panaderia', 'dulceria', 'fruteria'],
+  ferreteria: ['ferreteria', 'merceria', 'refaccionaria'],
+  merceria: ['merceria', 'ferreteria', 'refaccionaria'],
+  refaccionaria: ['refaccionaria', 'ferreteria', 'merceria'],
+  cosmeticos: ['cosmeticos', 'perfumeria'],
+  perfumeria: ['perfumeria', 'cosmeticos'],
+  muebleria: ['muebleria', 'floreria'],
+  floreria: ['floreria', 'muebleria'],
+};
+export const enabledCategoryModes = () => {
+  const primary = state.company?.mode || 'general';
+  const allowed = CATEGORY_GROUPS[primary] || [primary];
+  const extras = Array.isArray(state.settings?.extraCategoryModes) ? state.settings.extraCategoryModes : [];
+  return [primary, ...extras.filter((m) => allowed.includes(m) && m !== primary)];
+};
+export const sectionsForMode = () => Object.entries(SECTIONS).filter(([, s]) => enabledCategoryModes().includes(s.mode));
 export const productById = (id) => state.products.find((p) => p.id === id);
 
 export function stockOf(p, size, branchId = state.currentBranch) {
