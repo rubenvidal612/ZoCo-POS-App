@@ -1721,6 +1721,6 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @keyframes zoco-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.startup-spinner{animation:none}#zoco-startup{transition:none}}
 
-/* Fondo original aprobado: al subir /zoco-intro-original.jpg se usa sin duplicar textos. */
-#zoco-startup.original-artwork{background:#101827 url('/zoco-intro-original.jpg') center center/cover no-repeat}
+/* Fondo original aprobado: al subir /file_0000000045508212abb61c454ec385a8.png se usa sin duplicar textos. */
+#zoco-startup.original-artwork{background:#101827 url('/file_0000000045508212abb61c454ec385a8.png') center center/cover no-repeat}
 #zoco-startup.original-artwork::before,#zoco-startup.original-artwork::after,#zoco-startup.original-artwork .startup-content,#zoco-startup.original-artwork .startup-loading{display:none}
