@@ -37,7 +37,7 @@ export function integrationsView() {
     <div class="zi-banner">Configuración en preparación. Por seguridad, ZoCo todavía no recibe ni guarda credenciales de terceros desde esta pantalla.</div>
     <div class="zi-grid">
       <article class="zi-card">
-        <div class="zi-top"><div class="zi-logo zi-logo-mp" aria-label="Mercado Pago"><svg viewBox="0 0 64 64" width="43" height="43" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#009ee3"/><path d="M9 29l10-7 9 2 7-2 9 3 11-1-1 12-9 3-12 9-7-1-13-10z" fill="#fff"/><path d="M18 29l9-4 7 2 8-1 6 5-10 9-9-7-5 4-8-6" fill="none" stroke="#0069a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 36l8 7m-3-12l11 8" stroke="#009ee3" stroke-width="3" stroke-linecap="round"/></svg></div><div><div class="zi-name">Mercado Pago</div><p>Cobros online y terminal Point</p></div><span class="zi-badge">Sin conectar</span></div>
+        <div class="zi-top"><div class="zi-logo zi-logo-mp"><img src="https://www.google.com/s2/favicons?domain=mercadopago.com.mx&sz=128" alt="Ícono oficial de Mercado Pago" width="43" height="43" loading="lazy"></div><div><div class="zi-name">Mercado Pago</div><p>Cobros online y terminal Point</p></div><span class="zi-badge">Sin conectar</span></div>
         <div class="zi-panel">
           <div class="zi-line"><b>Cuenta de cobros</b><span>Conexión OAuth</span></div>
           <div class="zi-line"><b>Terminal asignada</b><span>Seleccionar Point</span></div>
@@ -50,7 +50,7 @@ export function integrationsView() {
         <a href="https://www.mercadopago.com.mx/developers/es" target="_blank" rel="noopener noreferrer">Documentación oficial de Mercado Pago</a>
       </article>
       <article class="zi-card">
-        <div class="zi-top"><div class="zi-logo zi-logo-envia" aria-label="Envia.com"><svg viewBox="0 0 64 64" width="43" height="43" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#e4f7f1"/><path d="M13 25l19-11 19 11v22L32 58 13 47z" fill="#00a98f"/><path d="M13 25l19 11 19-11M32 36v22" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><path d="M25 25l8-5 8 5-8 5z" fill="#fff"/></svg></div><div><div class="zi-name">Envia.com</div><p>Guías, cotizaciones y rastreo</p></div><span class="zi-badge">Sin conectar</span></div>
+        <div class="zi-top"><div class="zi-logo zi-logo-envia"><img src="https://www.google.com/s2/favicons?domain=envia.com&sz=128" alt="Ícono de Envia.com" width="43" height="43" loading="lazy"></div><div><div class="zi-name">Envia.com</div><p>Guías, cotizaciones y rastreo</p></div><span class="zi-badge">Sin conectar</span></div>
         <div class="zi-panel">
           <div class="zi-line"><b>Cotizar envíos</b><span>Varias paqueterías</span></div>
           <div class="zi-line"><b>Generar etiquetas</b><span>Desde tus ventas</span></div>
