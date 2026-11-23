@@ -11,7 +11,7 @@ import {
   cancelSale, sectionOf, resetDemo, fmtSize, upsertCustomer, ROLES, PERMS, can, currentUser,
   layawayPayment, cancelLayaway, upsertCoupon, registerSummary, upsertExpense, payExpense,
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
-  switchCompany, createCompany, MODES, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
+  switchCompany, createCompany, MODES, CATEGORY_GROUPS, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
@@ -1143,6 +1143,7 @@ export function settingsView(ctx) {
               ${Object.entries(MODES).map(([k, m]) => `<option value="${k}" ${state.company.mode === k ? 'selected' : ''}>${m.label}</option>`).join('')}
             </select>
             <div class="hint">Cada empresa elige su giro y secciones de catálogo.</div>
+            <div id="c-category-groups" style="margin-top:12px"></div>
 
           </div>
           <button class="btn sm" id="save-co">Guardar</button>
@@ -1616,6 +1617,36 @@ export function settingsView(ctx) {
     }
   });
 
+  // Las categorías adicionales comparten el inventario y mantienen sus escalas originales.
+  const categoryBox = $('#c-category-groups', root);
+  const categoryMode = $('#c-mode', root);
+  let chosenCategories = Array.isArray(state.settings?.extraCategoryModes)
+    ? [...state.settings.extraCategoryModes] : [];
+  const renderCategories = () => {
+    const primary = categoryMode.value;
+    const related = (CATEGORY_GROUPS[primary] || []).filter(m => m !== primary);
+    if (!related.length) {
+      categoryBox.innerHTML = '';
+      return;
+    }
+    categoryBox.innerHTML = '<div style="font-weight:700;margin-bottom:7px">También vendo productos de:</div>'
+      + '<div class="hint" style="margin-bottom:9px">Activa categorías adicionales sin cambiar el giro principal ni borrar existencias.</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px">'
+      + related.map(m => '<label style="display:flex;align-items:center;gap:9px;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2,#f8fafc)">'
+        + '<input type="checkbox" data-extra-category="' + m + '" ' + (chosenCategories.includes(m) ? 'checked' : '') + '>'
+        + '<span>' + esc(MODES[m]?.label || m) + '</span></label>').join('')
+      + '</div>';
+    categoryBox.querySelectorAll('[data-extra-category]').forEach(input => {
+      input.onchange = () => {
+        chosenCategories = input.checked
+          ? [...new Set([...chosenCategories, input.dataset.extraCategory])]
+          : chosenCategories.filter(m => m !== input.dataset.extraCategory);
+      };
+    });
+  };
+  categoryMode.addEventListener('change', renderCategories);
+  renderCategories();
+
   $('#save-co', root).onclick = () => {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
     state.company.legalId = $('#c-rfc', root).value.trim();
@@ -1632,6 +1663,9 @@ export function settingsView(ctx) {
     const mode = $('#c-mode', root).value;
     const cambioGiro = mode !== state.company.mode;
     if (cambioGiro) state.company.mode = mode;
+    state.settings = state.settings || {};
+    state.settings.extraCategoryModes = [...new Set(chosenCategories)]
+      .filter(m => (CATEGORY_GROUPS[mode] || []).includes(m) && m !== mode);
     toast('Datos guardados');
     ctx.persist(); ctx.refreshShell?.();
 
