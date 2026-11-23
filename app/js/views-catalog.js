@@ -1143,10 +1143,7 @@ export function settingsView(ctx) {
               ${Object.entries(MODES).map(([k, m]) => `<option value="${k}" ${state.company.mode === k ? 'selected' : ''}>${m.label}</option>`).join('')}
             </select>
             <div class="hint">Cada empresa elige su giro y secciones de catálogo.</div>
-            <div id="food-preview-access" style="display:${state.company.mode === 'restaurante' ? 'block' : 'none'};margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)">
-              <b>🍽 ZoCo Food</b><div class="hint" style="margin:5px 0 10px">Vista previa de Pedidos, Cocina y Menú Digital. Los pedidos de esta demostración no son reales.</div>
-              <button class="btn sm" type="button" id="food-preview-open">Abrir ZoCo Food (demo)</button>
-            </div>
+
           </div>
           <button class="btn sm" id="save-co">Guardar</button>
         </div>
@@ -1619,14 +1616,7 @@ export function settingsView(ctx) {
     }
   });
 
-  $('#c-mode', root)?.addEventListener('change', (e) => {
-    const panel = $('#food-preview-access', root);
-    if (panel) panel.style.display = e.target.value === 'restaurante' ? 'block' : 'none';
-  });
-  $('#food-preview-open', root)?.addEventListener('click', () => {
-    window.open('/food-preview.html', '_blank', 'noopener');
-  });
-    $('#save-co', root).onclick = () => {
+  $('#save-co', root).onclick = () => {
     state.company.name = $('#c-name', root).value.trim() || 'ZoCo';
     state.company.legalId = $('#c-rfc', root).value.trim();
     // WhatsApp del catálogo: se guardan solo dígitos, con lada de país
