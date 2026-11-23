@@ -256,9 +256,11 @@ const DEMOS = {
     ['Cera para cabello', 'producto_b', 160, 90],
   ],
   restaurante: [
-    ['Hamburguesa clásica', 'platillos', 110, 55],
-    ['Café americano', 'bebidas_r', 35, 12],
-    ['Rebanada de pastel', 'postres', 55, 25],
+    ['Hamburguesa clásica', 'platillos', 110, 55, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=640'],
+    ['Torta de pierna', 'platillos', 85, 40, 'https://images.unsplash.com/photo-1553909489-cd47e0ef937f?w=640'],
+    ['Pizza artesanal', 'platillos', 160, 75, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=640'],
+    ['Café americano', 'bebidas_r', 35, 12, 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=640'],
+    ['Rebanada de pastel', 'postres', 55, 25, 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=640'],
   ],
   merceria: [
     ['Botón 4 huecos (10 pzas)', 'botones', 15, 8],
@@ -288,7 +290,7 @@ export function demoForMode(mode) {
   const list = DEMOS[mode] || DEMOS.general;
   const branchId = state.currentBranch || (state.branches[0] || {}).id;
   return list.map((row, i) => {
-    const [name, section, price, cost] = row;
+    const [name, section, price, cost, image] = row;
     const sizes = sizesFor(section);
     const stock = {};
     // las primeras 3 tallas con existencia, el resto en 0
@@ -296,6 +298,7 @@ export function demoForMode(mode) {
     const p = {
       id: uid('demo'),
       name, section, price, cost,
+      ...(image ? { image } : {}),
       code: name.replace(/[^\w]/g, '').slice(0, 3).toUpperCase() + (10 + i),
       color: COLORS[i % COLORS.length],
       catalog: true, active: true, isDemo: true, createdAt: new Date().toISOString(),
