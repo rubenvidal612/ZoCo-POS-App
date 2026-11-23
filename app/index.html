@@ -50,14 +50,33 @@
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 <script>
-  // Desaparece en cuanto la aplicación muestra contenido, sin imponer una espera artificial.
+  // Mantener visible la presentación al menos 2.5 s, sin ocultar errores de carga.
   (function () {
-    const hide = () => { const s = document.getElementById('zoco-startup'); if (s) s.classList.add('startup-done'); };
+    const startedAt = performance.now();
+    const minDuration = 2500;
     const app = document.getElementById('app');
-    const observer = new MutationObserver(() => { if (app.children.length) { observer.disconnect(); requestAnimationFrame(() => setTimeout(hide, 180)); } });
+    let ready = false;
+    let hidden = false;
+    const hide = () => {
+      if (hidden || !ready) return;
+      const remaining = Math.max(0, minDuration - (performance.now() - startedAt));
+      setTimeout(() => {
+        if (hidden) return;
+        hidden = true;
+        document.getElementById('zoco-startup')?.classList.add('startup-done');
+      }, remaining);
+    };
+    const observer = new MutationObserver(() => {
+      if (app.children.length) { ready = true; observer.disconnect(); hide(); }
+    });
     observer.observe(app, {childList:true});
-    if (app.children.length) hide();
-    setTimeout(() => { observer.disconnect(); hide(); }, 9000);
+    if (app.children.length) { ready = true; observer.disconnect(); hide(); }
+    // En caso de un error, no dejar el inicio tapando la interfaz indefinidamente.
+    setTimeout(() => {
+      observer.disconnect();
+      ready = true;
+      hide();
+    }, 9000);
   })();
 </script>
 <script src="./js/config.js"></script>
