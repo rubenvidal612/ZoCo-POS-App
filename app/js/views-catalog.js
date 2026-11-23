@@ -13,7 +13,7 @@ import {
   personalSummary, fixedMonthlyTotal, expenseMonthly, setSavingGoal, recordImport, undoImport, undoRecentProducts, resetToBlank, exportBackup,
   switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
-  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
+  returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, demoPhotoForProduct, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
   PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
@@ -304,8 +304,8 @@ export function productsView(ctx) {
         <td><input type="checkbox" data-sel="${p.id}" ${sel.has(p.id) ? 'checked' : ''}></td>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
-            ${p.image
-              ? `<img src="${p.image}" style="width:86px;height:86px;min-width:86px;border-radius:14px;object-fit:cover;background:#f1f5f9" loading="lazy">`
+            ${demoPhotoForProduct(p)
+              ? `<img src="${demoPhotoForProduct(p)}" style="width:86px;height:86px;min-width:86px;border-radius:14px;object-fit:cover;background:#f1f5f9" loading="lazy">`
               : `<div style="width:86px;height:86px;min-width:86px;border-radius:14px;background:${p.color};display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">${esc(sectionOf(p).label.slice(0, 2).toUpperCase())}</div>`}
             <div><div class="t-strong">${esc(p.name)}${p.isDemo ? ` <span class="badge grey" style="font-size:9px">DEMO</span>` : ""}${p.isBase ? ` <span class="badge" style="font-size:9px">BASE</span>` : ""}</div>
             <div style="font-size:11.5px;color:var(--muted)">${p.brand ? `<b style="color:var(--brand-700,#C2410C)">${esc(p.brand)}</b> · ` : ''}${esc(p.code)}</div></div>
