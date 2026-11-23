@@ -1,6 +1,6 @@
 // Vista Inicio (home) — estilo ZoCo Classic
 import { el, money, esc, modal, toast } from './ui.js';
-import { state, totalStock, cashBreakdown, openRegister, branch, currentUser } from './store.js';
+import { state, totalStock, cashBreakdown, openRegister, branch, currentUser, demoPhotoForProduct } from './store.js';
 import { openCutZ } from './views-inventory.js';
 
 const spark = (color) => `  <svg viewBox="0 0 200 34" preserveAspectRatio="none" fill="none">
@@ -135,7 +135,7 @@ export function homeView(ctx) {
           </svg><div class="home-week-labels">${weekDays.map((d) => '<span>' + d.label + '</span>').join('')}</div></div>
         </div>
         <div class="panel home-low"><div class="panel-head"><h2>⚠ Productos con Stock Bajo</h2><button class="btn ghost sm" id="go-low-stock">Ver todos</button></div>
-          <div class="home-low-list">${lowProducts.length ? lowProducts.map((p) => '<div class="home-low-item"><span>' + esc(p.name) + '</span><b>Stock: ' + totalStock(p) + '</b></div>').join('') : '<p class="home-empty">No hay productos con stock bajo.</p>'}</div>
+          <div class="home-low-list">${lowProducts.length ? lowProducts.map((p) => '<div class="home-low-item"><div class="home-low-product"><div class="home-low-photo">' + (demoPhotoForProduct(p) ? '<img src="' + esc(demoPhotoForProduct(p)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span style="display:none">📦</span>' : '<span>📦</span>') + '</div><span class="home-low-name">' + esc(p.name) + '</span></div><b>Stock: ' + totalStock(p) + '</b></div>').join('') : '<p class="home-empty">No hay productos con stock bajo.</p>'}</div>
         </div>
       </div>
 
