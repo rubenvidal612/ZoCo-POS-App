@@ -3,7 +3,7 @@ import { $, el, money, esc, toast, modal, confirmDialog, readImageCompressed } f
 import {
   state, sectionsForMode, sizesFor, stockOf, totalStock, productById,
   cartTotals, addLine, commitSale, sectionOf, fmtSize, can, createLayaway, applyCoupon,
-  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey, findByBarcode, upsertProduct,
+  unitOf, isFractional, fmtQty, unitStep, round3, UNITS, variantsOf, variantKey, findByBarcode, upsertProduct, demoPhotoForProduct,
 } from './store.js';
 import { printTicket, ticketText } from './printer.js';
 import { lookupBarcode, LOOKUP_CREDIT } from './lookup.js';
@@ -275,7 +275,7 @@ export function posView(ctx) {
       const inCart = cart.lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
       return `<button class="sq-card" data-id="${p.id}" ${avail.length ? '' : 'disabled'}>
         <div class="sq-ph" style="background:${colorGradient(p.color)}">
-          ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
+          ${demoPhotoForProduct(p) ? `<img src="${demoPhotoForProduct(p)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : `<span>${esc(sectionOf(p).label.slice(0, 3).toUpperCase())}</span>`}
           ${inCart ? `<b class="sq-badge">${inCart}</b>` : ''}
         </div>
         <div class="sq-price">${p.discount?.on && Number(p.discount.value) > 0
