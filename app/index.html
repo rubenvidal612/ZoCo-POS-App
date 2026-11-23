@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZoCo POS</title>
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/zoco-192.png" type="image/png">
+<link rel="icon" href="/zoco-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,12 +35,31 @@
   });
 </script>
 <link rel="stylesheet" href="./css/tokens.css?v=8">
-<link rel="stylesheet" href="./css/app.css?v=44">
+<link rel="stylesheet" href="./css/app.css?v=45">
 </head>
 <body>
+<div id="zoco-startup" role="status" aria-label="Iniciando ZoCo POS">
+  <div class="startup-content">
+    <img class="startup-mark" src="/zoco-icon.svg" alt="ZoCo">
+    <div class="startup-name">ZoCo</div><div class="startup-pos">POS</div>
+    <div class="startup-sub">Inventario · Ventas · Catálogo · Reportes</div>
+  </div>
+  <div class="startup-loading"><span class="startup-spinner"></span><span>Iniciando ZoCo...</span></div>
+</div>
 <div id="app"></div>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
+<script>
+  // Desaparece en cuanto la aplicación muestra contenido, sin imponer una espera artificial.
+  (function () {
+    const hide = () => { const s = document.getElementById('zoco-startup'); if (s) s.classList.add('startup-done'); };
+    const app = document.getElementById('app');
+    const observer = new MutationObserver(() => { if (app.children.length) { observer.disconnect(); requestAnimationFrame(() => setTimeout(hide, 180)); } });
+    observer.observe(app, {childList:true});
+    if (app.children.length) hide();
+    setTimeout(() => { observer.disconnect(); hide(); }, 9000);
+  })();
+</script>
 <script src="./js/config.js"></script>
 <script type="module" src="./js/app.js"></script>
 <script>
