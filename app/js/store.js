@@ -392,6 +392,27 @@ export function removeDemoProducts() {
 export function demoCount() {
   return (state.products || []).filter((p) => p.isDemo).length;
 }
+/** Completa solo las categorías activas que todavía no tienen ejemplos.
+ * No elimina productos ni duplica ejemplos al guardar la configuración. */
+export function fillMissingDemoCategories() {
+  const modes = enabledCategoryModes();
+  let added = 0;
+  for (const mode of modes) {
+    const expected = DEMOS[mode] || DEMOS.general;
+    const sections = new Set(expected.map(row => row[1]));
+    const existing = (state.products || []).filter(p => p.isDemo && sections.has(p.section));
+    // Una categoría se considera cubierta solo si están sus ejemplos (no solo uno).
+    const names = new Set(existing.map(p => p.name));
+    const missing = demoForMode(mode).filter(p => !names.has(p.name));
+    if (missing.length) {
+      state.products.push(...missing);
+      added += missing.length;
+    }
+  }
+  if (added) emit();
+  return added;
+}
+
 export function loadDemoForMode(mode, { replace = true } = {}) {
   const allowedExtras = CATEGORY_GROUPS[mode] || [];
   const extras = (Array.isArray(state.settings?.extraCategoryModes) ? state.settings.extraCategoryModes : [])
