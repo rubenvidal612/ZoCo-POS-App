@@ -305,14 +305,14 @@ export function productsView(ctx) {
         <td>
           <div style="display:flex;align-items:center;gap:10px">
             ${p.image
-              ? `<img src="${p.image}" style="width:64px;height:64px;min-width:64px;border-radius:12px;object-fit:cover">`
-              : `<div style="width:64px;height:64px;min-width:64px;border-radius:12px;background:${p.color};display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">${esc(sectionOf(p).label.slice(0, 2).toUpperCase())}</div>`}
+              ? `<img src="${p.image}" style="width:86px;height:86px;min-width:86px;border-radius:14px;object-fit:cover;background:#f1f5f9" loading="lazy">`
+              : `<div style="width:86px;height:86px;min-width:86px;border-radius:14px;background:${p.color};display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">${esc(sectionOf(p).label.slice(0, 2).toUpperCase())}</div>`}
             <div><div class="t-strong">${esc(p.name)}${p.isDemo ? ` <span class="badge grey" style="font-size:9px">DEMO</span>` : ""}${p.isBase ? ` <span class="badge" style="font-size:9px">BASE</span>` : ""}</div>
             <div style="font-size:11.5px;color:var(--muted)">${p.brand ? `<b style="color:var(--brand-700,#C2410C)">${esc(p.brand)}</b> · ` : ''}${esc(p.code)}</div></div>
           </div>
         </td>
         <td>${esc(sectionOf(p).label)}</td>
-        <td>${withStock}/${sizes.length}</td>
+        <td>${sizes.length === 1 && ['Único','Unico','Unitario'].includes(String(sizes[0])) ? '—' : withStock + '/' + sizes.length}</td>
         <td class="mono"><span class="zoco-stock-pill">${totalStock(p)}</span></td>
         <td class="mono t-strong">${Number(p.price) > 0
           ? (p.discount?.on && Number(p.discount.value) > 0
