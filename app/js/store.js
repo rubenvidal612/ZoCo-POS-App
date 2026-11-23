@@ -342,6 +342,17 @@ Object.entries(DEMOS).forEach(([mode, rows]) => {
   });
 });
 
+/** Imagen de demostración derivada del catálogo, incluso si el producto se guardó sin foto. */
+export function demoPhotoForProduct(p) {
+  if (!p?.isDemo) return p?.image || '';
+  if (p.image) return p.image;
+  for (const rows of Object.values(DEMOS)) {
+    const match = rows.find(row => row[0] === p.name && row[1] === p.section);
+    if (match?.[4]) return match[4];
+  }
+  return '';
+}
+
 /** Productos de ejemplo del giro (sin tocar el estado). */
 export function demoForMode(mode) {
   const list = DEMOS[mode] || DEMOS.general;
