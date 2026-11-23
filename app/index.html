@@ -72,6 +72,33 @@
       ready = true;
       hide();
     }, 9000);
+    // Si el módulo principal no logra pintar, ofrecer recuperación sin borrar datos.
+    setTimeout(() => {
+      if (app.children.length) return;
+      const existing = document.getElementById('zoco-boot-diagnostic');
+      if (existing) return;
+      document.getElementById('zoco-startup')?.classList.add('startup-done');
+      const panel = document.createElement('div');
+      panel.id = 'zoco-boot-diagnostic';
+      panel.style.cssText = 'position:relative;z-index:100;max-width:440px;margin:12vh auto 20px;padding:24px;border-radius:20px;background:#fff;color:#172033;box-shadow:0 10px 40px #0002;font:15px/1.5 system-ui,sans-serif';
+      const title = document.createElement('h2');
+      title.textContent = 'ZoCo no pudo iniciar';
+      const msg = document.createElement('p');
+      msg.textContent = 'No borres los datos de la aplicación. Puedes reintentar la carga sin eliminar tus ventas guardadas.';
+      const detail = document.createElement('pre');
+      detail.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:#9f1239';
+      detail.textContent = (window.__errs || []).join(' | ') || 'No se detectó un error específico. Revisa la conexión o intenta actualizar.';
+      const retry = document.createElement('button');
+      retry.textContent = 'Reintentar sin borrar datos';
+      retry.style.cssText = 'background:#f97316;color:white;border:0;border-radius:12px;padding:14px;width:100%;font-weight:700';
+      retry.onclick = () => {
+        const url = new URL(location.href);
+        url.searchParams.set('reload', String(Date.now()));
+        location.replace(url.href);
+      };
+      panel.append(title, msg, detail, retry);
+      document.body.append(panel);
+    }, 12000);
   })();
 </script>
 <script src="./js/config.js"></script>
