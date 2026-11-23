@@ -42,10 +42,11 @@ export function homeView(ctx) {
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
     const sum = (a) => a.reduce((x, s) => x + s.total, 0);
-    const lowStock = state.products.filter((p) => totalStock(p) <= 3).length;
+    const lowStockLimit = Number.isInteger(Number(state.settings?.lowStockThreshold)) && state.settings?.lowStockThreshold !== undefined ? Number(state.settings.lowStockThreshold) : 3;
+    const lowStock = state.products.filter((p) => p.active !== false && totalStock(p) <= lowStockLimit).length;
     const cashSummary = cashBreakdown();
     const year = done.filter((sale) => new Date(sale.date).getFullYear() === now.getFullYear());
-    const lowProducts = state.products.filter((p) => p.active !== false && totalStock(p) <= 3).slice(0, 5);
+    const lowProducts = state.products.filter((p) => p.active !== false && totalStock(p) <= lowStockLimit).slice(0, 5);
     const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
     const weekDays = Array.from({ length: 7 }, (_, i) => {
       const day = new Date(monday); day.setDate(day.getDate() + i);
