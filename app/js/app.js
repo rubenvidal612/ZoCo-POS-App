@@ -1,6 +1,7 @@
 // Shell + router + login de ZoCo POS
 import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
+import { foodView } from './views-food.js';
 import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
 import { purchasesView } from './views-purchases.js';
@@ -36,6 +37,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'productos', label: 'Productos', icon: '▦', mobile: true, perm: 'products.edit' },
       { id: 'compras', label: 'Compras', icon: '📦', perm: 'products.edit' },
+      { id: 'food', label: 'ZoCo Food', icon: '🍽', perm: 'products.edit' },
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
@@ -78,7 +80,7 @@ let current = null;
 
 const titles = {
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
-  reportes: 'Reportes', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
+  reportes: 'Reportes', food: 'ZoCo Food', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
   usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
@@ -487,6 +489,7 @@ function mount() {
     }),
     ventas: () => salesView(ctx),
     compras: guard('products.edit', () => purchasesView(ctx)),
+    food: guard('products.edit', () => foodView(ctx)),
     clientes: guard('customers.manage', () => customersView(ctx)),
     usuarios: guard('users.manage', () => usersView(ctx)),
     checador: () => timeClockView(ctx),
