@@ -334,7 +334,7 @@ function paintShell() {
         </div>
 
         ${NAV_GROUPS.map((g) => {
-          const items = g.items.filter((n) => (!n.perm || can(n.perm)) && (!n.super || state.superadmin));
+          const items = g.items.filter((n) => (n.id !== 'food' || state.company?.mode === 'restaurante') && (!n.perm || can(n.perm)) && (!n.super || state.superadmin));
           if (!items.length) return '';
           return `<div class="nav-group">
             <div class="nav-group-label">${g.label}</div>
