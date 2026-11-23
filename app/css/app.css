@@ -1728,3 +1728,13 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 /* Intro único web: fotografía aprobada visible desde el primer fotograma HTML. */
 #zoco-startup{background:#101827 url('/file_0000000045508212abb61c454ec385a8.png') center center/cover no-repeat!important}
 #zoco-startup::before,#zoco-startup::after,#zoco-startup .startup-content,#zoco-startup .startup-loading,#zoco-startup .startup-fallback{display:none!important}
+
+/* Vender móvil: permitir desplazamiento completo de todas las filas del catálogo. */
+@media(max-width:900px){
+  .posv:has(.sell-wrap){height:auto;min-height:100%;overflow:visible}
+  .posv .sell-wrap{height:auto;min-height:0;overflow:visible}
+  .posv .sell-wrap .grid-wrap{flex:none;height:auto;max-height:none;overflow:visible;padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+  .posv .sell-wrap .pgrid.sq{align-content:start}
+  .posv .sell-wrap .sq-card{min-height:0}
+  .posv .sell-wrap .sq-name{max-height:none;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+}
