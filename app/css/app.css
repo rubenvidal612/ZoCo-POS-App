@@ -1726,7 +1726,9 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 #zoco-startup.original-artwork::before,#zoco-startup.original-artwork::after,#zoco-startup.original-artwork .startup-content,#zoco-startup.original-artwork .startup-loading{display:none}
 
 /* Intro único web: fotografía aprobada visible desde el primer fotograma HTML. */
-#zoco-startup{background:#101827 url('/file_0000000045508212abb61c454ec385a8.png') center center/cover no-repeat!important}
+/* Presentación: mostrar el arte completo en pantallas grandes sin cortar ZoCo ni el equipo POS. */
+#zoco-startup{background:#101827 url('/file_0000000045508212abb61c454ec385a8.png') center center/contain no-repeat!important}
+@media(max-width:700px){#zoco-startup{background-size:cover!important}}
 #zoco-startup::before,#zoco-startup::after,#zoco-startup .startup-content,#zoco-startup .startup-loading,#zoco-startup .startup-fallback{display:none!important}
 
 /* Vender móvil: permitir desplazamiento completo de todas las filas del catálogo. */
