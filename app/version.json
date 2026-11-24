@@ -1,8 +1,7 @@
 {
-    "version":  "2.77.2",
+    "version":  "2.77.3",
     "date":  "2026-11-10",
     "notes":  [
-                  "Landing publica (/landing) reconstruida con el mismo diseno blanco/naranja y capturas reales",
-                  "Pestana Landing dentro de la app con simulador de afiliados"
+                  "Landing: ya se puede hacer scroll hacia abajo (el contenido se recortaba)"
               ]
 }

@@ -1,6 +1,6 @@
 /* ================= Landing comercial (dentro de la app) ================= */
-.lp{width:100%;max-width:none;--lp-orange:#F97316;--lp-orange-2:#FB923C;--lp-ink:#0F172A;--lp-mut:#64748B;--lp-line:#E7EAF0;
-  background:#fff;color:var(--lp-ink);border-radius:18px;overflow:hidden;
+.lp{width:100%;max-width:none;flex:0 0 auto;height:auto;overflow:visible;--lp-orange:#F97316;--lp-orange-2:#FB923C;--lp-ink:#0F172A;--lp-mut:#64748B;--lp-line:#E7EAF0;
+  background:#fff;color:var(--lp-ink);border-radius:18px;
   box-shadow:0 10px 30px rgba(15,23,42,.05)}
 .lp *{box-sizing:border-box}
 .lp b{font-weight:800}
@@ -156,3 +156,8 @@
   .lp-final{padding:26px 18px}
   .lp-legal{padding:12px 18px 20px}
 }
+
+/* La landing crece a su altura real (no se recorta) */
+.lp{display:block}
+.lp-hero{border-top-left-radius:18px;border-top-right-radius:18px}
+.lp-legal{border-bottom-left-radius:18px;border-bottom-right-radius:18px}
