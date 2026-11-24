@@ -1,36 +1,44 @@
 import { el, toast } from './ui.js';
+
 const landingOptions = [
-  { name: 'Landing 1', title: 'Landing clásica', description: 'La presentación original de ZoCo POS, conservada sin cambios.', url: '/landing', color: '#2467df' },
-  { name: 'Landing 2', title: 'ZoCo con Inteligencia Artificial', description: 'Nueva versión interactiva: agentes IA, giros comerciales, integraciones y afiliados.', url: '/landing-2', color: '#f97316' },
+  { name: 'Landing 1', badge: '✓ Original', title: 'Landing clásica', description: 'La presentación original de ZoCo POS.', url: '/landing', color: '#1266f4', border: '#bcd6ff', tint: '#f5f9ff', badgeColor: '#0e762d', badgeBackground: '#e5f7e9' },
+  { name: 'Landing 2', badge: '✦ Nueva opción', title: 'ZoCo con Inteligencia Artificial', description: 'Agentes IA, giros de negocio, integraciones y programa de afiliados.', url: '/landing-2', color: '#e95000', border: '#ff9b61', tint: '#fff7f3', badgeColor: '#803b07', badgeBackground: '#fff0d5' },
 ];
-export function landingGalleryView(ctx) {
-  const root = el(`<div class="landing-gallery" style="width:100%;padding:clamp(14px,3vw,34px);background:#f6f8fc;border-radius:18px;color:#111d37">
-    <div style="margin-bottom:24px"><span style="color:#f97316;font-size:12px;font-weight:800;letter-spacing:1.4px">PÁGINAS DE PRESENTACIÓN</span><h2 style="font-size:clamp(25px,3vw,38px);margin:8px 0">Elige tu Landing</h2><p style="color:#68758c;margin:0">Compara tus diseños, abre cada versión y comparte su enlace independiente. Podemos agregar más opciones en el futuro.</p></div>
-    <div class="landing-gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:20px">
-      ${landingOptions.map((item,i)=>`<article style="background:#fff;border:1px solid #e0e6f0;border-radius:22px;padding:17px;box-shadow:0 12px 35px #1b2d4d0d;min-width:0">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px"><b style="background:${item.color};color:white;padding:9px 15px;border-radius:22px">${item.name}</b><small style="color:#6b7790">${i===0?'Original':'Nueva opción'}</small></div>
-        <div style="aspect-ratio: 16 / 10;border-radius:15px;border:1px solid #dce5f3;overflow:hidden;position:relative;background:#fff">
-          <iframe title="Vista previa de ${item.name}" loading="lazy" tabindex="-1" aria-hidden="true" src="${item.url}" style="position:absolute;top:0;left:0;width:1200px;height:750px;transform:scale(var(--preview-scale, .35));transform-origin:top left;border:0;pointer-events:none"></iframe>
-          <a href="${item.url}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${item.name}" style="position:absolute;inset:0"></a>
+
+export function landingGalleryView() {
+  const root = el(`<div style="width:100%;max-width:1250px;margin:auto">
+    <p style="margin:0 0 14px;color:var(--muted,#52617a)">Elige la página de presentación que usarás para ZoCo POS.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,425px),1fr));gap:16px">
+      ${landingOptions.map(item => `<article style="background:${item.tint};color:#111d37;border:1px solid ${item.border};border-radius:18px;padding:clamp(10px,2vw,17px);min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+          <b style="background:${item.color};color:white;padding:5px 13px;border-radius:20px">${item.name}</b>
+          <small style="background:${item.badgeBackground};color:${item.badgeColor};padding:5px 9px;border-radius:20px;font-weight:700">${item.badge}</small>
         </div>
-        <h3 style="margin:17px 0 7px;font-size:20px">${item.title}</h3><p style="color:#65728a;line-height:1.5;min-height:48px;margin:0 0 16px">${item.description}</p>
-        <div style="display:flex;gap:9px;flex-wrap:wrap"><a href="${item.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:${item.color};color:white;border-radius:12px;padding:11px 15px;text-decoration:none;font-weight:750">Ver landing ↗</a><button type="button" data-copy="${item.url}" style="border:1px solid #dce3ef;background:white;color:#15213c;border-radius:12px;padding:11px 15px;font-weight:750;cursor:pointer">Copiar enlace</button></div>
-        <div style="font-size:12px;color:#7b879c;overflow-wrap:anywhere;margin-top:12px">${item.url}</div>
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${item.name}" style="display:block;position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:12px;border:1px solid #e0e6f0;background:white">
+          <iframe title="Vista previa de ${item.name}" loading="lazy" tabindex="-1" aria-hidden="true" src="${item.url}" style="position:absolute;inset:0;width:1200px;height:675px;transform:scale(var(--preview-scale,.25));transform-origin:top left;border:0;pointer-events:none"></iframe>
+        </a>
+        <h2 style="margin:10px 0 3px;font-size:18px">${item.title}</h2>
+        <p style="margin:0 0 9px;color:#41536e;font-size:14px">${item.description}</p>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <a href="${item.url}" target="_blank" rel="noopener noreferrer" style="background:${item.color};color:white;border-radius:9px;padding:8px 12px;text-decoration:none;font-weight:750">↗ Ver landing</a>
+          <button type="button" data-copy="${item.url}" style="border:1px solid #dce3ef;background:white;color:#15213c;border-radius:9px;padding:8px 11px;font:inherit;font-weight:700;cursor:pointer">Copiar enlace</button>
+          <small style="margin-left:auto;background:#eaf0fa;color:#263955;padding:5px 9px;border-radius:13px">${item.url}</small>
+        </div>
       </article>`).join('')}
     </div>
-    <p style="margin:22px 0 0;color:#7a879c;font-size:13px">Cada landing tiene su propia URL. Abrir o copiar una versión no modifica la otra.</p>
   </div>`);
-  const previews = root.querySelectorAll('iframe[title^="Vista previa"]');
-  const resizePreview = () => previews.forEach(frame => { const box = frame.parentElement; if (box) box.style.setProperty('--preview-scale', String(box.clientWidth / 1200)); });
-  const previewObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resizePreview) : null;
-  previews.forEach(frame => previewObserver?.observe(frame.parentElement));
-  resizePreview();
+  const observer = new ResizeObserver(entries => {
+    for (const { target, contentRect } of entries) {
+      target.style.setProperty('--preview-scale', String(contentRect.width / 1200));
+    }
+  });
+  root.querySelectorAll('iframe').forEach(frame => observer.observe(frame.parentElement));
   root.querySelectorAll('[data-copy]').forEach(button => {
     button.onclick = async () => {
-      const url = location.origin + button.dataset.copy;
+      const url = new URL(button.dataset.copy, location.origin).href;
       try { await navigator.clipboard.writeText(url); toast('Enlace copiado'); }
-      catch { window.prompt('Copia el enlace:', url); }
+      catch { window.prompt('Copia el enlace', url); }
     };
   });
-  return { root };
+  return { root, destroy: () => observer.disconnect() };
 }
