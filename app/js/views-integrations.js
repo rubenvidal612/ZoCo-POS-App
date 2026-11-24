@@ -89,8 +89,14 @@ export function integrationsView() {
     const company_id=state.currentCompany;
     if(!company_id||company_id==='default')throw new Error('Selecciona una empresa de la nube.');
     const response=await fetch(config.url+'/functions/v1/envia-connection',{method:'POST',headers:{'Content-Type':'application/json','apikey':config.key,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({action,company_id,environment:environment.value,...(token?{token}:{})})});
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(data.error||'No se pudo contactar al servidor.');
+    const raw=await response.text();
+    let data={};try{data=JSON.parse(raw);}catch{}
+    if(!response.ok){
+      const reason=data.error||data.message||'Respuesta no JSON del servidor';
+      if(response.status===401)throw new Error('Sesión de Supabase vencida o rechazada (401). Cierra sesión de la nube y vuelve a entrar.');
+      if(response.status===403)throw new Error('Sin permisos para conectar esta empresa (403). Verifica que seas dueño o administrador.');
+      throw new Error('Error de conexión HTTP '+response.status+': '+String(reason).slice(0,180));
+    }
     return data;
   };
   const refresh=async()=>{
