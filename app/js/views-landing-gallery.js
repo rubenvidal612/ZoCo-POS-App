@@ -9,8 +9,8 @@ export function landingGalleryView(ctx) {
     <div class="landing-gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:20px">
       ${landingOptions.map((item,i)=>`<article style="background:#fff;border:1px solid #e0e6f0;border-radius:22px;padding:17px;box-shadow:0 12px 35px #1b2d4d0d;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px"><b style="background:${item.color};color:white;padding:9px 15px;border-radius:22px">${item.name}</b><small style="color:#6b7790">${i===0?'Original':'Nueva opción'}</small></div>
-        <div style="height:clamp(180px,24vw,265px);border-radius:15px;border:1px solid #dce5f3;overflow:hidden;position:relative;background:#fff">
-          <iframe title="Vista previa de ${item.name}" loading="lazy" tabindex="-1" aria-hidden="true" src="${item.url}" style="position:absolute;top:0;left:0;width:1000px;height:690px;transform:scale(.39);transform-origin:top left;border:0;pointer-events:none"></iframe>
+        <div style="aspect-ratio: 16 / 10;border-radius:15px;border:1px solid #dce5f3;overflow:hidden;position:relative;background:#fff">
+          <iframe title="Vista previa de ${item.name}" loading="lazy" tabindex="-1" aria-hidden="true" src="${item.url}" style="position:absolute;top:0;left:0;width:1200px;height:750px;transform:scale(var(--preview-scale, .35));transform-origin:top left;border:0;pointer-events:none"></iframe>
           <a href="${item.url}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${item.name}" style="position:absolute;inset:0"></a>
         </div>
         <h3 style="margin:17px 0 7px;font-size:20px">${item.title}</h3><p style="color:#65728a;line-height:1.5;min-height:48px;margin:0 0 16px">${item.description}</p>
@@ -20,6 +20,11 @@ export function landingGalleryView(ctx) {
     </div>
     <p style="margin:22px 0 0;color:#7a879c;font-size:13px">Cada landing tiene su propia URL. Abrir o copiar una versión no modifica la otra.</p>
   </div>`);
+  const previews = root.querySelectorAll('iframe[title^="Vista previa"]');
+  const resizePreview = () => previews.forEach(frame => { const box = frame.parentElement; if (box) box.style.setProperty('--preview-scale', String(box.clientWidth / 1200)); });
+  const previewObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resizePreview) : null;
+  previews.forEach(frame => previewObserver?.observe(frame.parentElement));
+  resizePreview();
   root.querySelectorAll('[data-copy]').forEach(button => {
     button.onclick = async () => {
       const url = location.origin + button.dataset.copy;
