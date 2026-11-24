@@ -72,3 +72,26 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
   .commerce .grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .commerce .results { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+.hero-copy small strong { color:#a63a00; }
+.hero-gallery { min-width:0; }
+.hero-art { padding:8% 11% 4% 0; }
+.monitor { border:9px solid #111929; border-radius:16px; background:#111929; box-shadow:0 16px 35px #15295032; }
+.monitor img { border-radius:7px; aspect-ratio:1392/849; }
+.phone { position:absolute; right:0; bottom:0; width:26%; max-width:175px; overflow:hidden; border:5px solid #111929; border-radius:clamp(12px,2.2vw,24px); background:#111929; box-shadow:0 8px 20px #1018304d; }
+.phone img { display:block; width:100%; height:auto; aspect-ratio: 719/1536; object-fit:cover; }
+.mascot { width:28%; left:-12%; bottom:-5%; pointer-events:none; animation:bob-zoco 3.4s ease-in-out infinite; }
+@keyframes bob-zoco { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-12px) rotate(3deg); } }
+.screen-controls { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:16px; }
+.screen-controls button { color:#17264a; background:#fff; border:1px solid #e1e6f3; padding:6px 12px; font-size:12px; }
+.screen-controls button[aria-pressed=true] { background:#fff0df; border-color:#f45e08; color:#963500; }
+.messages { height:285px; }
+.messages .bubble { margin:0; }
+.demo-toolbar { display:flex; min-height:52px; gap:8px; align-items:center; justify-content:space-between; padding:8px 12px; border-top:1px solid #e6ebf3; }
+.demo-toolbar span { min-width:0; font-size:13px; color:#465978; }
+.demo-toolbar button { flex:none; font-size:12px; padding:8px 12px; }
+#integraciones .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.integration-logo { display:block; width:min(100%,100px); height:44px; object-fit:contain; object-position:left center; }
+@media(max-width:700px) { .hero-art { margin-left:7%; } .monitor { border-width:5px; } .phone { border-width:3px; } }
+@media(prefers-reduced-motion:reduce) { .mascot { animation:none; } }
+.demo-toolbar span { width:100%; background:#f6f8fd; border:1px solid #e7ebf4; border-radius:10px; padding:7px 9px; overflow-wrap:anywhere; }
