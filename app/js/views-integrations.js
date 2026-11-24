@@ -56,6 +56,12 @@ export function integrationsView() {
           <div class="zi-line"><b>Generar etiquetas</b><span>Desde tus ventas</span></div>
           <div class="zi-line"><b>Rastreo</b><span>En el pedido</span></div>
         </div>
+        <label class="zi-label" for="zi-envia-env">Ambiente de Envia.com</label>
+        <select id="zi-envia-env" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border,#cbd5e1);background:var(--card,#fff);color:inherit;font-size:15px;margin-bottom:14px">
+          <option value="sandbox">Pruebas (sandbox)</option>
+          <option value="production">Producción (envíos reales)</option>
+        </select>
+        <p class="zi-hint" id="zi-envia-note">Utiliza un token generado en el ambiente de pruebas de Envia.com. Las guías de prueba no deben comprarse como envíos reales.</p>
         <label class="zi-label" for="zi-envia-key">Clave API de Envia.com</label>
         <input id="zi-envia-key" type="password" placeholder="••••••••••••••••" disabled autocomplete="off">
         <button type="button" id="zi-envia-connect" disabled>Conectar Envia.com</button>
@@ -63,5 +69,12 @@ export function integrationsView() {
         <a href="https://developers.envia.com/" target="_blank" rel="noopener noreferrer">Documentación oficial de Envia.com</a>
       </article>
     </div>`;
+  const environment = wrap.querySelector('#zi-envia-env');
+  const note = wrap.querySelector('#zi-envia-note');
+  environment.addEventListener('change', () => {
+    note.textContent = environment.value === 'production'
+      ? 'Producción: utiliza el token real de la empresa. Generar guías puede generar cargos.'
+      : 'Pruebas: utiliza un token del ambiente sandbox de Envia.com, independiente del token real.';
+  });
   return { root };
 }
