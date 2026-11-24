@@ -1,3 +1,5 @@
+import { sbConfig } from './sync.js';
+import { cloudSession } from './auth.js';
 import { state } from './store.js';
 import { esc, toast } from './ui.js';
 
@@ -34,7 +36,7 @@ export function integrationsView() {
   const wrap=document.createElement('div');root.append(wrap);
   wrap.innerHTML = `
     <div class="zi-head"><h2>🔌 Integraciones</h2><p>Conecta los servicios de tu negocio para cobrar y enviar desde ZoCo.</p></div>
-    <div class="zi-banner">Configuración en preparación. Por seguridad, ZoCo todavía no recibe ni guarda credenciales de terceros desde esta pantalla.</div>
+    <div class="zi-banner">Envia.com: conexión segura en preparación. Mercado Pago todavía no está disponible.</div>
     <div class="zi-grid">
       <article class="zi-card">
         <div class="zi-top"><div class="zi-logo zi-logo-mp"><img src="https://www.google.com/s2/favicons?domain=mercadopago.com.mx&sz=128" alt="Ícono oficial de Mercado Pago" width="43" height="43" loading="lazy"></div><div><div class="zi-name">Mercado Pago</div><p>Cobros online y terminal Point</p></div><span class="zi-badge">Sin conectar</span></div>
@@ -63,9 +65,9 @@ export function integrationsView() {
         </select>
         <p class="zi-hint" id="zi-envia-note">Utiliza un token generado en el ambiente de pruebas de Envia.com. Las guías de prueba no deben comprarse como envíos reales.</p>
         <label class="zi-label" for="zi-envia-key">Clave API de Envia.com</label>
-        <input id="zi-envia-key" type="password" placeholder="••••••••••••••••" disabled autocomplete="off">
-        <button type="button" id="zi-envia-connect" disabled>Conectar Envia.com</button>
-        <p class="zi-hint">La clave deberá guardarse cifrada en el servidor, separada de los datos del negocio. No la pegues hasta habilitar la conexión segura.</p>
+        <input id="zi-envia-key" type="password" placeholder="Token API de Envia.com" autocomplete="off">
+        <button type="button" id="zi-envia-connect">Conectar Envia.com</button>
+        <p class="zi-hint">La clave se envía al servidor y nunca se guarda en este navegador. La conexión solo se marcará como verificada tras comprobar la API.</p>
         <a href="https://developers.envia.com/" target="_blank" rel="noopener noreferrer">Documentación oficial de Envia.com</a>
       </article>
     </div>`;
@@ -76,5 +78,35 @@ export function integrationsView() {
       ? 'Producción: utiliza el token real de la empresa. Generar guías puede generar cargos.'
       : 'Pruebas: utiliza un token del ambiente sandbox de Envia.com, independiente del token real.';
   });
+
+  const keyInput=wrap.querySelector('#zi-envia-key');
+  const button=wrap.querySelector('#zi-envia-connect');
+  const badge=wrap.querySelector('.zi-logo-envia').closest('.zi-top').querySelector('.zi-badge');
+  const status=document.createElement('p');status.className='zi-hint';status.setAttribute('role','status');button.after(status);
+  const request=async(action,token)=>{
+    const config=sbConfig(),session=cloudSession();
+    if(!config.url||!config.key||!session?.access_token)throw new Error('Inicia sesión en ZoCo con tu cuenta de la nube.');
+    const company_id=state.currentCompany;
+    if(!company_id||company_id==='default')throw new Error('Selecciona una empresa de la nube.');
+    const response=await fetch(config.url+'/functions/v1/envia-connection',{method:'POST',headers:{'Content-Type':'application/json','apikey':config.key,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({action,company_id,environment:environment.value,...(token?{token}:{})})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'No se pudo contactar al servidor.');
+    return data;
+  };
+  const refresh=async()=>{
+    badge.textContent='Sin conectar';
+    status.textContent='';
+    try{const data=await request('status');if(data.connected){badge.textContent='Token guardado';status.textContent='Token almacenado. Pendiente verificarlo contra Envia.com.';}}
+    catch(e){status.textContent=e.message;}
+  };
+  environment.addEventListener('change',refresh);
+  button.addEventListener('click',async()=>{
+    const token=keyInput.value.trim();if(!token){status.textContent='Introduce el token API.';return;}
+    button.disabled=true;status.textContent='Guardando token de forma segura…';
+    try{const data=await request('connect',token);keyInput.value='';badge.textContent=data.verified?'Conectado':'Token guardado';status.textContent=data.message||'Operación completada.';}
+    catch(e){status.textContent=e.message;}
+    finally{button.disabled=false;}
+  });
+  refresh();
   return { root };
 }
