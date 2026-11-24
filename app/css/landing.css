@@ -1,12 +1,12 @@
 /* ================= Landing comercial (dentro de la app) ================= */
-.lp{--lp-orange:#F97316;--lp-orange-2:#FB923C;--lp-ink:#0F172A;--lp-mut:#64748B;--lp-line:#E7EAF0;
+.lp{width:100%;max-width:none;--lp-orange:#F97316;--lp-orange-2:#FB923C;--lp-ink:#0F172A;--lp-mut:#64748B;--lp-line:#E7EAF0;
   background:#fff;color:var(--lp-ink);border-radius:18px;overflow:hidden;
   box-shadow:0 10px 30px rgba(15,23,42,.05)}
 .lp *{box-sizing:border-box}
 .lp b{font-weight:800}
 
 /* Hero */
-.lp-hero{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;
+.lp-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:center;
   padding:52px 44px 44px;background:#fff}
 .lp-badge{display:inline-flex;align-items:center;gap:7px;background:#FFF3E8;color:#C2410C;
   font-size:11.5px;font-weight:900;letter-spacing:.6px;padding:6px 12px;border-radius:999px}
@@ -24,7 +24,7 @@
 .lp-mini{margin-top:14px;font-size:11.5px;color:#94A3B8}
 
 /* Mockup del hero */
-.lp-hero-art{position:relative}
+.lp-hero-art{position:relative;min-width:0}
 .lp-frame{background:#fff;border:1px solid var(--lp-line);border-radius:16px;overflow:hidden;
   box-shadow:0 24px 48px rgba(15,23,42,.13)}
 .lp-frame-bar{display:flex;align-items:center;gap:6px;padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--lp-line)}
