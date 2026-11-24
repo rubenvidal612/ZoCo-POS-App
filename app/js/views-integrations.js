@@ -35,8 +35,8 @@ export function integrationsView() {
   .zoco-integrations .zi-line span:last-child{color:var(--muted,#64748b);text-align:right}
   .zoco-integrations .zi-label{font-size:13px;font-weight:700;margin-bottom:8px;display:block}
   .zoco-integrations input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border,#cbd5e1);background:var(--card,#fff);color:inherit;box-sizing:border-box;font-size:15px}
-  .zoco-integrations button{border:0;border-radius:12px;background:#f97316;color:#fff;font-weight:750;padding:13px 17px;cursor:pointer;width:100%;margin-top:12px}
-  .zoco-integrations button:disabled{opacity:.55;cursor:not-allowed}
+  .zoco-integrations button:not(.zi-toggle){border:0;border-radius:12px;background:#f97316;color:#fff;font-weight:750;padding:13px 17px;cursor:pointer;width:100%;margin-top:12px}
+  .zoco-integrations button:not(.zi-toggle):disabled{opacity:.55;cursor:not-allowed}
   .zoco-integrations .zi-hint{font-size:12px;color:var(--muted,#64748b);margin-top:10px}
   .zoco-integrations a{color:#167ac6}
   .zoco-integrations .zi-banner{border:1px solid #f6d5a8;background:#fff8ee;color:#855318;border-radius:14px;padding:13px 15px;margin-bottom:20px;font-size:13px}
@@ -59,6 +59,7 @@ export function integrationsView() {
         <button type="button" id="zi-mp-connect" disabled>Conectar Mercado Pago</button>
         <p class="zi-hint">La conexión requerirá autorización del dueño y confirmación de pagos desde el servidor. No introduzcas aquí tu access token.</p>
         <a href="https://www.mercadopago.com.mx/developers/es" target="_blank" rel="noopener noreferrer">Documentación oficial de Mercado Pago</a>
+        </div>
       </article>
       <article class="zi-card">
         <button type="button" class="zi-toggle zi-top" aria-expanded="false" aria-controls="zi-envia-body"><div class="zi-logo zi-logo-envia"><img src="https://www.google.com/s2/favicons?domain=envia.com&sz=128" alt="Ícono de Envia.com" width="43" height="43" loading="lazy"></div><div class="zi-summary"><div class="zi-name">Envia.com</div><p>Guías, cotizaciones y rastreo</p></div><span class="zi-badge">Sin conectar</span><span class="zi-chevron" aria-hidden="true">⌄</span></button>\n        <div class="zi-body" id="zi-envia-body" hidden>
@@ -78,6 +79,7 @@ export function integrationsView() {
         <button type="button" id="zi-envia-connect">Conectar Envia.com</button>
         <p class="zi-hint">La clave se envía al servidor y nunca se guarda en este navegador. La conexión solo se marcará como verificada tras comprobar la API.</p>
         <a href="https://developers.envia.com/" target="_blank" rel="noopener noreferrer">Documentación oficial de Envia.com</a>
+        </div>
       </article>
     </div>`;
   wrap.querySelectorAll('.zi-toggle').forEach(toggle=>{
@@ -91,6 +93,7 @@ export function integrationsView() {
       wrap.querySelector('#'+toggle.getAttribute('aria-controls')).hidden=!open;
     });
   });
+  // La lista permanece contraída hasta que el usuario abra una integración.
   const environment = wrap.querySelector('#zi-envia-env');
   const note = wrap.querySelector('#zi-envia-note');
   environment.addEventListener('change', () => {
