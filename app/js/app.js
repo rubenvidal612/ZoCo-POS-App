@@ -7,6 +7,7 @@ import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
 import { purchasesView } from './views-purchases.js';
 import { landingView } from './views-landing.js';
+import { landingGalleryView } from './views-landing-gallery.js';
 import { aiView } from './views-ai.js';
 import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
@@ -507,7 +508,7 @@ function mount() {
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
     afiliados: () => affiliatesView(ctx),
-    landing: () => landingView(ctx),
+    landing: () => landingGalleryView(ctx),
   plan: guard('settings.edit', () => plansView(ctx)),
   };
 
