@@ -3,10 +3,126 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#ffffff">
-<title>ZoCo POS — Landing</title>
+<title>ZoCo POS — Punto de venta gratis</title>
+<meta name="description" content="Punto de venta gratis para tu negocio: ventas, inventario, compras, caja y reportes. Sin instalación y funciona sin internet.">
+<meta name="theme-color" content="#F97316">
 <link rel="icon" href="/zoco-icon.svg" type="image/svg+xml">
-<style>html,body{margin:0;min-height:100%;background:#fff}</style>
+<link rel="stylesheet" href="/css/tokens.css?v=8">
+<link rel="stylesheet" href="/css/landing.css?v=2">
+<style>
+  body{margin:0;background:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  .lp-page{max-width:1180px;margin:0 auto}
+  .lp-top{display:flex;align-items:center;justify-content:space-between;padding:18px 44px;border-bottom:1px solid var(--lp-line)}
+  .lp-brand{font-size:19px;font-weight:900;letter-spacing:-.5px}
+  .lp-brand span{color:var(--lp-orange)}
+  .lp-top nav{display:flex;gap:18px;align-items:center;font-size:13.5px}
+  .lp-top nav a{color:var(--lp-mut);text-decoration:none;font-weight:700}
+  .lp-top nav a:hover{color:var(--lp-ink)}
+  @media (max-width:700px){.lp-top{padding:14px 18px}.lp-top nav{display:none}}
+</style>
 </head>
-<body></body>
+<body>
+<div class="lp-page lp">
+  <header class="lp-top">
+    <div class="lp-brand">ZoCo<span>.</span> POS</div>
+    <nav>
+      <a href="#lp-por-dentro">Míralo por dentro</a>
+      <a href="#lp-giros">Giros</a>
+      <a href="/demo">Probar demo</a>
+      <a href="/?registro=1" style="background:#F97316;color:#fff;padding:9px 16px;border-radius:10px">Crear cuenta</a>
+    </nav>
+  </header>
+
+  <section class="lp-hero">
+    <div class="lp-hero-txt">
+      <span class="lp-badge">GRATIS en fase de prueba</span>
+      <h1>Tu punto de venta,<br><b>gratis</b> y sin complicaciones.</h1>
+      <p class="lp-lead">Vende, controla tu inventario, tus compras y tu caja desde el celular o la computadora.
+        Sin instalación, sin contratos y con un agente que te ayuda a entender tu negocio.</p>
+      <div class="lp-cta">
+        <a class="lp-btn lp-btn-primary" href="/demo">Probar el demo</a>
+        <a class="lp-btn lp-btn-ghost" href="/?registro=1">Crear mi cuenta</a>
+      </div>
+      <div class="lp-mini">Gratis por tiempo indefinido mientras estamos en fase de prueba · Sin tarjeta</div>
+    </div>
+    <div class="lp-hero-art">
+      <div class="lp-frame">
+        <div class="lp-frame-bar"><span></span><span></span><span></span><em>zoco-pos.vercel.app</em></div>
+        <img src="/assets/lp-inicio.png" alt="Resumen de ZoCo POS con ventas del día y caja">
+      </div>
+      <div class="lp-float">
+        <div class="lp-float-l">Ventas de hoy</div>
+        <div class="lp-float-v">$848.00</div>
+        <div class="lp-float-s">1 venta · Caja abierta</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-strip">
+    <div><b>Sin instalación</b><span>Abre el navegador y vende</span></div>
+    <div><b>Funciona sin internet</b><span>Sigue vendiendo y sincroniza después</span></div>
+    <div><b>Hecho en México</b><span>Pesos, IVA y facturación pensados aquí</span></div>
+    <div><b>Tus datos son tuyos</b><span>Respaldo descargable en un clic</span></div>
+  </section>
+
+  <section class="lp-sec" id="lp-por-dentro">
+    <div class="lp-sec-head">
+      <span class="lp-tag">Míralo por dentro</span>
+      <h2>No es una maqueta: es la app real.</h2>
+      <p>Estas capturas son del sistema funcionando. Puedes abrir el demo y tocar lo mismo.</p>
+    </div>
+    <div class="lp-shots">
+      <article class="lp-shot">
+        <div class="lp-shot-img"><img src="/assets/lp-vender.png" alt="Pantalla de venta con productos, tallas y precios"></div>
+        <h3>Vender en segundos</h3>
+        <p>Busca o escanea, elige talla y color, cobra en efectivo o tarjeta. El inventario se descuenta solo.</p>
+        <a class="lp-link" href="/demo#/vender" style="text-decoration:none;display:inline-block">Probar una venta →</a>
+      </article>
+      <article class="lp-shot">
+        <div class="lp-shot-img"><img src="/assets/lp-compras.png" alt="Pantalla de compras a proveedores con cuentas por pagar"></div>
+        <h3>Compras y proveedores</h3>
+        <p>Órdenes, recepción parcial y cuentas por pagar. Sabes cuánto debes sin abrir Excel.</p>
+        <a class="lp-link" href="/demo#/compras" style="text-decoration:none;display:inline-block">Ver compras →</a>
+      </article>
+      <article class="lp-shot">
+        <div class="lp-shot-img"><img src="/assets/lp-reportes.png" alt="Pantalla de reportes con ventas por periodo y sucursal"></div>
+        <h3>Reportes que sí entiendes</h3>
+        <p>Ventas por día, por sucursal, utilidad y margen. Exporta lo que necesites.</p>
+        <a class="lp-link" href="/demo#/reportes" style="text-decoration:none;display:inline-block">Ver reportes →</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="lp-giros">
+    <div class="lp-sec-head">
+      <span class="lp-tag">Para tu giro</span>
+      <h2>Un POS para cualquier negocio.</h2>
+      <p>ZoCo se configura con las secciones, tallas o unidades de cada tipo de negocio.</p>
+    </div>
+    <div class="lp-giros">
+      <span>Abarrotes</span><span>Farmacia</span><span>Papelería</span><span>Zapatería</span>
+      <span>Boutique</span><span>Ferretería</span><span>Joyería</span><span>Óptica</span>
+      <span>Carnicería</span><span>Frutería</span><span>Panadería</span><span>Dulcería</span>
+      <span>Cosméticos</span><span>Celulares</span>
+    </div>
+  </section>
+
+  <section class="lp-final">
+    <div>
+      <h2>Empieza gratis hoy.</h2>
+      <p>Estamos en fase de prueba: todo es gratis mientras seguimos agregando cosas.
+        Puedes probar cada servicio nuevo sin pagar nada.</p>
+    </div>
+    <div class="lp-final-cta">
+      <a class="lp-btn lp-btn-primary" href="/demo">Probar el demo</a>
+      <a class="lp-btn lp-btn-ghost" href="/?registro=1">Crear mi cuenta</a>
+    </div>
+  </section>
+
+  <div class="lp-legal">
+    * Gratis por tiempo indefinido durante la fase de prueba. Los planes de pago y las comisiones
+    de afiliados se activarán cuando termine la beta; hoy no se cobra nada.
+  </div>
+</div>
+</body>
 </html>

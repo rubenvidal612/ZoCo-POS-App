@@ -1,7 +1,8 @@
 {
-    "version":  "2.77.1",
+    "version":  "2.77.2",
     "date":  "2026-11-10",
     "notes":  [
-                  "Nueva pestana Landing dentro de ZoCo POS: diseno limpio en blanco con naranja, capturas reales y simulador de ingresos por afiliacion mes con mes"
+                  "Landing publica (/landing) reconstruida con el mismo diseno blanco/naranja y capturas reales",
+                  "Pestana Landing dentro de la app con simulador de afiliados"
               ]
 }
