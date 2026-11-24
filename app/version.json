@@ -1,9 +1,7 @@
 {
-    "version":  "2.76.0",
+    "version":  "2.77.0",
     "date":  "2026-11-10",
     "notes":  [
-                  "Editar producto: la foto sale al inicio del formulario (con boton Quitar)",
-                  "Descuento por producto: porcentaje o monto, con precio final a la vista",
-                  "El descuento se ve en la lista y en las tarjetas del punto de venta, y se aplica al cobrar"
+                  "Nueva pestana Landing dentro de ZoCo POS: diseno limpio en blanco con naranja, capturas reales y simulador de ingresos por afiliacion mes con mes"
               ]
 }

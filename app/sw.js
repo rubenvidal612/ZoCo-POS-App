@@ -6,6 +6,8 @@ const SHELL = [
   '/landing.html',
   '/demo.html',
   '/js/demo-data.js',
+  '/js/views-landing.js',
+  '/css/landing.css',
   '/js/catalog-abarrotes.js',
   '/js/catalog-farmacia.js',
   '/js/catalog-papeleria.js',
