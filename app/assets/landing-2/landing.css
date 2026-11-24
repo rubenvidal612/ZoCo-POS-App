@@ -95,3 +95,23 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
 @media(max-width:700px) { .hero-art { margin-left:7%; } .monitor { border-width:5px; } .phone { border-width:3px; } }
 @media(prefers-reduced-motion:reduce) { .mascot { animation:none; } }
 .demo-toolbar span { width:100%; background:#f6f8fd; border:1px solid #e7ebf4; border-radius:10px; padding:7px 9px; overflow-wrap:anywhere; }
+
+#clients { display:block; margin:5px 0 10px; width:100%; max-width:12rem; padding:8px 12px; border:1px solid #bbc8de; border-radius:10px; font:inherit; color:var(--n); }
+.sim-plan { display:flex; gap:6px; flex-wrap:wrap; }
+.sim-plan button { background:#edf2ff; color:#142d63; padding:6px 10px; font-size:12px; }
+.sim-plan button[aria-pressed=true] { background:#ffe5ce; color:#873300; box-shadow:inset 0 0 0 1px #f45e08; }
+#referral-month { display:block; margin:8px 0 0; width:100%; }
+.month-markers { display:flex; justify-content:space-between; padding-inline:5px; font-size:11px; color:#435572; }
+.referral-results { margin-top:10px; }
+.referral-results .stat { overflow-wrap:anywhere; }
+.monthly-breakdown { margin-top:10px; }
+.monthly-breakdown summary { cursor:pointer; font-weight:700; padding:5px 0; }
+.monthly-breakdown table { width:100%; text-align:right; font-size:13px; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.monthly-breakdown th,.monthly-breakdown td { padding:4px; border-bottom:1px solid #e9d7c7; }
+.monthly-breakdown th:first-child,.monthly-breakdown td:first-child { text-align:left; }
+.current-month { background:#ffe4cc; }
+.plans-heading { margin-top:25px; }
+#planes .public-plan { color:#13213c; padding:17px; }
+#planes .public-plan p { margin:5px 0; color:#475772; }
+.public-plan .plan-price strong { color:#13213c; font-size:27px; }
+@media(max-width:590px) { .public-plans { grid-template-columns:1fr; } }
