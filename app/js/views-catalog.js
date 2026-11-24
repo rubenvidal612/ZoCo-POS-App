@@ -3197,7 +3197,7 @@ export function financeView(ctx) {
   return { root, refresh: render };
 }
 export function timeClockView(ctx) {
-  const root = el(`<div id="tc"></div>`);
+  const root = el(`<div id="tc" class="tc-refresh"></div>`);
   let pin = '';
   let who = null;
   let stream = null;
@@ -3245,7 +3245,8 @@ export function timeClockView(ctx) {
       const ph = document.createElement('div');
       ph.id = 'tc-cam-empty';
       ph.className = 'tc-cam-empty';
-      ph.innerHTML = '📷<span>Cámara apagada</span>';
+      ph.classList.add("tc-demo-person");
+      ph.innerHTML = '<span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span>';
       box.insertBefore(ph, box.querySelector('#tc-cam-state'));
     }
     root.querySelector('#tc-cam-btn')?.classList.remove('on');
@@ -3267,11 +3268,11 @@ export function timeClockView(ctx) {
             <div class="tc-date">${new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
           </div>
 
-          <div class="tc-cam">
+          <div class="tc-cam tc-cam-modern">
             <video id="tc-video" playsinline muted></video>
-            <div id="tc-cam-empty" class="tc-cam-empty">📷<span>Cámara apagada</span></div>
-            <div id="tc-cam-state" class="tc-cam-state">Foto al checar</div>
-            <button id="tc-cam-btn" class="tc-cam-btn" title="Encender o apagar la cámara">⏻</button>
+            <div id="tc-cam-empty" class="tc-cam-empty tc-demo-person"><span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span></div>
+            <div id="tc-cam-state" class="tc-cam-state">Cámara apagada</div>
+            <button id="tc-cam-btn" class="tc-cam-btn" title="Encender o apagar la cámara" aria-label="Encender o apagar la cámara">⏻</button>
           </div>
 
           ${!who ? `
@@ -3335,7 +3336,8 @@ export function timeClockView(ctx) {
         </div>
       </div>`;
 
-    startCam();
+    // La cámara se activa solo a petición del empleado; no muestra al dueño al abrir la pantalla.
+    if (stream) startCam();
 
     root.querySelectorAll('#tckp .key').forEach((b) => b.onclick = () => {
       const k = b.dataset.k;
