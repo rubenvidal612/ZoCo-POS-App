@@ -14,9 +14,18 @@ export function integrationsView() {
   .zoco-integrations .zi-head{margin-bottom:24px}
   .zoco-integrations h2{font-size:26px;margin:0 0 6px}
   .zoco-integrations p{color:var(--muted,#64748b);line-height:1.5;margin:4px 0}
-  .zoco-integrations .zi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:18px}
+  .zoco-integrations .zi-grid{display:grid;grid-template-columns:1fr;gap:18px}
   .zoco-integrations .zi-card{background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:22px;padding:22px;box-shadow:0 8px 28px rgba(16,24,40,.045)}
-  .zoco-integrations .zi-top{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .zoco-integrations .zi-card{padding:0;overflow:hidden}\n  .zoco-integrations .zi-top{display:flex;align-items:center;gap:12px;margin-bottom:0}
+  .zoco-integrations .zi-toggle{display:flex;align-items:center;gap:12px;width:100%;padding:18px 20px;margin:0;border:0;border-radius:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+  .zoco-integrations .zi-toggle:hover{background:var(--bg,#f8fafc)}
+  .zoco-integrations .zi-toggle:focus-visible{outline:3px solid #f97316;outline-offset:-4px}
+  .zoco-integrations .zi-summary{min-width:0;flex:1}
+  .zoco-integrations .zi-summary p{font-size:13px}
+  .zoco-integrations .zi-chevron{font-size:22px;color:var(--muted,#64748b);transition:transform .2s}
+  .zoco-integrations .zi-toggle[aria-expanded="true"] .zi-chevron{transform:rotate(180deg)}
+  .zoco-integrations .zi-body{padding:0 20px 22px;border-top:1px solid var(--border,#e2e8f0)}
+  .zoco-integrations .zi-body[hidden]{display:none}
   .zoco-integrations .zi-logo{height:54px;width:54px;display:grid;place-items:center;border-radius:15px;font-size:24px;font-weight:900;background:#e9f4ff;color:#1682c8;flex-shrink:0}.zoco-integrations .zi-logo-mp{background:#e6f6ff}.zoco-integrations .zi-logo-envia{background:#e4f7f1}
   .zoco-integrations .zi-name{font-size:19px;font-weight:750}
   .zoco-integrations .zi-badge{margin-left:auto;background:#f1f5f9;color:#64748b;border-radius:30px;padding:7px 10px;font-size:11px;font-weight:750;white-space:nowrap}
@@ -39,7 +48,7 @@ export function integrationsView() {
     <div class="zi-banner">Envia.com: conexión segura en preparación. Mercado Pago todavía no está disponible.</div>
     <div class="zi-grid">
       <article class="zi-card">
-        <div class="zi-top"><div class="zi-logo zi-logo-mp"><img src="https://www.google.com/s2/favicons?domain=mercadopago.com.mx&sz=128" alt="Ícono oficial de Mercado Pago" width="43" height="43" loading="lazy"></div><div><div class="zi-name">Mercado Pago</div><p>Cobros online y terminal Point</p></div><span class="zi-badge">Sin conectar</span></div>
+        <button type="button" class="zi-toggle zi-top" aria-expanded="false" aria-controls="zi-mp-body"><div class="zi-logo zi-logo-mp"><img src="https://www.google.com/s2/favicons?domain=mercadopago.com.mx&sz=128" alt="Ícono oficial de Mercado Pago" width="43" height="43" loading="lazy"></div><div class="zi-summary"><div class="zi-name">Mercado Pago</div><p>Cobros online y terminal Point</p></div><span class="zi-badge">Sin conectar</span><span class="zi-chevron" aria-hidden="true">⌄</span></button>\n        <div class="zi-body" id="zi-mp-body" hidden>
         <div class="zi-panel">
           <div class="zi-line"><b>Cuenta de cobros</b><span>Conexión OAuth</span></div>
           <div class="zi-line"><b>Terminal asignada</b><span>Seleccionar Point</span></div>
@@ -52,7 +61,7 @@ export function integrationsView() {
         <a href="https://www.mercadopago.com.mx/developers/es" target="_blank" rel="noopener noreferrer">Documentación oficial de Mercado Pago</a>
       </article>
       <article class="zi-card">
-        <div class="zi-top"><div class="zi-logo zi-logo-envia"><img src="https://www.google.com/s2/favicons?domain=envia.com&sz=128" alt="Ícono de Envia.com" width="43" height="43" loading="lazy"></div><div><div class="zi-name">Envia.com</div><p>Guías, cotizaciones y rastreo</p></div><span class="zi-badge">Sin conectar</span></div>
+        <button type="button" class="zi-toggle zi-top" aria-expanded="false" aria-controls="zi-envia-body"><div class="zi-logo zi-logo-envia"><img src="https://www.google.com/s2/favicons?domain=envia.com&sz=128" alt="Ícono de Envia.com" width="43" height="43" loading="lazy"></div><div class="zi-summary"><div class="zi-name">Envia.com</div><p>Guías, cotizaciones y rastreo</p></div><span class="zi-badge">Sin conectar</span><span class="zi-chevron" aria-hidden="true">⌄</span></button>\n        <div class="zi-body" id="zi-envia-body" hidden>
         <div class="zi-panel">
           <div class="zi-line"><b>Cotizar envíos</b><span>Varias paqueterías</span></div>
           <div class="zi-line"><b>Generar etiquetas</b><span>Desde tus ventas</span></div>
@@ -71,6 +80,17 @@ export function integrationsView() {
         <a href="https://developers.envia.com/" target="_blank" rel="noopener noreferrer">Documentación oficial de Envia.com</a>
       </article>
     </div>`;
+  wrap.querySelectorAll('.zi-toggle').forEach(toggle=>{
+    toggle.addEventListener('click',()=>{
+      const open=toggle.getAttribute('aria-expanded')!=='true';
+      wrap.querySelectorAll('.zi-toggle').forEach(other=>{
+        other.setAttribute('aria-expanded','false');
+        wrap.querySelector('#'+other.getAttribute('aria-controls')).hidden=true;
+      });
+      toggle.setAttribute('aria-expanded',String(open));
+      wrap.querySelector('#'+toggle.getAttribute('aria-controls')).hidden=!open;
+    });
+  });
   const environment = wrap.querySelector('#zi-envia-env');
   const note = wrap.querySelector('#zi-envia-note');
   environment.addEventListener('change', () => {
