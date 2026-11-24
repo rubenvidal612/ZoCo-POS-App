@@ -99,17 +99,28 @@ export function integrationsView() {
     }
     return data;
   };
+  const MASK='••••••••••••••••••••••••';
+  let hasSavedToken=false;
+  const showSaved=(saved)=>{
+    hasSavedToken=!!saved;
+    keyInput.value='';
+    keyInput.placeholder=saved?MASK:'Token API de Envia.com';
+    badge.textContent=saved?'Token guardado':'Sin conectar';
+  };
   const refresh=async()=>{
-    badge.textContent='Sin conectar';
+    showSaved(false);
     status.textContent='';
-    try{const data=await request('status');if(data.connected){badge.textContent='Token guardado';status.textContent='Token almacenado. Pendiente verificarlo contra Envia.com.';}}
-    catch(e){status.textContent=e.message;}
+    try{
+      const data=await request('status');
+      showSaved(data.connected);
+      if(data.connected)status.textContent='API guardada de forma segura. Para reemplazarla, escribe una nueva clave. Pendiente verificarla con Envia.com.';
+    }catch(e){status.textContent=e.message;}
   };
   environment.addEventListener('change',refresh);
   button.addEventListener('click',async()=>{
     const token=keyInput.value.trim();if(!token){status.textContent='Introduce el token API.';return;}
     button.disabled=true;status.textContent='Guardando token de forma segura…';
-    try{const data=await request('connect',token);keyInput.value='';badge.textContent=data.verified?'Conectado':'Token guardado';status.textContent=data.message||'Operación completada.';}
+    try{const data=await request('connect',token);showSaved(true);badge.textContent=data.verified?'Conectado':'Token guardado';status.textContent=data.message||'Operación completada.';}
     catch(e){status.textContent=e.message;}
     finally{button.disabled=false;}
   });
