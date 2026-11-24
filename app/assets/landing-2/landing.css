@@ -115,3 +115,31 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
 #planes .public-plan p { margin:5px 0; color:#475772; }
 .public-plan .plan-price strong { color:#13213c; font-size:27px; }
 @media(max-width:590px) { .public-plans { grid-template-columns:1fr; } }
+
+.feature-row a { display:grid; place-items:center; min-height:58px; padding:10px 5px; text-align:center; background:#fff4e8; border:1px solid #f9d5b7; border-radius:14px; font-size:clamp(11px,1.15vw,15px); font-weight:800; }
+.feature-row a:hover { background:#ffe6ce; }
+#equipo { background:#f4f7fc; }
+.team-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch; }
+.team-card { padding:clamp(14px,2.4vw,24px); min-width:0; }
+.team-card h3 { margin:0; font-size:clamp(20px,2.2vw,28px); }
+.team-card > p { margin:8px 0 15px; }
+#nomina { scroll-margin-top:105px; }
+.clock-demo,.payroll-demo { margin:0; border-radius:16px; overflow:hidden; }
+.clock-demo { padding:12px; background:#121e34; color:#fff; }
+.clock-top,.payroll-top { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 2px 12px; }
+.clock-top strong { font-size:clamp(19px,2.5vw,29px); }
+.clock-top span,.payroll-top span { font-size:12px; }
+.camera-demo { position:relative; }
+.camera-demo img { display:block; width:100%; height:auto; aspect-ratio:1.85; object-fit:cover; object-position:center 42%; border-radius:12px; }
+.camera-demo span { position:absolute; top:8px; left:8px; padding:5px 8px; border-radius:20px; background:#10291f; color:#d2ffe1; font-size:12px; }
+.clock-demo figcaption { padding:10px 2px 0; color:#a7f4c2; font-weight:700; }
+.payroll-demo { border:1px solid #e0e8f4; }
+.payroll-top { padding:13px; background:#edf3fc; }
+.staff-list { list-style:none; margin:0; padding:0 13px; }
+.staff-list li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; padding:11px 0; }
+.staff-list li + li { border-top:1px solid #edf1f8; }
+.staff-list img { border-radius:50%; object-fit:cover; background:#eff3f8; }
+.staff-list small { display:block; color:#52617a; }
+.payroll-total { font-size:14px; }
+#planes .plan-conditions { font-size:clamp(18px,2vw,23px); max-width:68ch; line-height:1.5; color:#f4f7ff; }
+@media (max-width:680px) { .team-grid { grid-template-columns:1fr; } }
