@@ -1,40 +1,8 @@
+import { shoeDemoRows, boutiqueDemoRows } from './demo-catalog.js';
+
 // Datos del demo interactivo: zapatería ficticia con fotos, tallas, colores,
 // existencias, clientes, ventas de ejemplo y caja abierta.
 // Todo vive SOLO en localStorage del navegador (clave zoco.demo.v1).
-
-/** Foto del producto dibujada como SVG (sin depender de internet ni licencias). */
-function shoePhoto(colorHex, colorName) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="300" viewBox="0 0 420 300">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#F8FAFC"/><stop offset="1" stop-color="#E2E8F0"/>
-      </linearGradient>
-      <linearGradient id="sh" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="${colorHex}"/><stop offset="1" stop-color="#0F172A"/>
-      </linearGradient>
-    </defs>
-    <rect width="420" height="300" fill="url(#bg)"/>
-    <ellipse cx="210" cy="238" rx="132" ry="20" fill="#0F172A" opacity=".10"/>
-    <path d="M96 214c-6-26 2-46 16-66 10-15 12-30 10-48 22 2 34 14 44 30 8 13 18 19 34 22l52 10c26 5 42 18 46 38 2 12-4 20-16 22l-152 10c-18 1-30-4-34-18z"
-      fill="url(#sh)"/>
-    <path d="M108 196c22 8 54 12 92 10l96-7" stroke="#F8FAFC" stroke-width="5" fill="none" opacity=".55" stroke-linecap="round"/>
-    <path d="M132 150c14 6 30 10 46 10" stroke="#F8FAFC" stroke-width="4" fill="none" opacity=".4" stroke-linecap="round"/>
-    <circle cx="150" cy="120" r="4" fill="#F8FAFC" opacity=".7"/>
-    <circle cx="168" cy="132" r="4" fill="#F8FAFC" opacity=".7"/>
-    <text x="210" y="278" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#475569">${colorName}</text>
-  </svg>`;
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
-
-const COLORS = {
-  Negro: '#1F2937',
-  Blanco: '#CBD5E1',
-  Café: '#8B5E34',
-  Rojo: '#B91C1C',
-  Azul: '#1D4ED8',
-  Rosa: '#DB2777',
-  Beige: '#D9C7A7',
-};
 
 /** Tallas reales de cada sección (deben coincidir con SECTIONS del store). */
 function rank(from, to) {
@@ -49,9 +17,12 @@ const SIZE_SETS = {
   escolar: rank(1, 6.5),
   bolsas: ['Único'],
   carteras: ['Único'],
+  accesorios: ['Único'],
+  ropa: ['CH', 'M', 'G'],
+  calzado: rank(22, 30),
 };
 
-function buildShoe(id, name, code, price, cost, section, colors, stockPorTalla) {
+function buildProduct(id, [name, section, price, cost, image], code, colors, stockPorTalla) {
   const sizes = SIZE_SETS[section] || SIZE_SETS.dama;
   const branchStock = { b1: {}, b2: {} };
   colors.forEach((c, ci) => {
@@ -66,7 +37,7 @@ function buildShoe(id, name, code, price, cost, section, colors, stockPorTalla) 
     id, name, code, price, cost, section,
     colors: colors.slice(),
     color: colors[0],
-    image: shoePhoto(COLORS[colors[0]] || '#1F2937', colors[0]),
+    image,
     active: true,
     catalog: true,
     isDemo: true,
@@ -76,20 +47,32 @@ function buildShoe(id, name, code, price, cost, section, colors, stockPorTalla) 
   };
 }
 
+function buildDemoProducts() {
+  const rows = [...shoeDemoRows, ...boutiqueDemoRows];
+  const colors = ['Blanco', 'Café', 'Beige', 'Negro', 'Negro', 'Negro', 'Blanco', 'Azul', 'Negro', 'Café'];
+  return rows.map((row, index) => buildProduct(
+    'dp-photo-' + index, row, 'DEMO-' + (index + 1), [colors[index]], [4, 6, 8, 6, 5, 3],
+  ));
+}
+
+export function upgradeDemoCatalog(data) {
+  if (data.photoCatalogVersion === 1) return false;
+  const legacy = data.products.filter(product =>
+    product.isDemo && /^dp[1-8]$/.test(product.id) &&
+    product.image?.startsWith('data:image/svg+xml;charset=utf-8,'));
+  if (legacy.length) {
+    legacy.forEach(product => { product.active = false; product.catalog = false; });
+    const known = new Set(data.products.map(product => product.id));
+    data.products.push(...buildDemoProducts().filter(product => !known.has(product.id)));
+  }
+  data.photoCatalogVersion = 1;
+  return true;
+}
+
 export function buildDemoState() {
   const now = Date.now();
   const haceDias = (d) => new Date(now - d * 864e5).toISOString();
-
-  const products = [
-    buildShoe('dp1', 'Zapato escolar negro', 'ZP-ESC-NEG', 499, 260, 'escolar', ['Negro'], [4, 6, 8, 6, 5, 3]),
-    buildShoe('dp2', 'Tenis casual urbano', 'TN-URB-001', 799, 420, 'dama', ['Blanco', 'Rosa'], [3, 5, 7, 6, 4, 2]),
-    buildShoe('dp3', 'Bota vaquera café', 'BT-VAQ-CAF', 1290, 720, 'caballero', ['Café'], [2, 3, 5, 4, 3, 2]),
-    buildShoe('dp4', 'Sandalia de mujer', 'SD-MUJ-002', 449, 210, 'dama', ['Beige', 'Negro'], [5, 6, 6, 4, 3, 2]),
-    buildShoe('dp5', 'Zapato formal caballero', 'ZF-CAB-003', 949, 520, 'caballero', ['Negro', 'Café'], [2, 4, 5, 5, 3, 2]),
-    buildShoe('dp6', 'Tenis infantil con luz', 'TN-INF-004', 399, 190, 'infantil', ['Azul', 'Rojo'], [6, 7, 6, 5, 4, 2]),
-    buildShoe('dp7', 'Mocasín casual', 'MC-CAS-005', 699, 350, 'caballero', ['Beige'], [3, 4, 5, 4, 3, 2]),
-    buildShoe('dp8', 'Baleta de vestir', 'BL-VES-006', 549, 280, 'dama', ['Negro', 'Rosa'], [4, 5, 6, 5, 3, 2]),
-  ];
+  const products = buildDemoProducts();
 
   const customers = [
     { id: 'dc1', name: 'María López', phone: '555-102-3344', email: 'maria@ejemplo.com', balance: 0, creditLimit: 0, notes: 'Cliente frecuente' },
@@ -112,7 +95,7 @@ export function buildDemoState() {
   const purchases = [
     {
       id: 'dpo1', folio: 'OC-9000', supplierId: 'dsup1', date: haceDias(12), branchId: 'b1',
-      status: 'received', items: [poItem(products[0], '3', 'Negro', 12, 12, 260)],
+      status: 'received', items: [poItem(products[3], '3', 'Negro', 12, 12, 260)],
       total: 3120, paid: 3120, creditApplied: 0,
       payments: [{ at: haceDias(10), amount: 3120, note: 'Transferencia' }],
       note: 'Pedido de temporada escolar', photo: null,
@@ -120,15 +103,15 @@ export function buildDemoState() {
     {
       id: 'dpo2', folio: 'OC-9001', supplierId: 'dsup2', date: haceDias(6), branchId: 'b1',
       status: 'partial',
-      items: [poItem(products[2], '25', 'Café', 8, 5, 720), poItem(products[4], '26', 'Negro', 6, 0, 520)],
-      total: 8880, paid: 3000, creditApplied: 0,
+      items: [poItem(products[1], '25', 'Café', 8, 5, 520), poItem(products[4], 'Único', 'Negro', 6, 0, 210)],
+      total: 5420, paid: 3000, creditApplied: 0,
       payments: [{ at: haceDias(4), amount: 3000, note: 'Anticipo' }],
       note: 'Faltan 3 pares de la bota', photo: null,
     },
     {
       id: 'dpo3', folio: 'OC-9002', supplierId: 'dsup3', date: haceDias(1), branchId: 'b1',
-      status: 'ordered', items: [poItem(products[1], '25', 'Blanco', 10, 0, 420)],
-      total: 4200, paid: 0, creditApplied: 0,
+      status: 'ordered', items: [poItem(products[0], '25', 'Blanco', 10, 0, 380)],
+      total: 3800, paid: 0, creditApplied: 0,
       payments: [],
       note: 'Por recibir esta semana', photo: null,
     },
@@ -143,38 +126,39 @@ export function buildDemoState() {
     {
       id: 'ds1', code: '1-1000', date: haceDias(2), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'María López', customerId: 'dc1', note: '',
-      items: [item(products[0], '3', 'Negro', 1, 499)],
-      subtotal: 499, discount: 0, total: 499,
+      items: [item(products[3], '3', 'Negro', 1, 450)],
+      subtotal: 450, discount: 0, total: 450,
       method: 'cash', payments: null, fiscalMode: 'interno',
-      received: 500, change: 1, status: 'done', cancelReason: null, cancelledAt: null,
+      received: 500, change: 50, status: 'done', cancelReason: null, cancelledAt: null,
     },
     {
       id: 'ds2', code: 'F-5000', date: haceDias(1), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'Jorge Ramírez', customerId: 'dc2', note: '',
-      items: [item(products[1], '25', 'Blanco', 1, 799), item(products[5], '15', 'Azul', 1, 399)],
-      subtotal: 1198, discount: 0, total: 1198,
+      items: [item(products[0], '25', 'Blanco', 1, 690), item(products[5], 'M', 'Negro', 1, 320)],
+      subtotal: 1010, discount: 0, total: 1010,
       method: 'debit', payments: null, fiscalMode: 'fiscal',
-      received: 1198, change: 0, status: 'done', cancelReason: null, cancelledAt: null,
+      received: 1010, change: 0, status: 'done', cancelReason: null, cancelledAt: null,
     },
     {
       id: 'ds3', code: '1-1001', date: new Date(now - 3 * 3600e3).toISOString(), branchId: 'b1', branchName: 'Centro',
       user: 'Demo Dueño', customer: 'Sofía Herrera', customerId: 'dc3', note: '',
-      items: [item(products[3], '24', 'Beige', 2, 449)],
-      subtotal: 898, discount: 50, total: 848,
+      items: [item(products[2], '24', 'Beige', 2, 640)],
+      subtotal: 1280, discount: 50, total: 1230,
       method: 'cash', payments: null, fiscalMode: 'interno',
-      received: 900, change: 52, status: 'done', cancelReason: null, cancelledAt: null,
+      received: 1250, change: 20, status: 'done', cancelReason: null, cancelledAt: null,
     },
   ];
 
   const cashMovements = [
     { id: 'cm0', date: haceDias(2), type: 'open', amount: 500, note: 'Apertura de caja', branchId: 'b1', user: 'Demo Dueño' },
-    { id: 'cm1', date: sales[0].date, type: 'in', amount: 499, note: 'Venta 1-1000', branchId: 'b1', user: 'Demo Dueño' },
-    { id: 'cm2', date: sales[2].date, type: 'in', amount: 848, note: 'Venta 1-1001', branchId: 'b1', user: 'Demo Dueño' },
+    { id: 'cm1', date: sales[0].date, type: 'in', amount: 450, note: 'Venta 1-1000', branchId: 'b1', user: 'Demo Dueño' },
+    { id: 'cm2', date: sales[2].date, type: 'in', amount: 1230, note: 'Venta 1-1001', branchId: 'b1', user: 'Demo Dueño' },
     { id: 'cm3', date: new Date(now - 2 * 3600e3).toISOString(), type: 'out', amount: 120, note: 'Compra de bolsas', branchId: 'b1', user: 'Demo Dueño' },
   ];
 
   return {
     version: 1,
+    photoCatalogVersion: 1,
     company: {
       id: 'demo-company',
       name: 'Zapatería Demo',
@@ -221,6 +205,7 @@ export function buildDemoState() {
     cuts: [],
     seq: 1002,
     settings: {
+      extraCategoryModes: ['boutique'],
       discountMax: 100,
       aiKey: '',
       aiProvider: 'gemini',

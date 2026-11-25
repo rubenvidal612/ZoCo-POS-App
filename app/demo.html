@@ -55,7 +55,7 @@
 
 <script src="./js/config.js"></script>
 <script type="module">
-  import { buildDemoState } from './js/demo-data.js';
+  import { buildDemoState, upgradeDemoCatalog } from './js/demo-data.js?v=2';
 
   const KEY = 'zoco.demo.v1';
   const SKEY = 'zoco.demo.session';
@@ -80,6 +80,10 @@
     if (raw) {
       const parsed = JSON.parse(raw);
       listo = !!(parsed && Array.isArray(parsed.products) && parsed.products.length);
+      if (listo && upgradeDemoCatalog(parsed)) {
+        try { localStorage.setItem(KEY, JSON.stringify(parsed)); }
+        catch (error) { console.warn('demo catalog update', error); }
+      }
     }
   } catch { listo = false; }
   if (!listo) seed();
