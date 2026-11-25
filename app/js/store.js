@@ -815,13 +815,17 @@ export const PERMS = {
   'users.manage':   'Administrar usuarios',
   'settings.edit':  'Configuración',
   'ai.use':         'Usar agente IA',
+  'food.order':     'Atender mesas y tomar comandas',
+  'food.kitchen':   'Gestionar comandas de cocina y barra',
 };
 
 export const ROLES = {
   OWNER:   { label: 'Propietario', perms: ['*'] },
   ADMIN:   { label: 'Administrador', perms: ['sales.sell', 'sales.cancel', 'sales.discount', 'products.edit', 'stock.manage', 'customers.manage', 'reports.view', 'finance.view', 'users.manage', 'settings.edit', 'ai.use'] },
-  CASHIER: { label: 'Cajero', perms: ['sales.sell', 'sales.discount', 'customers.manage'] },
-  STOCK:   { label: 'Almacén', perms: ['products.edit', 'stock.manage'] },
+  CASHIER: { label: 'Cajero', perms: ['sales.sell', 'sales.discount', 'customers.manage', 'food.order'] },
+  WAITER: { label: 'Mesero', perms: ['food.order'] },
+  KITCHEN: { label: 'Cocina', perms: ['food.kitchen'] },
+  STOCK:   { label: 'Almacén', perms: ['products.edit', 'stock.manage', 'food.kitchen'] },
   ACCOUNT: { label: 'Contador', perms: ['reports.view', 'finance.view'] },
 };
 
