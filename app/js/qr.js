@@ -430,7 +430,7 @@ export function qrSvg(text, { size = 220, margin = 4, dark = '#0F172A', light = 
 export function qrDataUrl(text, { size = 240, margin = 4, dark = '#0F172A', light = '#FFFFFF', ec = 'M' } = {}) {
   const { size: n, modules } = qrMatrix(text, { ec });
   const total = n + margin * 2;
-  const scale = Math.max(1, Math.floor(size / total));
+  const scale = Math.max(1, Math.ceil(size / total));
   const px = total * scale;
   const canvas = document.createElement('canvas');
   canvas.width = px;

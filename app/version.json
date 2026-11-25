@@ -1,5 +1,5 @@
 {
-    "version":  "2.82.0",
+    "version":  "2.82.1",
     "date":  "2026-11-24",
     "notes":  [
                   "Lavanderia: el QR de seguimiento ahora se genera dentro de la app, sin internet y al instante",
