@@ -1,7 +1,7 @@
 {
-    "version":  "2.85.1",
+    "version":  "2.85.2",
     "date":  "2026-11-24",
     "notes":  [
-                  "Salon de ZoCo Food: configuracion colapsada para que el plano ocupe la pantalla"
+                  "Salon 3D: mesas con volumen real y texto legible"
               ]
 }
