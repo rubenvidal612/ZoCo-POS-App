@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reserva tu cita · ZoCo Beauty</title><meta name="robots" content="noindex,follow"><meta name="theme-color" content="#f97316">
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#102039;background:#f6f8fd}
+*{box-sizing:border-box}body{margin:0}.top{background:#fff;border-bottom:1px solid #e6eaf3;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:10px}.brand{font-size:22px;font-weight:900}.brand em{color:#f97316;font-style:normal}
+.wrap{max-width:780px;margin:35px auto 70px;padding:0 18px}h1{font-size:clamp(29px,5vw,43px);letter-spacing:-.04em;margin:12px 0}p{color:#53647b;line-height:1.6}.card{border:1px solid #e0e6f0;border-radius:22px;background:#fff;box-shadow:0 14px 36px #1233540b;padding:clamp(17px,4vw,32px)}
+form{display:grid;gap:16px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800}
+input,select,textarea{width:100%;border:1px solid #c9d3e2;background:#fff;border-radius:12px;padding:13px;font:inherit;color:#102039;font-size:15px}textarea{resize:vertical;min-height:72px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #f97316;outline-offset:2px}
+button{cursor:pointer;border:0;border-radius:12px;padding:15px 20px;background:#f97316;color:white;font-size:15px;font-weight:800}
+button:disabled{opacity:.6;cursor:not-allowed}.cost{background:#fff4eb;border:1px solid #ffd5ba;border-radius:12px;padding:14px;font-size:14px;font-weight:800;color:#b74a05}
+.note{font-size:12px;color:#62748a}.status{font-size:14px;font-weight:700;border-radius:12px;padding:12px}.status.error{color:#8b291f;background:#fff2f0}.status.good{color:#136b3d;background:#eaf8f0}
+footer{text-align:center;color:#7a889c;font-size:12px;padding:30px}
+@media(max-width:590px){.two{grid-template-columns:1fr}.wrap{margin-top:19px}}
+</style></head>
+<body><header class="top"><span class="brand">ZoCo <em>Beauty</em></span><span style="font-size:12px;color:#687790">Agenda en línea</span></header>
+<main class="wrap"><span style="color:#f97316;font-size:12px;font-weight:900">RESERVACIONES</span><h1 id="business">Agenda tu próxima cita</h1>
+<p>Elige servicio, profesional y horario. El establecimiento revisará tu solicitud y confirmará la disponibilidad.</p>
+<section class="card"><p id="message" role="status" hidden></p>
+<form id="booking" hidden>
+<label>Sucursal<select name="branchId" id="branch" required></select></label>
+<div class="two"><label>Servicio<select name="serviceId" id="service" required></select></label>
+<label>Profesional<select name="professionalId" id="professional" required></select></label></div>
+<div class="cost" id="price">Selecciona un servicio.</div>
+<div class="two"><label>Fecha<input id="day" name="day" type="date" required></label>
+<label>Horario<select id="time" name="time" required><option value="">Elige una fecha</option></select></label></div>
+<div class="two"><label>Tu nombre<input id="name" name="name" required maxlength="90" autocomplete="name"></label>
+<label>Teléfono<input name="phone" required maxlength="20" inputmode="tel" autocomplete="tel" placeholder="993 123 4567"></label></div>
+<label>Detalles opcionales<textarea name="notes" maxlength="300" placeholder="Algo que el profesional deba saber"></textarea></label>
+<button id="send" type="submit">Solicitar cita</button>
+<div class="note">Al solicitar tu cita, autorizas al establecimiento a usar tus datos de contacto únicamente para gestionar esta reserva. La cita no está confirmada hasta que el negocio te lo comunique.</div></form></section></main>
+<footer>Reservaciones facilitadas por ZoCo POS</footer>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n);
+const company=new URLSearchParams(location.search).get('c');
+const msg=(text,error=false)=>{const node=$('#message');node.textContent=text;node.hidden=false;node.className='status '+(error?'error':'good')};
+let data=null;
+function options(id,items,placeholder){const select=$(id);select.replaceChildren(new Option(placeholder,''),...items.map(i=>new Option(i.label,i.value)))}
+function updatePrice(){const s=data?.services?.find(x=>x.id===$('#service').value);$('#price').textContent=s?money(s.price)+' · '+s.minutes+' minutos':'Selecciona un servicio.';updateTimes()}
+function updateTimes(){
+const s=data?.services?.find(x=>x.id===$('#service').value),day=$('#day').value,pro=$('#professional').value,branch=$('#branch').value;
+const times=[];if(s&&day&&pro&&branch){
+  for(let h=9;h<=19;h++)for(let m=0;m<60;m+=15){
+    const hh=String(h).padStart(2,'0'),mm=String(m).padStart(2,'0'),start=new Date(day+'T'+hh+':'+mm+':00');
+    const end=new Date(start.getTime()+s.minutes*60000);
+    if(end.getHours()>20||end.getHours()===20&&end.getMinutes()>0)continue;
+    if(start<=new Date(Date.now()+5*60000))continue;
+    const conflicts=(data.busy||[]).some(x=>x.professionalId===pro&&x.branchId===branch&&new Date(x.start)<end&&new Date(x.end)>start);
+    if(!conflicts)times.push({value:hh+':'+mm,label:hh+':'+mm});
+  }
+}
+options('#time',times,times.length?'Selecciona un horario':'No hay horarios disponibles');
+}
+async function load(){
+if(!company){msg('Falta el enlace del establecimiento.',true);return}
+const r=await fetch('/api/beauty-appointments?mode=public&c='+encodeURIComponent(company),{cache:'no-store'});
+const j=await r.json();if(!r.ok||!j.ok){msg(j.error||'No fue posible cargar la agenda.',true);return}
+data=j;$('#business').textContent='Reserva en '+j.business;
+if(!j.services.length||!j.professionals.length||!j.branches.length){msg('Este establecimiento aún no ha configurado servicios y profesionales.',true);return}
+options('#branch',j.branches.map(x=>({value:x.id,label:x.name})),'Selecciona una sucursal');
+options('#service',j.services.map(x=>({value:x.id,label:x.name+' · '+money(x.price)})),'Selecciona un servicio');
+options('#professional',j.professionals.map(x=>({value:x.id,label:x.name})),'Elige un profesional');
+const now=new Date(),tomorrow=new Date(now.getTime()+86400000),last=new Date(now.getTime()+90*86400000);
+const isoLocal=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+$('#day').min=isoLocal(now);$('#day').max=isoLocal(last);
+$('#service').addEventListener('change',updatePrice);
+['#day','#professional','#branch'].forEach(id=>$(id).addEventListener('change',updateTimes));
+$('#booking').hidden=false;
+}
+$('#booking').onsubmit=async ev=>{
+ev.preventDefault();const f=new FormData(ev.target),day=f.get('day'),time=f.get('time');
+if(!day||!time)return msg('Elige fecha y horario.',true);
+const button=$('#send');button.disabled=true;
+try{const r=await fetch('/api/beauty-appointments?mode=public&c='+encodeURIComponent(company),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+ branchId:f.get('branchId'),serviceId:f.get('serviceId'),professionalId:f.get('professionalId'),
+ name:f.get('name'),phone:f.get('phone'),notes:f.get('notes'),start:new Date(day+'T'+time+':00').toISOString(),
+})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'No se pudo enviar');
+msg('¡Solicitud enviada! El negocio debe confirmar tu cita.');ev.target.hidden=true;
+}catch(e){msg(e.message,true);button.disabled=false}};
+load().catch(()=>msg('No se pudo conectar con el servicio de citas.',true));
+})();
+</script></body></html>
