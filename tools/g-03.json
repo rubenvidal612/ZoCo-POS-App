@@ -1,0 +1,4 @@
+[
+  { "op": "shot", "path": "C:/ZOCOPOS 2.0/captures/gcloud-mfa.png" },
+  { "op": "eval", "label": "texto", "expr": "document.body.innerText.replace(/\\n+/g,' | ').slice(0,700)" }
+]

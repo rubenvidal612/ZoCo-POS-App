@@ -1,8 +1,7 @@
 {
-    "version":  "2.79.0",
+    "version":  "2.79.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Planes ajustados: Esencial $149, Pro $295 (antes $349, mas caro que dos Esencial) y Empresarial $499",
-                  "Cada plan ahora lista todo lo que incluye"
+                  "Landing-2 actualizada: planes $149 / $295 / $499 con la lista de lo que incluye cada uno"
               ]
 }

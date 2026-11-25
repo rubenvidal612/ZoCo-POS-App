@@ -1,0 +1,5 @@
+[
+  { "op": "wait", "ms": 1500 },
+  { "op": "url" },
+  { "op": "eval", "label": "estado", "expr": "JSON.stringify({url:location.href.slice(0,90), title:document.title, proyectos:[...document.querySelectorAll('a,button')].map(e=>e.textContent.trim()).filter(t=>/project|create|proyecto/i.test(t)).slice(0,6)})" }
+]

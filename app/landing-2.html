@@ -89,7 +89,59 @@
   <p class="sub">Estimación en pesos mexicanos. Supone que todos los clientes permanecen activos y pagan el mismo plan. Las comisiones se activarán al terminar la fase de prueba.</p>
 </section></div>
 <section id="planes"><div class="eyebrow">Pruebas y retroalimentación</div><h2>Prueba ZoCo <em>GRATIS por el momento</em></h2><p class="plan-conditions">Durante la fase de prueba puedes explorar ZoCo y crear tu cuenta gratis.</p><a href="/demo" class="btn">Probar ZoCo GRATIS ›</a> <a href="/?registro=1" class="btn classic">Crear mi cuenta</a>
-<h3 class="plans-heading">Planes para después de la prueba</h3><div class="grid public-plans"><article class="card public-plan"><h3>ZoCo Esencial</h3><p class="plan-price"><strong>$149</strong> MXN/mes</p><p>1 sucursal</p><p>Comisión de afiliado de $50 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Pro</h3><p class="plan-price"><strong>$349</strong> MXN/mes</p><p>2 sucursales</p><p>Comisión de afiliado de $150 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Empresarial</h3><p class="plan-price"><strong>$599</strong> MXN/mes</p><p>10 sucursales</p><p>Comisión de afiliado de $250 MXN al mes por cliente activo</p></article></div><p class="plan-conditions">Todos incluyen usuarios y productos ilimitados, inventario, caja, reportes, catálogo, afiliados y agente IA con tu propia clave.</p></section></main><footer>ZoCo POS · Ventas, inventario y agentes IA</footer><script>const types={Zapatería:["👟","Modelos, tallas, medias tallas, colores y variantes.",["24","24½","25","25½","26"]],Abarrotes:["🛒","Productos, códigos de barras y control de existencias.",["Leche","Arroz","Aceite","Frijol"]],Restaurante:["🍔","Platillos, bebidas, pedidos e ingredientes.",["Hamburguesa","Torta","Pizza","Café"]],Ferretería:["🛠️","Herramientas, materiales y refacciones.",["Taladro","Martillo","Tornillos"]],Boutique:["👗","Prendas por talla, color y modelo.",["Blusa","Pantalón","Vestido"]],Electrónica:["🎧","Equipos y accesorios por modelo y existencia.",["Audífonos","Cargador","Cable USB"]],Farmacia:["💊","Medicamentos, presentaciones y existencias.",["Caja","Frasco","Tabletas"]]};document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active");let t=types[b.dataset.type];document.querySelector("#typeTitle").textContent=t[0]+" "+b.dataset.type;document.querySelector("#typeDesc").textContent=t[1];document.querySelector("#typeExamples").textContent=t[2].join(" · ")});document.querySelectorAll('[data-agent]').forEach(button => {
+<h3 class="plans-heading">Planes para después de la prueba</h3><div class="grid public-plans">
+        <article class="card public-plan">
+          <h3>ZoCo Esencial</h3>
+          <p class="plan-price"><strong>$149</strong> MXN/mes</p>
+          <p class="plan-ideal">Para la tienda de una sola puerta</p>
+          <ul class="plan-list">
+            <li>Punto de venta completo (tallas, colores y servicios)</li>
+            <li>Inventario ilimitado con alertas de stock bajo</li>
+            <li>Caja, cortes Z y control de efectivo</li>
+            <li>Compras, proveedores y cuentas por pagar</li>
+            <li>Clientes, apartados y cupones</li>
+            <li>Catálogo en línea con pedidos por WhatsApp</li>
+            <li>Reportes de ventas, utilidad y margen</li>
+            <li>Agente IA con tu propia llave</li>
+            <li>Respaldo descargable de tus datos</li>
+            <li>Soporte por WhatsApp</li>
+          </ul>
+          <p class="plan-affiliate">Comisión de afiliado de $50 MXN al mes por cliente activo</p>
+        </article>
+        <article class="card public-plan">
+          <h3>ZoCo Pro</h3>
+          <p class="plan-price"><strong>$295</strong> MXN/mes</p>
+          <p class="plan-ideal">Para quien ya abrió su segunda sucursal</p>
+          <ul class="plan-list">
+            <li>Todo lo de Esencial, y además:</li>
+            <li>Inventario por separado en cada sucursal</li>
+            <li>Comparativo de ventas entre sucursales</li>
+            <li>Traspasos de mercancía entre sucursales</li>
+            <li>Reloj checador y nómina del equipo</li>
+            <li>Cortes de caja por sucursal</li>
+            <li>Integraciones (Mercado Pago y Envía)</li>
+            <li>Catálogos base por giro</li>
+            <li>Soporte prioritario</li>
+          </ul>
+          <p class="plan-affiliate">Comisión de afiliado de $150 MXN al mes por cliente activo</p>
+        </article>
+        <article class="card public-plan">
+          <h3>ZoCo Empresarial</h3>
+          <p class="plan-price"><strong>$499</strong> MXN/mes</p>
+          <p class="plan-ideal">Para cadenas con varias puertas</p>
+          <ul class="plan-list">
+            <li>Todo lo de Pro, y además:</li>
+            <li>Hasta 10 sucursales</li>
+            <li>Tablero consolidado de la cadena</li>
+            <li>Permisos avanzados por rol y sucursal</li>
+            <li>Migración de tu inventario (te ayudamos)</li>
+            <li>Capacitación en línea para tu equipo</li>
+            <li>Revisión de catálogo y precios contigo</li>
+            <li>Soporte prioritario y atención directa</li>
+          </ul>
+          <p class="plan-affiliate">Comisión de afiliado de $250 MXN al mes por cliente activo</p>
+        </article>
+      Todos incluyen usuarios y productos ilimitados, inventario, caja, reportes, catálogo, afiliados y agente IA con tu propia clave.</p></section></main><footer>ZoCo POS · Ventas, inventario y agentes IA</footer><script>const types={Zapatería:["👟","Modelos, tallas, medias tallas, colores y variantes.",["24","24½","25","25½","26"]],Abarrotes:["🛒","Productos, códigos de barras y control de existencias.",["Leche","Arroz","Aceite","Frijol"]],Restaurante:["🍔","Platillos, bebidas, pedidos e ingredientes.",["Hamburguesa","Torta","Pizza","Café"]],Ferretería:["🛠️","Herramientas, materiales y refacciones.",["Taladro","Martillo","Tornillos"]],Boutique:["👗","Prendas por talla, color y modelo.",["Blusa","Pantalón","Vestido"]],Electrónica:["🎧","Equipos y accesorios por modelo y existencia.",["Audífonos","Cargador","Cable USB"]],Farmacia:["💊","Medicamentos, presentaciones y existencias.",["Caja","Frasco","Tabletas"]]};document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active");let t=types[b.dataset.type];document.querySelector("#typeTitle").textContent=t[0]+" "+b.dataset.type;document.querySelector("#typeDesc").textContent=t[1];document.querySelector("#typeExamples").textContent=t[2].join(" · ")});document.querySelectorAll('[data-agent]').forEach(button => {
   button.addEventListener('click', () => {
     const provider = document.getElementById('provider');
     provider.selectedIndex = Number(button.dataset.agent);

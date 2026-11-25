@@ -1,0 +1,6 @@
+[
+  { "op": "goto", "url": "https://myaccount.google.com/signinoptions/two-step-verification", "settle": 3000 },
+  { "op": "url" },
+  { "op": "eval", "label": "texto", "expr": "document.body.innerText.replace(/\\n+/g,' | ').slice(0,400)" },
+  { "op": "shot", "path": "C:/ZOCOPOS 2.0/captures/gcloud-2sv.png" }
+]

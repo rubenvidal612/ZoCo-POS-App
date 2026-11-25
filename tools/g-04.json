@@ -1,0 +1,7 @@
+[
+  { "op": "clicktext", "text": "Habilitar la MFA" },
+  { "op": "wait", "ms": 2500 },
+  { "op": "url" },
+  { "op": "eval", "label": "texto", "expr": "document.body.innerText.replace(/\\n+/g,' | ').slice(0,500)" },
+  { "op": "shot", "path": "C:/ZOCOPOS 2.0/captures/gcloud-mfa2.png" }
+]

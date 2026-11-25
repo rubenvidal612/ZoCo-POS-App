@@ -1,0 +1,5 @@
+[
+  { "op": "wait", "ms": 1500 },
+  { "op": "shot", "path": "C:/ZOCOPOS 2.0/captures/gcloud-01.png" },
+  { "op": "eval", "label": "url", "expr": "document.location.href" }
+]
