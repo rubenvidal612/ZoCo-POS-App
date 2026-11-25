@@ -3715,12 +3715,14 @@ export function bindPlanPanel(root) {
       const cur = code === p.code;
       return `<div class="pl-card ${cur ? 'on' : ''}">
         <div class="pl-card-name">${esc(pl.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 6px">${esc(pl.ideal || '')}</div>
         <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
         <div class="pl-card-list">
-          <div>${pl.limits.branches} sucursal(es)</div>
-          <div>Usuarios ilimitados</div>
-          <div>Todo incluido</div>
-          <div style="color:var(--muted);font-size:11px">Comisión afiliado $${pl.affiliate}/mes</div>
+          <div><b>${pl.limits.branches} sucursal(es)</b> · usuarios ilimitados</div>
+          ${(pl.incluye || []).map((t) => `<div style="display:flex;gap:6px;align-items:flex-start;line-height:1.35">
+            <span style="color:var(--ok,#059669);font-weight:900;flex:none">✓</span>
+            <span>${/^Todo lo de/.test(t) ? '<b>' + esc(t) + '</b>' : esc(t)}</span></div>`).join('')}
+          <div style="color:var(--muted);font-size:11px;margin-top:6px">Comisión afiliado $${pl.affiliate}/mes</div>
         </div>
         ${cur ? '<div class="pl-card-on">Plan actual</div>'
               : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}

@@ -1,7 +1,8 @@
 {
-    "version":  "2.78.0",
+    "version":  "2.79.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "POS: el pie de cada tarjeta (precio y nombre) queda siempre debajo de la foto, sin encimarse"
+                  "Planes ajustados: Esencial $149, Pro $295 (antes $349, mas caro que dos Esencial) y Empresarial $499",
+                  "Cada plan ahora lista todo lo que incluye"
               ]
 }

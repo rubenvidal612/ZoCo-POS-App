@@ -4,8 +4,8 @@ import { el, esc, money, toast } from './ui.js';
 
 const PAQUETES = [
   { id: 'esencial', nombre: 'Esencial', precio: 149, comision: 50 },
-  { id: 'pro', nombre: 'Pro', precio: 349, comision: 150 },
-  { id: 'empresarial', nombre: 'Empresarial', precio: 599, comision: 250 },
+  { id: 'pro', nombre: 'Pro', precio: 295, comision: 150 },
+  { id: 'empresarial', nombre: 'Empresarial', precio: 499, comision: 250 },
 ];
 
 const GIROS = ['Abarrotes', 'Farmacia', 'Papelería', 'Zapatería', 'Boutique', 'Ferretería',
