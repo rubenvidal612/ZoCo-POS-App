@@ -18,6 +18,7 @@ function waLink(orden, estado) {
 
 export function laundryView(ctx) {
   const root = el(`
+    <div class="ld-root">
     <div class="panel ld-wrap">
       <div class="panel-head ld-head">
         <h2>Lavandería · Órdenes</h2>
@@ -30,6 +31,7 @@ export function laundryView(ctx) {
     <div class="panel" style="margin-top:14px">
       <div class="panel-head"><h2>Insumos con stock bajo</h2></div>
       <div style="padding:14px 18px" id="ld-low"></div>
+    </div>
     </div>
   `);
 
