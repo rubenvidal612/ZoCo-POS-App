@@ -79,7 +79,13 @@ export function beautyView(){
   function paintAgenda(body){
     const selected=dayList(),pending=all.filter(a=>a.status==='requested'&&a.branch_id===state.currentBranch);
     const days=[...Array(7)].map((_,i)=>{const d=new Date(focusDay+'T12:00:00');d.setDate(d.getDate()+i);return d});
+    const pendingBox=pending.length?
+      '<div class="by-box"><h3>🔔 Solicitudes nuevas por confirmar</h3><p class="by-help">Revisa las solicitudes recibidas desde tu enlace de reserva.</p>'+
+      pending.slice(0,8).map(a=>'<div class="by-line"><div><strong>'+E(a.customer_name)+'</strong><small>'+E(a.service_name)+' · '+E(a.professional_name)+' · '+E(formatDate(a.start_at))+'</small></div>'+
+      '<div class="by-line-actions"><button type="button" class="btn sm" data-change="'+E(a.id)+'" data-status="confirmed">Confirmar</button><button type="button" class="btn ghost sm" data-change="'+E(a.id)+'" data-status="cancelled">Rechazar</button></div></div>').join('')+
+      '</div>':'';
     body.innerHTML='<div class="by-stats"><div><small>Solicitudes pendientes</small><strong>'+pending.length+'</strong></div><div><small>Citas del día</small><strong>'+selected.filter(a=>a.status!=='cancelled').length+'</strong></div><div><small>Servicios atendidos hoy</small><strong>'+selected.filter(a=>a.status==='completed').length+'</strong></div></div>'+
+      pendingBox+
       '<div class="by-box by-calendar"><div class="by-datebar"><button type="button" id="by-prev">←</button><label>Fecha<input id="by-day" type="date" value="'+E(focusDay)+'"></label><button type="button" id="by-next">→</button></div>'+
       '<div class="by-week">'+days.map(d=>'<button class="'+(dateKey(d)===focusDay?'active':'')+'" data-day="'+dateKey(d)+'"><small>'+d.toLocaleDateString('es-MX',{weekday:'short'})+'</small><b>'+d.getDate()+'</b></button>').join('')+'</div>'+
       (online()?'<p class="by-help">Solicitudes nuevas aparecen al actualizar y se revisan automáticamente mientras tengas este módulo abierto.</p>':'<p class="by-help">Inicia sesión con tu cuenta de ZoCo en la nube para sincronizar y gestionar citas.</p>')+
