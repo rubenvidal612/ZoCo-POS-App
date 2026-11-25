@@ -499,7 +499,7 @@ export async function googleSignIn(guser) {
       }
     } catch {}
 
-    const roles = ['OWNER', 'ADMIN', 'CASHIER', 'STOCK', 'ACCOUNT'];
+    const roles = ['OWNER', 'ADMIN', 'CASHIER', 'STOCK', 'ACCOUNT', 'WAITER', 'KITCHEN'];
     const role = roles.includes(cloudRole)
       ? cloudRole
       : (users.some((u) => String(u.role).toUpperCase() === 'OWNER') ? 'CASHIER' : 'OWNER');
@@ -507,7 +507,7 @@ export async function googleSignIn(guser) {
     user = {
       id: 'u-' + Math.random().toString(36).slice(2, 9),
       name, email, role, pin: '1234', active: true,
-      jobTitle: role === 'OWNER' ? 'Propietario' : 'Vendedor',
+      jobTitle: role === 'OWNER' ? 'Propietario' : role === 'WAITER' ? 'Mesero' : role === 'KITCHEN' ? 'Cocina' : 'Vendedor',
       payType: 'HOURLY', payRate: 60,
     };
     created = true;
