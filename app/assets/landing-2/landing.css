@@ -144,7 +144,7 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
 #planes .plan-conditions { font-size:clamp(18px,2vw,23px); max-width:68ch; line-height:1.5; color:#f4f7ff; }
 @media (max-width:680px) { .team-grid { grid-template-columns:1fr; } }
 
-.pearl { transition:filter .4s ease; }
+.pearl { transition:filter .12s ease-out; }
 .chat-identity { display:inline-flex; align-items:center; gap:6px; }
 .chat-identity .pearl { object-fit:contain; }
 .pearl[data-state="thinking"] { filter:sepia(1) saturate(3) hue-rotate(165deg) drop-shadow(0 3px 5px #315da235); }

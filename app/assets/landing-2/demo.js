@@ -54,24 +54,25 @@ async function playConversation() {
     setPearlState(owner ? "idle" : "thinking");
     const draft = owner ? Array.from(bubble.textContent) : ['.', '.', '.'];
     let written = owner ? '' : 'ZoCo está respondiendo';
-    for (const character of draft) {
-      written += character;
+    const step = owner ? 4 : 1;
+    for (let offset = 0; offset < draft.length; offset += step) {
+      written += draft.slice(offset, offset + step).join('');
       demoStatus.textContent = written;
-      await new Promise(resolve => setTimeout(resolve, owner ? 27 : 360));
+      await new Promise(resolve => setTimeout(resolve, owner ? 20 : 125));
       if (currentPlayback !== playbackId) return;
     }
     demoStatus.textContent = 'Conversación de ejemplo';
     if (!owner && index === bubbles.length - 1) {
       setPearlState("working");
       demoStatus.textContent = 'ZoCo está aplicando el descuento…';
-      await new Promise(resolve => setTimeout(resolve, 850));
+      await new Promise(resolve => setTimeout(resolve, 320));
       if (currentPlayback !== playbackId) return;
       demoStatus.textContent = 'Conversación de ejemplo';
     }
     bubble.hidden = false;
     if (!owner) setPearlState(index === bubbles.length - 1 ? "success" : "working");
     messages.scrollTop = messages.scrollHeight;
-    await new Promise(resolve => setTimeout(resolve, 1450));
+    await new Promise(resolve => setTimeout(resolve, index === bubbles.length - 1 ? 1000 : 350));
     if (currentPlayback !== playbackId) return;
   }
   showConversation();
