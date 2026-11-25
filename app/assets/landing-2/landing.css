@@ -151,3 +151,14 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
 .pearl[data-state="working"] { filter:sepia(1) saturate(4) hue-rotate(339deg) drop-shadow(0 3px 5px #9b570435); }
 .pearl[data-state="success"] { filter:sepia(1) saturate(2.7) hue-rotate(76deg) drop-shadow(0 3px 5px #16824a35); }
 @media(prefers-reduced-motion:reduce) { .pearl { transition:none; } }
+
+.pearl { display:inline-block; aspect-ratio:340 / 234; }
+.chat-identity .pearl { position:relative; flex:0 0 38px; width:38px; }
+.pearl img { display:block; width:100%; height:auto; }
+.pearl-mouth { display:none; position:absolute; inset:0; pointer-events:none; }
+.pearl[data-state="thinking"] .pearl-mouth,
+.pearl[data-state="working"] .pearl-mouth { display:block; }
+.pearl-mouth::before { content:""; position:absolute; left:45%; top:68.5%; width:10%; height:10%; background:radial-gradient(ellipse,#e3d8d0 46%,transparent 72%); }
+.pearl-mouth::after { content:""; position:absolute; left:50%; top:73%; transform:translate(-50%,-50%); background:#231c18; border-radius:50%; }
+.pearl[data-state="thinking"] .pearl-mouth::after { width:5%; height:1.8%; }
+.pearl[data-state="working"] .pearl-mouth::after { width:4.8%; height:7%; }
