@@ -17,7 +17,7 @@ footer{text-align:center;color:#7a889c;font-size:12px;padding:30px}
 </style></head>
 <body><header class="top"><span class="brand">ZoCo <em>Beauty</em></span><span style="font-size:12px;color:#687790">Agenda en línea</span></header>
 <main class="wrap"><span style="color:#f97316;font-size:12px;font-weight:900">RESERVACIONES</span><h1 id="business">Agenda tu próxima cita</h1>
-<p>Elige servicio, profesional y horario. El establecimiento revisará tu solicitud y confirmará la disponibilidad.</p>
+<p>Elige servicio, profesional y horario. Los horarios corresponden a la hora local del establecimiento (centro de México). El negocio confirmará tu solicitud.</p>
 <section class="card"><p id="message" role="status" hidden></p>
 <form id="booking" hidden>
 <label>Sucursal<select name="branchId" id="branch" required></select></label>
@@ -43,10 +43,11 @@ function updatePrice(){const s=data?.services?.find(x=>x.id===$('#service').valu
 function updateTimes(){
 const s=data?.services?.find(x=>x.id===$('#service').value),day=$('#day').value,pro=$('#professional').value,branch=$('#branch').value;
 const times=[];if(s&&day&&pro&&branch){
-  for(let h=9;h<=19;h++)for(let m=0;m<60;m+=15){
+  for(let h=0;h<24;h++)for(let m=0;m<60;m+=15){
     const hh=String(h).padStart(2,'0'),mm=String(m).padStart(2,'0'),start=new Date(day+'T'+hh+':'+mm+':00');
     const end=new Date(start.getTime()+s.minutes*60000);
-    if(end.getHours()>20||end.getHours()===20&&end.getMinutes()>0)continue;
+    const clock=hh+':'+mm,finish=String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0');
+    if(!(clock>=data.hours.start&&finish<=data.hours.end&&data.hours.start<data.hours.end))continue;
     if(start<=new Date(Date.now()+5*60000))continue;
     const conflicts=(data.busy||[]).some(x=>x.professionalId===pro&&x.branchId===branch&&new Date(x.start)<end&&new Date(x.end)>start);
     if(!conflicts)times.push({value:hh+':'+mm,label:hh+':'+mm});
