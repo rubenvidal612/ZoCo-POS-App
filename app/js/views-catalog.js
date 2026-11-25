@@ -1322,6 +1322,8 @@ export function settingsView(ctx) {
                 <option value="CASHIER">Cajero / Vendedor</option>
                 <option value="ADMIN">Administrador</option>
                 <option value="STOCK">Almacén</option>
+                <option value="WAITER">Mesero (solo mesas)</option>
+                <option value="KITCHEN">Cocina / barra (comandas)</option>
                 <option value="ACCOUNT">Contabilidad</option>
               </select></div>
           </div>
@@ -2121,7 +2123,7 @@ export function settingsView(ctx) {
   // ===== Equipo: invitar empleados por correo =====
   const eqList = $('#eq-list', root);
   if (eqList) {
-    const roleLabel = { OWNER: 'Dueño', ADMIN: 'Administrador', CASHIER: 'Cajero/Vendedor', STOCK: 'Almacén', ACCOUNT: 'Contabilidad' };
+    const roleLabel = { OWNER: 'Dueño', ADMIN: 'Administrador', CASHIER: 'Cajero/Vendedor', STOCK: 'Almacén', WAITER: 'Mesero', KITCHEN: 'Cocina / barra', ACCOUNT: 'Contabilidad' };
     const paintTeam = async () => {
       if (!cloudSession()?.access_token) {
         eqList.innerHTML = '<div class="hint">Entra con tu cuenta (Google o correo) para ver tu equipo.</div>';
