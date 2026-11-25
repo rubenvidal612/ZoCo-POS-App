@@ -52,6 +52,12 @@ function systemPrompt() {
     catalogo: catalogForPrompt(),
     clientes: state.customers.slice(0, 30).map((c) => ({ nombre: c.name, saldo: c.balance || 0, limite: c.creditLimit || 0 })),
     sucursales: state.branches.map((x) => x.name),
+    fecha_hora_actual_local: new Date().toString(),
+    agenda_belleza: state.company.mode === 'barberia' ? {
+      servicios: state.products.filter(x=>x.section==='servicios'&&x.active!==false).map(x=>({nombre:x.name,precio:x.price,duracion_minutos:x.bookingMinutes||30})),
+      profesionales: state.users.filter(x=>x.beautyProfessional&&x.active!==false).map(x=>x.name),
+      nota:'Para crear citas usa create_beauty_appointment, pregunta datos faltantes y solicita confirmación. No asegures disponibilidad hasta recibir resultado.',
+    } : null,
   };
   return SYSTEM_PROMPT
     + '\n\nDATOS REALES DEL NEGOCIO (JSON, úsalos para responder con cifras exactas):\n'
@@ -524,17 +530,21 @@ export function aiView() {
   }
 
   function bindActions() {
-    root.querySelectorAll('[data-apply]').forEach((b) => b.onclick = () => {
+    root.querySelectorAll('[data-apply]').forEach((b) => b.onclick = async () => {
       const i = Number(b.dataset.apply);
       const m = CHAT[i];
-      if (!m?.action) return;
-      const r = runAction(m.action.action, m.action.params);
+      if (!m?.action || m.done || b.disabled) return;
+      b.disabled = true;
+      b.textContent = 'Aplicando…';
+      let result;
+      try { result = await runAction(m.action.action, m.action.params); }
+      catch(err) { result = {ok:false,msg:err?.message||'No se pudo completar la acción'}; }
       m.done = true;
-      m.result = r;
-      m.content = 'Acción ejecutada:';
+      m.result = typeof result==='object' && result ? result : {ok:true,msg:String(result)};
+      m.content = m.result.ok ? 'Acción ejecutada:' : 'No se pudo completar la acción:';
       saveChat();
       render();
-      toast(r.msg);
+      toast(m.result.msg);
     });
     root.querySelectorAll('[data-cancel]').forEach((b) => b.onclick = () => {
       const i = Number(b.dataset.cancel);
