@@ -254,7 +254,9 @@ export function posView(ctx) {
   function renderGrid() {
     const grid = $('#pgrid', box);
     if (!grid) return;
+    const demoSections = window.__ZOCO_DEMO__ === true ? new Set(sectionsForMode().map(([id]) => id)) : null;
     const items = state.products.filter((p) => {
+      if (demoSections && p.isDemo && (p.active === false || !demoSections.has(p.section))) return false;
       if (section !== 'all' && p.section !== section) return false;
       if (!filter) return true;
       const hay = (p.name + ' ' + p.code + ' ' + sectionOf(p).label).toLowerCase();

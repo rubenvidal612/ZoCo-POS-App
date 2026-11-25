@@ -1693,12 +1693,13 @@ export function settingsView(ctx) {
       .filter(m => (CATEGORY_GROUPS[mode] || []).includes(m) && m !== mode);
     // Si ya se está usando el catálogo de demostración, completar automáticamente
     // las nuevas categorías seleccionadas, sin tocar productos reales.
-    const demoAdded = demoCount() > 0 ? fillMissingDemoCategories() : 0;
+    const publicDemo = window.__ZOCO_DEMO__ === true;
+    const demoAdded = publicDemo || demoCount() > 0 ? fillMissingDemoCategories() : 0;
     toast(demoAdded ? 'Datos guardados · ' + demoAdded + ' ejemplos añadidos a las categorías' : 'Datos guardados');
     ctx.persist(); ctx.refreshShell?.();
 
     // Al cambiar de giro: ofrece cargar ejemplos de ese giro
-    if (cambioGiro) setTimeout(() => {
+    if (cambioGiro && !publicDemo) setTimeout(() => {
       const m = modal({
         title: 'Cambiaste a ' + (MODES[mode]?.label || mode),
         body: `<div style="font-size:13px;line-height:1.5">
