@@ -1,7 +1,8 @@
 {
-    "version":  "2.83.4",
+    "version":  "2.84.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Corregido: ya no aparece ZoCo Belleza junto con ZoCo Lavanderia; cada pestana sale solo con su giro"
+                  "Regla de giros: cada giro tiene su propio apartado y nunca se mezclan",
+                  "Si cambias de giro estando dentro de un apartado, te regresa a Inicio"
               ]
 }
