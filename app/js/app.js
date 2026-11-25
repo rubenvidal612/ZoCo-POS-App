@@ -8,7 +8,6 @@ import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
 import { purchasesView } from './views-purchases.js';
 import { landingView } from './views-landing.js';
-import { landingGalleryView } from './views-landing-gallery.js';
 import { aiView } from './views-ai.js';
 import { installScanner } from './scanner.js';
 import { initInstallPrompt, showInstallCard, mountInstallButtons } from './install.js';
@@ -47,7 +46,6 @@ const NAV_GROUPS = [
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
-  { id: 'landing', label: 'Landing', icon: '🚀' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
       { id: 'gastos', label: 'Gastos', icon: '🧾' },
@@ -88,7 +86,7 @@ let current = null;
 const titles = {
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
   reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
-  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Landing', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
+  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
 function applyTheme() {
@@ -516,7 +514,7 @@ function mount() {
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
     afiliados: () => affiliatesView(ctx),
-    landing: () => landingGalleryView(ctx),
+    landing: () => affiliatesView(ctx, { showLandings: true }),
   plan: guard('settings.edit', () => plansView(ctx)),
   };
 

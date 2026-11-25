@@ -565,7 +565,9 @@ export function captureRef() {
     if (ref) {
       localStorage.setItem(REF_KEY, ref.trim().toUpperCase());
       // limpia la URL sin recargar
-      const clean = location.pathname + (location.hash || '');
+      p.delete('ref');
+      const query = p.toString();
+      const clean = location.pathname + (query ? '?' + query : '') + (location.hash || '');
       history.replaceState(null, '', clean);
     }
   } catch {}

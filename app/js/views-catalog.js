@@ -1,3 +1,4 @@
+import { landingGalleryView } from './views-landing-gallery.js';
 // Vistas: Productos, Ventas, Reportes, Configuración
 import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompressed, captureVideoFrame, pad } from './ui.js';
 import { requestNotifyPermission, subscribePush } from './notify.js';
@@ -3479,7 +3480,7 @@ export function payrollView() {
 }
 
 /* ================= AFILIADOS ================= */
-export function affiliatesView(ctx) {
+export function affiliatesView(ctx, { showLandings = false } = {}) {
   const root = el(`<div id="aff-root">
     <div class="aff-hero">
       <div>
@@ -3489,6 +3490,12 @@ export function affiliatesView(ctx) {
       <div class="aff-badge">Tu código: <b id="aff-code">—</b></div>
     </div>
 
+    <div role="group" aria-label="Herramientas de afiliados" style="display:flex;gap:8px;margin:14px 0">
+      <button type="button" class="btn ghost sm" id="aff-summary" aria-controls="aff-summary-panel">Resumen</button>
+      <button type="button" class="btn ghost sm" id="aff-pages" aria-controls="aff-pages-panel">Landings</button>
+    </div>
+    <div id="aff-pages-panel" hidden></div>
+    <div id="aff-summary-panel">
     <div class="aff-grid">
       <div class="panel aff-link-card">
         <div class="panel-head"><h2>Tu link</h2></div>
@@ -3496,16 +3503,6 @@ export function affiliatesView(ctx) {
           <div class="aff-linkbox">
             <input id="aff-link" readonly>
             <button class="btn sm" id="aff-copy">Copiar</button>
-          </div>
-          <div style="margin-top:14px">
-            <div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px">Link de la landing (presentación)</div>
-            <div class="aff-linkbox">
-              <input id="aff-landing" readonly>
-              <button class="btn ghost sm" id="aff-landing-copy">Copiar</button>
-            </div>
-            <div class="hint" style="margin-top:6px">
-              Este link abre la página de presentación con tu código: puedes mandarlo a quien quieras para que primero conozca ZoCo.
-            </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button class="btn sm" id="aff-wa" style="background:#25D366">WhatsApp</button>
@@ -3570,6 +3567,7 @@ export function affiliatesView(ctx) {
         <div class="hint" style="margin-top:8px">Cada usuario de la app tiene su propio link y su propio código.</div>
       </div>
     </div>
+    </div>
   </div>`);
 
   const code = myAffCode();
@@ -3577,23 +3575,23 @@ export function affiliatesView(ctx) {
   $('#aff-code', root).textContent = code;
   $('#aff-link', root).value = link;
 
-  // Link de la landing con el código de afiliado
-  const landingUrl = location.origin + '/landing?ref=' + encodeURIComponent(code);
-  const landingInput = $('#aff-landing', root);
-  if (landingInput) landingInput.value = landingUrl;
-  const landingCopy = $('#aff-landing-copy', root);
-  if (landingCopy) {
-    landingCopy.onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(landingUrl);
-        toast('Link de la landing copiado');
-      } catch {
-        landingInput.select();
-        document.execCommand('copy');
-        toast('Link de la landing copiado');
-      }
-    };
+  const gallery = landingGalleryView({ referralCode: code });
+  const summary = $('#aff-summary-panel', root);
+  const pages = $('#aff-pages-panel', root);
+  const summaryButton = $('#aff-summary', root);
+  const pagesButton = $('#aff-pages', root);
+  pages.append(gallery.root);
+  function selectPages(selected) {
+    summary.hidden = selected;
+    pages.hidden = !selected;
+    summaryButton.setAttribute('aria-pressed', String(!selected));
+    pagesButton.setAttribute('aria-pressed', String(selected));
+    summaryButton.classList.toggle('ghost', selected);
+    pagesButton.classList.toggle('ghost', !selected);
   }
+  summaryButton.onclick = () => selectPages(false);
+  pagesButton.onclick = () => selectPages(true);
+  selectPages(showLandings);
 
   const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
   const paint = () => {
@@ -3651,7 +3649,7 @@ export function affiliatesView(ctx) {
     } else { toast('Copia el link y compártelo'); }
   };
 
-  return { root, refresh: paint };
+  return { root, refresh: paint, destroy: gallery.destroy };
 }
 /* ================= Panel de plan reutilizable ================= */
 export function planPanelMarkup(withSec = true) {

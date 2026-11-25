@@ -97,7 +97,10 @@
     seed();
     location.reload();
   };
-  document.getElementById('demo-signup').onclick = () => { location.href = '/?registro=1'; };
+  document.getElementById('demo-signup').onclick = () => { const url = new URL('/?registro=1', location.origin);
+    const ref = new URLSearchParams(location.search).get('ref');
+    if (ref) url.searchParams.set('ref', ref);
+    location.href = url.href; };
   document.getElementById('demo-login').onclick = () => { location.href = '/'; };
 
   // Arranca la app real en modo demo, directo en el punto de venta
