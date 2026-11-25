@@ -1909,3 +1909,38 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @media(max-width:620px){.by-stats{grid-template-columns:1fr 1fr}.by-stats>div:last-child{grid-column:1/-1}.by-grid,.by-team,.by-service-grid{grid-template-columns:1fr}.by-appt{align-items:stretch;flex-direction:column}.by-appt-actions{justify-content:flex-start}.by-week{gap:3px}.by-week button{padding:8px 1px}.by-week b{font-size:18px}}
 
 .by-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line,#e2e8f0)}.by-line>div:first-child{min-width:0}.by-line strong{display:block;font-size:14px}.by-line small{display:block;color:var(--muted,#69788b);margin-top:5px;font-size:12px;line-height:1.5}.by-line-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}@media(max-width:610px){.by-line{align-items:stretch;flex-direction:column}.by-line-actions{justify-content:flex-start}}
+
+
+/* Mascota de ZoCo */
+.zoco-mascot {
+  --mascot-green: sepia(1) saturate(3) hue-rotate(86deg);
+  --mascot-blue: sepia(1) saturate(3) hue-rotate(158deg);
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 340 / 234;
+  filter: var(--mascot-green);
+  transition: filter .25s ease;
+}
+.zoco-mascot img { display: block; width: 100%; height: auto; }
+.zoco-mascot[data-mascot-state="thinking"] { filter: var(--mascot-blue); }
+.zoco-mascot-cycle { animation: zoco-mascot-colors 3.2s ease-in-out infinite; }
+.uc-avatar:has(.zoco-mascot) { background: transparent; }
+.zoco-mascot-header { flex: 0 0 30px; }
+.zoco-mascot-welcome { width: 92px; }
+.zoco-mascot-smile {
+  position: absolute;
+  left: 45%;
+  top: 68%;
+  width: 10%;
+  height: 8%;
+  border-bottom: max(1px, .15em) solid #201c1a;
+  border-radius: 0 0 55% 55%;
+}
+@keyframes zoco-mascot-colors {
+  0%, 100% { filter: var(--mascot-green); }
+  50% { filter: var(--mascot-blue); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zoco-mascot { transition: none; animation: none; }
+}

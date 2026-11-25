@@ -281,6 +281,7 @@ const DEMOS = {
 };
 
 /* Catálogos visuales: cinco ejemplos por giro, sin alterar productos reales. */
+const HAIR_WASH_DEMO_PHOTO = '/assets/demo/lavado-de-cabello.webp';
 const EXTRA_DEMOS = {
   abarrotes: [['Leche entera 1 L','bebidas',29,22]],
   farmacia: [['Protector solar FPS 50','cuidado',210,125]],
@@ -295,7 +296,7 @@ const EXTRA_DEMOS = {
   mascotas: [['Juguete mordedera','accesorios_m',120,55],['Arena para gato 5 kg','alimento_m',165,110]],
   muebleria: [['Comedor 4 sillas','muebles',7900,5200],['Espejo decorativo','deco',750,380]],
   floreria: [['Arreglo floral mixto','arreglos',390,210],['Ramo de tulipanes','flores',560,350]],
-  barberia: [['Lavado de cabello','servicios',80,0],['Aceite para barba','producto_b',190,90]],
+  barberia: [['Lavado de cabello','servicios',80,0,HAIR_WASH_DEMO_PHOTO],['Aceite para barba','producto_b',190,90]],
   merceria: [['Hilo de coser','listones',18,8],['Cierre 20 cm','botones',22,10]],
   refaccionaria: [['Bujía estándar','refacciones',95,52],['Anticongelante 1 L','aceites',120,70]],
   perfumeria: [['Atomizador de viaje','perf_frascos',45,20]],
@@ -303,6 +304,8 @@ const EXTRA_DEMOS = {
 };
 // Fotografías ilustrativas para los giros que aún no tenían imágenes.
 // Solo se aplican a productos DEMO; nunca a inventarios reales.
+const OLD_HAIR_WASH_PHOTO = 'https://images.unsplash.com/photo-1593702295094-ada5d6b4ed46?w=640&auto=format&fit=crop';
+
 const DEMO_PHOTOS = {
   abarrotes:['photo-1542838132-92c53300491e','photo-1506619216599-9d16d0903dfd','photo-1604908176997-4319ba0e7c91','photo-1540189549336-e6e99c3679fe','photo-1550583724-b2692b85b150'],
   farmacia:['photo-1571781926291-c477ebfd024b','photo-1608248543803-ba4f8c70ae0b','photo-1556228578-0d85b1a4d571','photo-1556229010-6c3f2c9ca5f8','photo-1607619056574-7b8d3ee536b2'],
@@ -317,7 +320,7 @@ const DEMO_PHOTOS = {
   mascotas:['photo-1589924691995-400dc9ecc119','photo-1601758228041-f3b2795255f1','photo-1583337130417-3346a1be7dee','photo-1517849845537-4d257902454a','photo-1548199973-03cce0bbc87b'],
   muebleria:['photo-1555041469-a586c61ea9bc','photo-1505693416388-ac5ce068fe85','photo-1507473885765-e6ed057f782c','photo-1616486338812-3dadae4b4ace','photo-1600210492486-724fe5c67fb0'],
   floreria:['photo-1490750967868-88aa4486c946','photo-1597848212624-e6ec2b2c0c9a','photo-1561181286-d3fee7d55364','photo-1487530811176-3780de880c2d','photo-1525310072745-f49212b5ac6d'],
-  barberia:['photo-1503951914875-452162b0f3f1','photo-1599351431202-1e0f0137899a','photo-1621605815971-fbc98d665033','photo-1593702295094-ada5d6b4ed46','photo-1503951914875-452162b0f3f1'],
+  barberia:['photo-1503951914875-452162b0f3f1','photo-1599351431202-1e0f0137899a','photo-1621605815971-fbc98d665033',null,'photo-1503951914875-452162b0f3f1'],
   merceria:['photo-1590736969955-71cc94901144','photo-1494438639946-1ebd1d20bf85','photo-1512436991641-6745cdb1723f','photo-1558618666-fcd25c85cd64','photo-1490481651871-ab68de25d43d'],
   refaccionaria:['photo-1486262715619-67b85e0b08d3','photo-1503376780353-7e6692767b70','photo-1517524206127-48bbd363f3d7','photo-1492144534655-ae79c964c9d7','photo-1549317661-bd32c8ce0db2'],
   perfumeria:['photo-1541643600914-78b084683601','photo-1594035910387-fea47794261f','photo-1615634260167-c8cdede054de','photo-1592945403244-b3fbafd7f539','photo-1590736969955-71cc94901144'],
@@ -334,6 +337,9 @@ Object.entries(DEMOS).forEach(([mode, rows]) => {
 /** Imagen de demostración derivada del catálogo, incluso si el producto se guardó sin foto. */
 export function demoPhotoForProduct(p) {
   if (!p?.isDemo) return p?.image || '';
+  if (p.name === 'Lavado de cabello' && p.section === 'servicios' && p.image === OLD_HAIR_WASH_PHOTO) {
+    return HAIR_WASH_DEMO_PHOTO;
+  }
   if (p.image) return p.image;
   for (const rows of Object.values(DEMOS)) {
     const match = rows.find(row => row[0] === p.name && row[1] === p.section);

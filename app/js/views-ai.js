@@ -1,3 +1,4 @@
+import { mascotMarkup } from './mascot.js';
 // Agente IA: conoce la plataforma y responde con la API key del cliente.
 import { el, money, esc, toast, modal } from './ui.js';
 import { state, emit } from './store.js';
@@ -296,7 +297,7 @@ export function aiView() {
         </aside>
 
         <main class="ai-main">
-          <div class="ai-head"><b>Asistente ZoCo</b><span class="badge info">beta</span>
+          <div class="ai-head">${mascotMarkup('zoco-mascot-header', busy)}<b>Asistente ZoCo</b><span class="badge info">beta</span>
           <button type="button" class="btn ghost sm" id="ai-popout" title="Abrir conversación en otra pestaña">↗ <span class="ai-popout-label">Otra pestaña</span></button>
           <div class="sp"></div>
           <button type="button" class="btn ghost sm ai-gear" id="ai-gear" title="Configuración del agente">⚙</button>
@@ -306,7 +307,7 @@ export function aiView() {
             ${CHAT.length ? CHAT.map((m, i) => `
               <div class="msg ${m.role}"><div class="bubble">${format(m.content)}${csvDownloadButton(m, i)}${m.action ? actionCard(m, i) : ''}</div></div>`).join('')
               : `<div class="ai-empty">
-                  <div class="big">✦</div>
+                  ${mascotMarkup('zoco-mascot-welcome', busy)}
                   <b>Pregúntame lo que sea de tu negocio</b>
                   <div class="chips">
                     <button class="chip" data-q="Oye, ¿cómo ves el negocio esta semana?">¿Cómo ves el negocio?</button>
@@ -325,7 +326,7 @@ export function aiView() {
             <button type="button" class="btn ghost sm" id="ai-file" title="Cargar inventario desde Excel/CSV" style="height:42px;padding:0 12px">📎</button>
             <button type="button" class="btn ghost sm" id="ai-img" title="Leer inventario de una foto" style="height:42px;padding:0 12px">📷</button>
             <textarea id="ai-q" rows="1" placeholder="Escribe tu pregunta…" autocomplete="off" enterkeyhint="enter" ${busy ? 'disabled' : ''}></textarea>
-            <button type="button" id="ai-send" class="btn sm" ${busy ? 'disabled' : ''}>${busy ? '…' : 'Enviar'}</button>
+            <button type="button" id="ai-send" class="btn sm" ${busy ? 'aria-label="El asistente está pensando"' : ''} ${busy ? 'disabled' : ''}>${busy ? '…' : 'Enviar'}</button>
           </form>
         </main>
       </div>`;

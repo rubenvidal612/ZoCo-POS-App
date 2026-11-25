@@ -1,3 +1,4 @@
+import { mascotMarkup } from './mascot.js';
 // Shell + router + login de ZoCo POS
 import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
@@ -336,7 +337,7 @@ function paintShell() {
     <div class="shell">
       <aside class="sidebar">
         <div class="user-card">
-          <div class="uc-avatar">${initials}<span class="uc-star">★</span></div>
+          <div class="uc-avatar">${mascotMarkup('zoco-mascot-cycle')}<span class="uc-star">★</span></div>
           <div class="uc-info">
             <div class="uc-name">${u.name} <span class="crown">♛</span></div>
             <div class="uc-tags"><span class="uc-role">${roleLabel}</span><span class="uc-plan">PRO</span></div>
