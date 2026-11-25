@@ -1,7 +1,9 @@
 {
-    "version":  "2.77.3",
-    "date":  "2026-11-10",
-    "notes":  [
-                  "Landing: ya se puede hacer scroll hacia abajo (el contenido se recortaba)"
-              ]
+  "version": "2.77.4",
+  "date": "2026-11-24",
+  "notes": [
+    "Landings ahora está dentro de Afiliados",
+    "Enlaces personalizados y botón Ver mi landing",
+    "Actualización del caché para mostrar la nueva versión"
+  ]
 }
