@@ -1,7 +1,8 @@
 {
-    "version":  "2.79.1",
+    "version":  "2.80.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Landing-2 actualizada: planes $149 / $295 / $499 con la lista de lo que incluye cada uno"
+                  "Nuevo giro Lavanderia / tintoreria con su pestana ZoCo Lavanderia: ordenes con folio, tablero por estado (recibido, en proceso, listo, entregado), estante, cargos extra, ticket y aviso por WhatsApp",
+                  "Insumos con alerta de stock bajo para lavanderias"
               ]
 }

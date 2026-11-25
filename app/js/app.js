@@ -4,6 +4,7 @@ import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, 
 import { posView } from './views-pos.js';
 import { foodView } from './views-food.js';
 import { beautyView } from './views-beauty.js';
+import { laundryView } from './views-laundry.js';
 import { integrationsView } from './views-integrations.js';
 import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
@@ -43,6 +44,7 @@ const NAV_GROUPS = [
       { id: 'compras', label: 'Compras', icon: '📦', perm: 'products.edit' },
       { id: 'food', label: 'ZoCo Food', icon: '🍽' },
       { id: 'beauty', label: 'ZoCo Belleza', icon: '✂', perm: 'products.edit' },
+  { id: 'laundry', label: 'ZoCo Lavandería', icon: '🧺', perm: 'products.edit' },
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
@@ -86,7 +88,7 @@ let current = null;
 
 const titles = {
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
-  reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
+  reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', laundry: 'ZoCo Lavandería', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
   usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
@@ -502,6 +504,7 @@ function mount() {
     compras: guard('products.edit', () => purchasesView(ctx)),
     food: () => (state.company?.mode === 'restaurante' && (can('food.order') || can('food.kitchen') || can('products.edit')) ? foodView(ctx) : soonView('Sin acceso a ZoCo Food')),
     beauty: guard('products.edit', () => state.company?.mode === 'barberia' ? beautyView(ctx) : soonView('No disponible para este giro')),
+    laundry: guard('products.edit', () => state.company?.mode === 'lavanderia' ? laundryView(ctx) : soonView('No disponible para este giro')),
     integraciones: guard('settings.edit', () => integrationsView()),
     clientes: guard('customers.manage', () => customersView(ctx)),
     usuarios: guard('users.manage', () => usersView(ctx)),
