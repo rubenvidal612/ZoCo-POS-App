@@ -21,7 +21,7 @@ const bubbles = [...messages.querySelectorAll('.bubble')];
 const demoStatus = document.getElementById('demo-status');
 const demoToggle = document.getElementById('demo-toggle');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const pearls = document.querySelectorAll('.pearl');
+const pearls = document.querySelectorAll('.chat-identity .pearl');
 function setPearlState(state) {
   pearls.forEach(pearl => { pearl.dataset.state = state; });
 }
@@ -54,25 +54,24 @@ async function playConversation() {
     setPearlState(owner ? "idle" : "thinking");
     const draft = owner ? Array.from(bubble.textContent) : ['.', '.', '.'];
     let written = owner ? '' : 'ZoCo está respondiendo';
-    const step = owner ? 4 : 1;
-    for (let offset = 0; offset < draft.length; offset += step) {
-      written += draft.slice(offset, offset + step).join('');
+    for (const character of draft) {
+      written += character;
       demoStatus.textContent = written;
-      await new Promise(resolve => setTimeout(resolve, owner ? 20 : 125));
+      await new Promise(resolve => setTimeout(resolve, owner ? 27 : 360));
       if (currentPlayback !== playbackId) return;
     }
     demoStatus.textContent = 'Conversación de ejemplo';
     if (!owner && index === bubbles.length - 1) {
       setPearlState("working");
       demoStatus.textContent = 'ZoCo está aplicando el descuento…';
-      await new Promise(resolve => setTimeout(resolve, 320));
+      await new Promise(resolve => setTimeout(resolve, 850));
       if (currentPlayback !== playbackId) return;
       demoStatus.textContent = 'Conversación de ejemplo';
     }
     bubble.hidden = false;
     if (!owner) setPearlState(index === bubbles.length - 1 ? "success" : "working");
     messages.scrollTop = messages.scrollHeight;
-    await new Promise(resolve => setTimeout(resolve, index === bubbles.length - 1 ? 1000 : 350));
+    await new Promise(resolve => setTimeout(resolve, 1450));
     if (currentPlayback !== playbackId) return;
   }
   showConversation();
