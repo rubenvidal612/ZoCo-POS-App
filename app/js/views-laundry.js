@@ -1,5 +1,6 @@
 // ZoCo Lavandería / Tintorería: tablero de órdenes de servicio.
 import { el, esc, money, toast, modal, confirmDialog, readImageCompressed } from './ui.js';
+import { qrDataUrl } from './qr.js';
 import {
   state, emit, laundryOrders, createLaundryOrder, moveLaundryOrder,
   laundryStats, LAUNDRY_STATUS, productById, sectionsForMode, addLaundryPhoto, removeLaundryPhoto,
@@ -192,31 +193,15 @@ export function laundryView(ctx) {
       } catch (err) { toast(err.message || 'No se pudo procesar la foto'); }
     };
 
-    // --- QR (se guarda en la orden para reimprimir sin internet) ---
+    // --- QR generado localmente (funciona sin internet) ---
     const qrBox = m.root.querySelector('#ld-qr');
-    const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data=' + encodeURIComponent(link);
-    const guardarQr = (dataUrl) => { o.qrData = dataUrl; };
-    if (o.qrData) {
-      qrBox.innerHTML = `<img src="${o.qrData}" alt="QR de seguimiento">`;
-    } else {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const cv = document.createElement('canvas');
-          cv.width = img.width; cv.height = img.height;
-          cv.getContext('2d').drawImage(img, 0, 0);
-          const dataUrl = cv.toDataURL('image/png');
-          guardarQr(dataUrl);
-          qrBox.innerHTML = `<img src="${dataUrl}" alt="QR de seguimiento">`;
-        } catch {
-          qrBox.innerHTML = `<img src="${qrSrc}" alt="QR de seguimiento">`;
-        }
-      };
-      img.onerror = () => {
-        qrBox.innerHTML = '<div class="hint">Sin conexión: el QR se genera cuando haya internet. Comparte el enlace de abajo.</div>';
-      };
-      img.src = qrSrc;
+    let qrPng = o.qrData || '';
+    try {
+      qrPng = qrDataUrl(link, { size: 240, margin: 4, dark: '#0F172A', light: '#FFFFFF', ec: 'M' });
+      o.qrData = qrPng;
+      qrBox.innerHTML = `<img src="${qrPng}" alt="QR de seguimiento" width="150" height="150">`;
+    } catch (err) {
+      qrBox.innerHTML = '<div class="hint">No se pudo dibujar el QR. Comparte el enlace de abajo.</div>';
     }
 
     m.root.querySelector('#ld-copy').onclick = async () => {
@@ -245,6 +230,8 @@ export function laundryView(ctx) {
       const w = window.open('', '_blank', 'width=380,height=640');
       if (!w) { toast('Permite las ventanas emergentes'); return; }
       const fotos = (o.photos || []).map((f) => `<img src="${f.url}" style="width:100%;border-radius:6px;margin-top:6px">`).join('');
+      let qrTicket = o.qrData || '';
+      try { qrTicket = qrDataUrl(link, { size: 300, margin: 3, ec: 'M' }); } catch {}
       w.document.write(`<pre style="font-family:ui-monospace,monospace;font-size:12px;line-height:1.45;padding:10px">
 ${esc(state.company?.name || 'ZoCo')}
 Orden ${o.folio}
@@ -259,7 +246,7 @@ Estado: ${esc(estado)}
 
 Sigue tu orden:
 ${esc(link)}
-${o.qrData ? '<img src="' + o.qrData + '" style="width:150px;height:150px">' : ''}
+${qrTicket ? '<img src="' + qrTicket + '" style="width:150px;height:150px">' : ''}
 ${fotos}
 </pre>`);
       w.document.close();
