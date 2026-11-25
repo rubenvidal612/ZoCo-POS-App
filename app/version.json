@@ -1,7 +1,7 @@
 {
-  "version": "2.77.5",
-  "date": "2026-11-24",
-  "notes": [
-    "Restaurada la navegación y las pantallas originales de Afiliados y Landing"
-  ]
+    "version":  "2.78.0",
+    "date":  "2026-11-24",
+    "notes":  [
+                  "POS: el pie de cada tarjeta (precio y nombre) queda siempre debajo de la foto, sin encimarse"
+              ]
 }

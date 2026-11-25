@@ -1944,3 +1944,36 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @media (prefers-reduced-motion: reduce) {
   .zoco-mascot { transition: none; animation: none; }
 }
+
+/* ===== POS: la foto arriba y el pie (precio + nombre) siempre debajo =====
+   Aplica en todos los anchos: si la foto es alta se recorta, pero el nombre
+   nunca queda tapado ni encimado con la imagen. */
+.posv .sell-wrap .pgrid.sq{align-items:start}
+.posv .sell-wrap .sq-card{
+  display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto auto minmax(30px,auto);
+  align-content:start;align-items:start;gap:4px;
+  height:auto;min-height:0;aspect-ratio:auto;padding:8px;overflow:hidden;box-sizing:border-box;
+}
+.posv .sell-wrap .sq-ph{
+  position:relative;width:100%;height:auto;aspect-ratio:1/1;
+  min-height:0;max-height:none;flex:none;overflow:hidden;border-radius:12px;
+}
+.posv .sell-wrap .sq-ph img{
+  position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;
+}
+.posv .sell-wrap .sq-price{
+  position:static;justify-self:center;align-self:start;
+  margin:2px 0 0;max-width:100%;white-space:normal;line-height:1.2;text-align:center;
+}
+.posv .sell-wrap .sq-name{
+  position:static;display:-webkit-box;width:100%;margin:0;
+  min-height:26px;max-height:none;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+  overflow:hidden;white-space:normal;overflow-wrap:anywhere;
+  line-height:1.22;text-align:center;
+}
+@media (min-width:901px){
+  .posv .sell-wrap .sq-name{font-size:11.5px}
+  .posv .sell-wrap .sq-price{font-size:12px}
+}
