@@ -33,3 +33,14 @@ create policy beauty_appointments_members_read on public.beauty_appointments for
 revoke all on public.beauty_appointments from anon;
 revoke insert, update, delete on public.beauty_appointments from authenticated;
 grant select on public.beauty_appointments to authenticated;
+
+-- Evita reservas solapadas incluso cuando dos clientes solicitan a la vez.
+-- La base de datos es la autoridad final sobre disponibilidad.
+create extension if not exists btree_gist;
+alter table public.beauty_appointments
+  add constraint beauty_no_overlapping_active exclude using gist (
+    company_id with =,
+    branch_id with =,
+    professional_id with =,
+    tstzrange(start_at, end_at, '[)') with &&
+  ) where (status in ('requested','confirmed'));
