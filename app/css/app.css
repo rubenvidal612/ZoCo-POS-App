@@ -1814,3 +1814,45 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .rcv-footer .btn{flex:none}
 @media(max-width:800px){.rcv-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.rcv-footer{align-items:stretch;flex-direction:column}.rcv-footer .btn{width:100%}}
 @media(max-width:480px){.rcv-controls,.rcv-two{grid-template-columns:1fr}.rcv-scanrow{flex-wrap:wrap}.rcv-scanrow input{flex-basis:100%}.rcv-scanrow button{flex:1}.rcv-title{align-items:center}.rcv-card{padding:13px}.rcv-root input,.rcv-root select{padding:10px}}
+
+
+/* ===== ZoCo Food · Mesas, comanda, cocina/barra ===== */
+.food-service{max-width:1180px;margin:15px auto 35px;color:var(--text,#17233f);font-family:inherit}
+.fd-heading{margin:8px 0 15px}.fd-heading h2{font-size:clamp(22px,3vw,30px);margin:0 0 5px}.fd-heading p{color:var(--muted,#687589);margin:0}
+.fd-tabs{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 20px}
+.fd-tabs button{background:var(--surface,#fff);color:var(--text,#152038);border:1px solid var(--line,#e0e5ee);border-radius:14px;padding:11px 16px;font-size:14px;font-weight:800;cursor:pointer}
+.fd-tabs button.active{background:#fff1e6;color:#ab4505;border-color:#fdc79e}
+.fd-box{background:var(--surface,#fff);border:1px solid var(--line,#e0e5ee);border-radius:20px;padding:clamp(14px,2vw,22px);min-width:0}
+.fd-box h3{margin:0 0 14px;font-size:19px}
+.fd-box label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:760;min-width:0}
+.fd-box input,.fd-box select{width:100%;min-width:0;padding:12px 13px;font:inherit;font-size:14px;border-radius:12px;border:1px solid var(--line,#d6e0eb);color:var(--text,#192944);background:var(--surface,#fff)}
+.fd-box input:focus-visible,.fd-box select:focus-visible,.fd-tabs button:focus-visible,.fd-table:focus-visible{outline:3px solid #fd8c48;outline-offset:3px}
+.fd-config{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:17px}
+.fd-config label{max-width:145px}
+.fd-tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:13px}
+.fd-table{min-height:135px;padding:16px;text-align:left;background:#f5faf7;color:#114b33;border:2px solid #c4ead4;border-radius:20px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;cursor:pointer;box-shadow:0 5px 15px #213b2709}
+.fd-table.occupied{background:#fff3e7;color:#9a440c;border-color:#facda8}
+.fd-table b{font-size:18px}.fd-table span{font-size:13px}.fd-table strong{font-size:19px}.fd-table small{font-size:11px;line-height:1.4}
+.fd-back{display:flex;flex-wrap:wrap;gap:11px;align-items:center;margin-bottom:14px}
+.fd-back h3{margin:0;font-size:22px}.fd-back span{color:var(--muted,#687589);font-size:13px}
+.fd-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:17px;align-items:start}
+.fd-two>.fd-box{display:flex;flex-direction:column;gap:12px}
+.fd-inline{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fd-help{font-size:12px;line-height:1.6;color:var(--muted,#66748a);margin:8px 0}
+.fd-line{display:flex;gap:9px;align-items:center;border-bottom:1px solid var(--line,#e4e9f2);padding:12px 0}
+.fd-line>div{flex:1;min-width:0}.fd-line b{font-size:13px}.fd-line small{display:block;font-size:11px;color:var(--muted,#64748b);margin-top:4px}
+.fd-line button{flex:none}
+.fd-total{padding-top:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:760;border-top:2px solid var(--line,#dfe5f0)}
+.fd-total strong{font-size:25px;color:#e46a11}
+.fd-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fd-actions>*{flex:0 1 auto}.fd-actions select{max-width:160px}
+.fd-kds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:16px}
+.fd-ticket{border:1px solid var(--line,#e3e8ef);border-left:4px solid #fd8a29;border-radius:14px;padding:14px;background:var(--surface-2,#fafbfe);margin:12px 0}
+.fd-ticket-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.fd-ticket-head span{font-size:12px;color:var(--muted,#64748b)}
+.fd-ticket>small{color:#9f4e19;font-size:11px}
+.fd-ticket p{font-size:14px;line-height:1.5;margin:10px 0}
+.fd-ticket p small{color:var(--muted,#59677b)}
+.fd-empty{padding:18px;border-radius:12px;background:var(--surface-2,#f6f8fb);color:var(--muted,#64748b);line-height:1.5}
+@media(max-width:840px){.fd-two,.fd-kds{grid-template-columns:1fr}}
+@media(max-width:490px){.fd-tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fd-table{padding:13px;min-height:124px}.fd-two>.fd-box{padding:13px}.fd-inline{gap:8px}.fd-actions button{flex:1}.fd-actions select{max-width:none;width:100%}}
