@@ -22,11 +22,11 @@ function model() {
 function availableMenu() {
   const ids = new Set((model().recipes || []).map(r => r.productId).filter(Boolean));
   return (state.products || []).filter(p => p.active !== false &&
-    (ids.has(p.id) || ['restaurante','platillos','bebidas','postres'].includes(p.section)));
+    (ids.has(p.id) || ['platillos','bebidas_r','postres'].includes(p.section)));
 }
 function stationOf(product) {
   const recipe = (model().recipes || []).find(r => r.productId === product.id);
-  return recipe?.station === 'barra' ? 'barra' : 'cocina';
+  return recipe?.station === 'barra' || (!recipe && product.section === 'bebidas_r') ? 'barra' : 'cocina';
 }
 function orderFor(tableId) {
   return model().tableOrders.find(o => o.tableId === tableId && o.branchId === state.currentBranch && o.status !== 'paid');
@@ -64,12 +64,12 @@ function printComanda({ title, table, waiter, items, note = '', date = new Date(
 export function foodServiceView() {
   const root = document.createElement('div');
   root.className = 'food-service';
-  let tab = 'mesas', currentTable = null, selectedMenu = '', draftNote = '';
+  let tab = currentUser()?.role === 'KITCHEN' ? 'cocina' : 'mesas', currentTable = null, selectedMenu = '', draftNote = '';
   const waiter = () => currentUser() || { name: 'Personal', id: '' };
   const manager = () => can('products.edit');
   const waiterAccess = () => can('food.order') || manager();
   const kitchenAccess = () => can('food.kitchen') || manager();
-  const cashierAccess = () => can('sales.sell') || manager();
+  const cashierAccess = () => can('sales.sell');
   const save = () => emit();
 
   function createTables() {
@@ -274,10 +274,10 @@ export function foodServiceView() {
     });
   }
   function render() {
-    const roleOnly = waiter().role === 'WAITER';
+    if (!waiterAccess() && kitchenAccess()) tab = 'cocina';
     if ((tab === 'cocina' && !kitchenAccess()) || (tab === 'mesa' && !waiterAccess())) tab = 'mesas';
     root.innerHTML = '<div class="fd-heading"><h2>Servicio en mesas</h2><p>Meseros, cocina, barra y caja en una misma orden.</p></div>' +
-      '<div class="fd-tabs"><button data-tab="mesas" class="' + (tab === 'mesas' || tab === 'mesa' ? 'active' : '') + '">🪑 Mesas</button>' +
+      '<div class="fd-tabs">' + (waiterAccess() ? '<button data-tab="mesas" class="' + (tab === 'mesas' || tab === 'mesa' ? 'active' : '') + '">🪑 Mesas</button>' : '') +
       (kitchenAccess() ? '<button data-tab="cocina" class="' + (tab === 'cocina' ? 'active' : '') + '">🍳 Cocina y barra</button>' : '') + '</div>' +
       '<div id="fd-body"></div>';
     root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {tab = b.dataset.tab;currentTable=null;render();});
