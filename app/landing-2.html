@@ -1,14 +1,263 @@
-<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZoCo POS · Punto de venta con inteligencia artificial</title><link rel="icon" href="/zoco-icon.svg"><link rel="stylesheet" href="/assets/landing-2/landing.css?v=8"><header>
-<a class="logo" href="#inicio"><img src="/zoco-icon.svg" alt=""> ZoCo <b>POS</b></a>
-<nav aria-label="Secciones"><a href="#inicio">Inicio</a><a href="#funciones">Funciones</a><a href="#agentes">Agentes IA</a><a href="#negocios">Negocios</a><a href="#integraciones">Integraciones</a><a href="#afiliados">Afiliados</a><a href="#planes">Planes</a></nav>
+<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>ZoCo POS | Ventas, inventario y asistente IA</title><meta name="description" content="Conoce ZoCo POS: ventas, inventario, sucursales, catálogo por WhatsApp, asistente IA y afiliados. Gratis durante la fase de prueba."><link rel="icon" href="/zoco-icon.svg"><link rel="canonical" href="https://zoco-pos.vercel.app/landing-2"><meta property="og:type" content="website"><meta property="og:title" content="ZoCo POS | El punto de venta para tu negocio"><meta property="og:description" content="Ventas, inventario, sucursales, catálogo online y asistente IA. Gratis durante las pruebas."><meta property="og:image" content="https://zoco-pos.vercel.app/assets/landing-2/resumen-escritorio.webp"><meta property="og:image:alt" content="Pantalla real del panel de ZoCo POS"><meta name="twitter:card" content="summary_large_image"><link rel="preload" as="image" href="/assets/landing-2/resumen-escritorio.webp"><style>:root{--o:#ff7415;--n:#111c37;--b:#2478e8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:16px system-ui,Arial;color:var(--n);background:white}header{position:sticky;top:0;z-index:5;background:#fffe;border-bottom:1px solid #e9edf4;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px max(4%,calc((100vw - 1200px)/2))}a{text-decoration:none;color:inherit}nav{display:flex;gap:16px;overflow-x:auto;white-space:nowrap;font-size:13px}button,.btn{border:0;border-radius:30px;padding:12px 20px;background:var(--o);color:white;font-weight:750;cursor:pointer;display:inline-block}button.alt{background:#edf4ff;color:#17488c}.logo{font-size:24px;font-weight:900;white-space:nowrap}.logo b{color:var(--o)}section{padding:75px max(5%,calc((100vw - 1150px)/2))}section:nth-child(even){background:#f6f9ff}h1{font-size:clamp(35px,5vw,67px);line-height:1.06;letter-spacing:-2px;margin:0 0 20px}h2{font-size:clamp(27px,3.4vw,42px);letter-spacing:-1px;margin:0 0 14px}p{line-height:1.6;color:#59667d}em{color:var(--o);font-style:normal}.hero{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:35px;min-height:610px}.eyebrow{color:var(--o);font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:white;border:1px solid #e2e8f4;border-radius:23px;padding:23px;box-shadow:0 12px 30px #182a4910}.card h3{margin:10px 0}.dark{background:linear-gradient(135deg,#101a32,#143d7d);color:white;border-radius:25px;padding:26px;box-shadow:0 20px 40px #14204424}.dark p{color:#cbd7eb}.stat{font-size:37px;font-weight:900}.mock{background:#eaf1ff;border:9px solid #14223e;border-radius:23px;padding:18px;box-shadow:0 24px 45px #1c2d4d30}.mock .screen{background:white;border-radius:12px;padding:20px}.line{height:9px;border-radius:10px;background:linear-gradient(90deg,#ff7a18,#347ce9);margin:14px 0}.chat{background:white;border:1px solid #dfe6f2;border-radius:22px;overflow:hidden}.chat-head{padding:16px;border-bottom:1px solid #e6ebf3;display:flex;justify-content:space-between;gap:10px;align-items:center}.messages{min-height:260px;padding:18px;display:flex;flex-direction:column;gap:12px}.bubble{padding:14px;border-radius:17px;background:#f0f4fc;max-width:88%;line-height:1.5}.bubble.user{background:#fff0e4;align-self:flex-end}.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ebf3}.chat input{min-width:0;flex:1;border:1px solid #dfe5ef;border-radius:12px;padding:13px;font:inherit}.chat select{border:1px solid #dfe5ef;border-radius:12px;padding:10px;max-width:160px}.chips{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}.chips button{background:#edf3ff;color:#17376b}.chips button.active{background:var(--o);color:white}.mini{display:flex;gap:15px;align-items:center}.icon{font-size:31px}.robot{font-size:75px;filter:drop-shadow(0 10px 12px #6b90bc77);animation:float 4s ease-in-out infinite}@keyframes float{50%{transform:translateY(-12px)}}.split{display:grid;grid-template-columns:1fr 1fr;gap:25px;align-items:center}.sub{font-size:12px;color:#66738b}.calc input[type=range]{width:100%;accent-color:var(--o)}.results{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}footer{padding:35px;text-align:center;background:#101a32;color:white}@media(max-width:760px){header{padding:12px 15px;flex-wrap:wrap}nav{order:3;width:100%;padding-bottom:4px}section{padding:55px 18px}.hero,.split{grid-template-columns:1fr;min-height:auto}.grid{grid-template-columns:1fr 1fr}.mock{padding:9px}.stat{font-size:29px}.chat-head{flex-wrap:wrap}h1{letter-spacing:-1px}}@media(max-width:420px){.grid{grid-template-columns:1fr}.results{grid-template-columns:1fr}}
 
-</header><main><section class="hero" id="inicio">
-<div class="hero-copy"><span class="eyebrow">Acceso gratuito durante la prueba</span>
-<h1>El POS inteligente que se adapta <em>a tu negocio</em></h1>
-<p>Ventas, inventario, clientes y marketing con agentes de inteligencia artificial.</p>
-<ul class="checks"><li>Para todo tipo de negocios</li><li>Agentes IA integrados</li><li>Fácil, rápido y en la nube</li></ul>
-<a class="btn" href="/demo">Probar ZoCo GRATIS ›</a><small><strong>GRATIS por el momento</strong> · Estamos en fase de prueba</small></div>
-<div class="hero-gallery">
+:root { --o:#f45e08; --n:#0c173c; --gutter:max(4%, calc((100vw - 1220px)/2)); }
+body { background:#f5f6ff; }
+header { padding-inline:var(--gutter); }
+header nav { gap:clamp(8px,1.5vw,22px); font-weight:700; }
+header a:hover { color:var(--o); }
+.logo,.versions { display:flex; align-items:center; gap:7px; }
+.logo img { width:33px; height:33px; }
+.versions .btn { font-size:12px; padding:9px 14px; white-space:nowrap; }
+.btn { background:linear-gradient(#ff9022,#ed4f00); color:#fff; box-shadow:0 4px 10px #f973162b; }
+.btn:hover { color:white; filter:brightness(.94); }
+.btn.classic { color:#142d63; background:#edf2ff; box-shadow:none; }
+section { padding:26px var(--gutter); scroll-margin-top:86px; }
+.hero { min-height:0; grid-template-columns:.83fr 1.17fr; gap:24px; padding-block:28px 22px; background:radial-gradient(ellipse at 76% 56%,#ffe7d1 0%,transparent 66%),linear-gradient(110deg,#eeeaff,#fff 58%,#eeeaff); }
+.hero h1 { margin:10px 0; font-size:clamp(39px,5.1vw,70px); letter-spacing:-.06em; }
+.hero-copy p { color:#17254a; font-weight:650; font-size:clamp(15px,1.55vw,20px); margin:0; max-width:33ch; }
+.hero-copy small { display:block; margin-top:8px; color:#435572; }
+.eyebrow { display:inline-block; border-radius:20px; background:linear-gradient(90deg,#ff6c00,#f99239); color:white; padding:5px 12px; font-size:12px; letter-spacing:0; text-transform:none; }
+.hero-art { position:relative; min-width:0; }
+.devices { display:block; width:100%; border-radius:22px; }
+.mascot { position:absolute; bottom:0; left:-14%; width:32%; object-fit:contain; filter:drop-shadow(0 8px 10px #17274635); }
+.checks { padding:0; margin:12px 0; list-style:none; font-size:14px; font-weight:650; }
+.checks li::before { content:"✓"; font-weight:900; color:#159b36; margin-right:6px; }
+#funciones { padding-block:14px; }
+.feature-row,.business-row,.agent-row { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:12px; }
+.feature-row div,.business-card,.agent-card { color:var(--n); background:#fbfcff; text-align:center; border:1px solid #e8eafb; border-radius:14px; box-shadow:0 6px 13px #21448616; font-size:clamp(10px,1.15vw,15px); font-weight:800; }
+.feature-row div { display:grid; place-content:center; gap:5px; padding:10px 5px; }
+.feature-row span { color:var(--o); font-size:24px; line-height:1; }
+.agents-layout { display:grid; grid-template-columns:1fr 1.05fr; gap:26px; align-items:center; }
+.agents-copy h2 { margin:8px 0 4px; line-height:1.03; }
+.agents-copy p,#negocios p { margin:4px 0 12px; }
+.agent-row { grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+.agent-card { padding:8px 2px; overflow-wrap:anywhere; }
+.agent-card[aria-pressed=true],.business-card.active { border-color:var(--o); background:#fff1e3; }
+.agent-card img { display:block; width:35px; height:35px; border-radius:50%; margin:0 auto 4px; }
+.agent-checks { display:flex; flex-wrap:wrap; gap:5px 13px; }
+.chat { border-left:10px solid #111b39; box-shadow:0 9px 22px #21448624; }
+.chat-head small { color:#b74708; background:#fff0df; padding:2px 6px; border-radius:12px; }
+.messages { min-height:0; height:176px; overflow-y:auto; }
+.bubble { font-size:14px; padding:10px; overflow-wrap:anywhere; }
+.business-card { padding:4px 4px 8px; }
+.business-card img { display:block; width:100%; aspect-ratio:1.55; object-fit:cover; border-radius:10px; margin-bottom:5px; }
+#negocios { background:#eef2ff; }
+#negocios .split { margin-top:12px; }
+#negocios .split .card { padding:12px 16px; }
+#negocios .chips { margin:6px 0; }
+.commerce { margin:18px var(--gutter); display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.commerce section { padding:18px; border-radius:20px; min-width:0; }
+#integraciones { background:#eef2ff; }
+#afiliados { background:#fff0e4; }
+.commerce h2 { font-size:clamp(23px,2.3vw,34px); margin-top:6px; }
+.commerce .card,.commerce .dark { border-radius:13px; padding:12px; }
+.commerce .split,.commerce .grid { gap:9px; }
+.commerce .stat { font-size:clamp(15px,2vw,26px); }
+#planes { color:white; background:#102957; }
+#planes p { color:#e0eaff; }
+@media (max-width:940px) {
+  header { flex-wrap:wrap; }
+  header nav { order:3; width:100%; padding-bottom:4px; }
+  .commerce .split { grid-template-columns:1fr; }
+}
+@media (max-width:700px) {
+  section { padding-block:20px; }
+  .hero,.agents-layout,.commerce { grid-template-columns:1fr; }
+  .hero { gap:12px; }
+  .hero-art { margin-left:8%; }
+  .mascot { left:-8%; }
+  .feature-row,.business-row { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+  .agents-copy { grid-row:1; }
+  .agent-row { gap:5px; }
+  .commerce .grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .commerce .results { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+.hero-copy small strong { color:#a63a00; }
+.hero-gallery { min-width:0; }
+.hero-art { padding:8% 11% 4% 0; }
+.monitor { border:9px solid #111929; border-radius:16px; background:#111929; box-shadow:0 16px 35px #15295032; }
+.monitor img { border-radius:7px; aspect-ratio:1392/849; }
+.phone { position:absolute; right:0; bottom:0; width:26%; max-width:175px; overflow:hidden; border:5px solid #111929; border-radius:clamp(12px,2.2vw,24px); background:#111929; box-shadow:0 8px 20px #1018304d; }
+.phone img { display:block; width:100%; height:auto; aspect-ratio: 719/1536; object-fit:cover; }
+.mascot { width:28%; left:-12%; bottom:-5%; pointer-events:none; animation:bob-zoco 3.4s ease-in-out infinite; }
+@keyframes bob-zoco { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-12px) rotate(3deg); } }
+.screen-controls { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:16px; }
+.screen-controls button { color:#17264a; background:#fff; border:1px solid #e1e6f3; padding:6px 12px; font-size:12px; }
+.screen-controls button[aria-pressed=true] { background:#fff0df; border-color:#f45e08; color:#963500; }
+.messages { height:285px; }
+.messages .bubble { margin:0; }
+.demo-toolbar { display:flex; min-height:52px; gap:8px; align-items:center; justify-content:space-between; padding:8px 12px; border-top:1px solid #e6ebf3; }
+.demo-toolbar span { min-width:0; font-size:13px; color:#465978; }
+.demo-toolbar button { flex:none; font-size:12px; padding:8px 12px; }
+#integraciones .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.integration-logo { display:block; width:min(100%,100px); height:44px; object-fit:contain; object-position:left center; }
+@media(max-width:700px) { .hero-art { margin-left:7%; } .monitor { border-width:5px; } .phone { border-width:3px; } }
+@media(prefers-reduced-motion:reduce) { .mascot { animation:none; } }
+.demo-toolbar span { width:100%; background:#f6f8fd; border:1px solid #e7ebf4; border-radius:10px; padding:7px 9px; overflow-wrap:anywhere; }
+
+#clients { display:block; margin:5px 0 10px; width:100%; max-width:12rem; padding:8px 12px; border:1px solid #bbc8de; border-radius:10px; font:inherit; color:var(--n); }
+.sim-plan { display:flex; gap:6px; flex-wrap:wrap; }
+.sim-plan button { background:#edf2ff; color:#142d63; padding:6px 10px; font-size:12px; }
+.sim-plan button[aria-pressed=true] { background:#ffe5ce; color:#873300; box-shadow:inset 0 0 0 1px #f45e08; }
+#referral-month { display:block; margin:8px 0 0; width:100%; }
+.month-markers { display:flex; justify-content:space-between; padding-inline:5px; font-size:11px; color:#435572; }
+.referral-results { margin-top:10px; }
+.referral-results .stat { overflow-wrap:anywhere; }
+.monthly-breakdown { margin-top:10px; }
+.monthly-breakdown summary { cursor:pointer; font-weight:700; padding:5px 0; }
+.monthly-breakdown table { width:100%; text-align:right; font-size:13px; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.monthly-breakdown th,.monthly-breakdown td { padding:4px; border-bottom:1px solid #e9d7c7; }
+.monthly-breakdown th:first-child,.monthly-breakdown td:first-child { text-align:left; }
+.current-month { background:#ffe4cc; }
+.plans-heading { margin-top:25px; }
+#planes .public-plan { color:#13213c; padding:17px; }
+#planes .public-plan p { margin:5px 0; color:#475772; }
+.public-plan .plan-price strong { color:#13213c; font-size:27px; }
+@media(max-width:590px) { .public-plans { grid-template-columns:1fr; } }
+
+.feature-row a { display:grid; place-items:center; min-height:58px; padding:10px 5px; text-align:center; background:#fff4e8; border:1px solid #f9d5b7; border-radius:14px; font-size:clamp(11px,1.15vw,15px); font-weight:800; }
+.feature-row a:hover { background:#ffe6ce; }
+#equipo { background:#f4f7fc; }
+.team-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch; }
+.team-card { padding:clamp(14px,2.4vw,24px); min-width:0; }
+.team-card h3 { margin:0; font-size:clamp(20px,2.2vw,28px); }
+.team-card > p { margin:8px 0 15px; }
+#nomina { scroll-margin-top:105px; }
+.clock-demo,.payroll-demo { margin:0; border-radius:16px; overflow:hidden; }
+.clock-demo { padding:12px; background:#121e34; color:#fff; }
+.clock-top,.payroll-top { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 2px 12px; }
+.clock-top strong { font-size:clamp(19px,2.5vw,29px); }
+.clock-top span,.payroll-top span { font-size:12px; }
+.camera-demo { position:relative; }
+.camera-demo img { display:block; width:100%; height:auto; aspect-ratio:1.85; object-fit:cover; object-position:center 42%; border-radius:12px; }
+.camera-demo span { position:absolute; top:8px; left:8px; padding:5px 8px; border-radius:20px; background:#10291f; color:#d2ffe1; font-size:12px; }
+.clock-demo figcaption { padding:10px 2px 0; color:#a7f4c2; font-weight:700; }
+.payroll-demo { border:1px solid #e0e8f4; }
+.payroll-top { padding:13px; background:#edf3fc; }
+.staff-list { list-style:none; margin:0; padding:0 13px; }
+.staff-list li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; padding:11px 0; }
+.staff-list li + li { border-top:1px solid #edf1f8; }
+.staff-list img { border-radius:50%; object-fit:cover; background:#eff3f8; }
+.staff-list small { display:block; color:#52617a; }
+.payroll-total { font-size:14px; }
+#planes .plan-conditions { font-size:clamp(18px,2vw,23px); max-width:68ch; line-height:1.5; color:#f4f7ff; }
+@media (max-width:680px) { .team-grid { grid-template-columns:1fr; } }
+
+.pearl { transition:filter .12s ease-out; }
+.chat-identity { display:inline-flex; align-items:center; gap:6px; }
+.chat-identity .pearl { object-fit:contain; }
+.pearl[data-state="thinking"] { filter:sepia(1) saturate(3) hue-rotate(165deg) drop-shadow(0 3px 5px #315da235); }
+.pearl[data-state="working"] { filter:sepia(1) saturate(4) hue-rotate(339deg) drop-shadow(0 3px 5px #9b570435); }
+.pearl[data-state="success"] { filter:sepia(1) saturate(2.7) hue-rotate(76deg) drop-shadow(0 3px 5px #16824a35); }
+@media(prefers-reduced-motion:reduce) { .pearl { transition:none; } }
+
+.pearl { display:inline-block; aspect-ratio:340 / 234; }
+.chat-identity .pearl { position:relative; flex:0 0 38px; width:38px; }
+.pearl img { display:block; width:100%; height:auto; }
+.pearl-mouth { display:none; position:absolute; inset:0; pointer-events:none; }
+.pearl[data-state="thinking"] .pearl-mouth,
+.pearl[data-state="working"] .pearl-mouth { display:block; }
+.pearl-mouth::before { content:""; position:absolute; left:45%; top:68.5%; width:10%; height:10%; background:radial-gradient(ellipse,#e3d8d0 46%,transparent 72%); }
+.pearl-mouth::after { content:""; position:absolute; left:50%; top:73%; transform:translate(-50%,-50%); background:#231c18; border-radius:50%; }
+.pearl[data-state="thinking"] .pearl-mouth::after { width:5%; height:1.8%; }
+.pearl[data-state="working"] .pearl-mouth::after { width:4.8%; height:7%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mascot.pearl { animation:bob-zoco 3.4s ease-in-out infinite, pearl-colors 6s linear infinite; }
+}
+@keyframes pearl-colors {
+  0%, 20%, 100% { filter:sepia(0) saturate(1) hue-rotate(0deg) drop-shadow(0 8px 10px #17274635); }
+  24%, 44% { filter:sepia(1) saturate(3) hue-rotate(165deg) drop-shadow(0 8px 10px #315da235); }
+  48%, 68% { filter:sepia(1) saturate(4) hue-rotate(339deg) drop-shadow(0 8px 10px #9b570435); }
+  72%, 90% { filter:sepia(1) saturate(2.7) hue-rotate(76deg) drop-shadow(0 8px 10px #16824a35); }
+  94% { filter:sepia(0) saturate(1) hue-rotate(0deg) drop-shadow(0 8px 10px #17274635); }
+}
+
+
+/* Ajustes de navegación y conversión. Se mantiene la identidad blanca/navy/naranja original. */
+:root{--o:#F97316;--n:#0F172A;--gutter:max(4%,calc((100vw - 1220px)/2))}
+html{scroll-padding-top:110px;overflow-x:clip}body{color:#0F172A;background:#fff;overflow-x:clip}
+section[id],article[id]{scroll-margin-top:110px}
+.site-header{min-height:76px;z-index:50;position:sticky;top:0;flex-wrap:nowrap;padding-block:13px;background:rgba(255,255,255,.97)}
+.site-nav{display:flex;flex-wrap:nowrap;align-items:center;gap:clamp(8px,1.1vw,17px);min-width:0;max-width:100%;overflow:visible}
+.site-nav a{font-size:12px}
+.site-nav .demo-nav{font-size:12px;padding:9px 13px;white-space:nowrap}
+.menu-toggle,.nav-backdrop{display:none}
+.hero-actions,.final-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:19px}
+.hero-copy small{margin-top:18px}.hero-gallery img{max-width:100%}
+.feature-row,.commerce,.agents-layout,.hero,.split{min-width:0}
+#integraciones .integration-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+#integraciones .integration-grid .integration-note{grid-column:1/-1;background:#fff8f1}
+#integraciones .integration-grid .card{min-width:0}
+.commerce{display:block;margin-block:18px}
+.commerce section{margin-bottom:22px}
+#integraciones .card{min-height:145px}
+#afiliados{scroll-margin-top:110px}
+.calc-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc-controls label{display:block;font-weight:800;font-size:14px;margin-bottom:10px}
+.calc-controls select{display:block;width:100%;border:1px solid #b8c6db;padding:12px 13px;border-radius:12px;background:#fff;color:#0f172a;min-width:0}
+.linked-inputs{display:flex;gap:13px;align-items:center}.linked-inputs #clients{flex:0 0 72px;width:72px;margin:0}
+#clients-range{flex:1;min-width:0;accent-color:var(--o)}
+.affiliate-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.affiliate-kpis>div{background:#101c38;color:white;padding:19px;border-radius:18px;min-width:0}
+.affiliate-kpis strong{display:block;font-size:clamp(23px,3vw,36px);margin:7px 0;overflow-wrap:anywhere}
+.affiliate-kpis small{color:#e0e9f9}
+.strip-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.strip-head h3{font-size:17px}
+.strip-controls{display:flex;gap:8px}.strip-controls button{background:#e7effc;color:#172650;padding:8px 14px}
+.months-strip{display:flex;gap:11px;overflow-x:auto;padding:9px 3px 19px;scroll-snap-type:x mandatory;scrollbar-width:thin;touch-action:pan-x;cursor:grab;overscroll-behavior-x:contain}
+.months-strip:active{cursor:grabbing}
+.months-strip:focus-visible{outline:3px solid var(--o);outline-offset:3px}
+.month-card{flex:0 0 175px;border-radius:17px;padding:15px;background:#fff;border:1px solid #e2e8f4;scroll-snap-align:start;user-select:none}
+.month-card b{display:block;font-size:19px;color:#e95800;margin:8px 0}
+.month-card small{display:block;color:#59677e;line-height:1.6}
+.additional-section{padding-block:65px;background:#fff}
+.additional-section:nth-of-type(even){background:#f6f9ff}
+.section-heading{max-width:800px;margin-bottom:28px}
+.catalog-showcase{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:center}
+.catalog-browser{background:#f2f5fa;border:8px solid #11203d;border-radius:22px;overflow:hidden;box-shadow:0 20px 40px #10233a25}
+.catalog-top{background:#0f172a;color:white;padding:18px;font-weight:800;display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px}.catalog-top small{font-size:11px;font-weight:400}
+.catalog-items{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:15px}
+.catalog-items article{border:1px solid #e1e6ed;border-radius:13px;background:white;padding:20px 12px;display:flex;flex-direction:column;gap:13px}
+.catalog-items article span{font-size:12px;color:#586982}.catalog-items strong{font-size:23px}.sample-button{display:block;padding:10px;background:#e6f8ed;color:#176d39!important;border-radius:10px;text-align:center;font-weight:700}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.steps-grid .card span{color:var(--o);font-size:28px;font-weight:900}
+.beta-section{background:#fff4ea}.beta-chips{display:flex;flex-wrap:wrap;gap:9px}
+.beta-chips span{padding:9px 14px;border:1px solid #f1c9ad;border-radius:99px;background:white;font-size:13px}
+.compare-wrap{overflow-x:auto}.compare{width:100%;border-collapse:collapse;min-width:620px;text-align:left;font-size:14px}
+.compare th,.compare td{border-bottom:1px solid #dee5ef;padding:14px 12px}.compare thead{background:#14213d;color:white}
+.compare tbody th{width:32%}.compare tbody td:nth-child(2){color:#b44d00;font-weight:800}
+.faq-list{max-width:900px;margin:auto}.faq-list details{background:white;border:1px solid #e0e5ed;border-radius:15px;margin:10px 0;padding:16px 20px}
+.faq-list summary{cursor:pointer;font-weight:800;list-style:none}.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary:after{content:"+";float:right;color:#ed650c;font-size:21px}.faq-list details[open] summary:after{content:"−"}
+.faq-list details p{margin-bottom:0}
+.sticky-mobile-cta{display:none}
+:where(a,button,input,select,summary,[tabindex]):focus-visible{outline:3px solid #c04a00!important;outline-offset:3px}
+img{max-width:100%}
+@media(max-width:1080px){.site-header{gap:9px}.site-nav{gap:8px}.site-nav a{font-size:11px}.site-nav .demo-nav{padding:8px 9px}}
+@media(max-width:860px){
+.site-header{min-height:64px;display:flex;flex-wrap:nowrap;justify-content:space-between;padding:12px 18px}
+.menu-toggle{display:flex;flex-direction:column;gap:5px;justify-content:center;align-items:center;width:45px;height:42px;flex:none;background:#f1f5fb;color:#10213e;border:1px solid #dbe3ee;border-radius:12px;box-shadow:none;z-index:53;padding:8px}
+.menu-toggle span{display:block;width:21px;height:2px;background:#16233e;border-radius:3px}
+.nav-backdrop.open{display:block;position:fixed;inset:0;background:#0c142e88;z-index:48}
+.site-nav{display:none;position:fixed;top:64px;right:0;left:0;max-height:calc(100dvh - 64px);overflow-y:auto;overflow-x:hidden;z-index:52;background:#fff;padding:19px 18px 30px;box-shadow:0 20px 35px #17273f25;flex-direction:column;gap:0;white-space:normal}
+.site-nav.open{display:flex}
+.site-nav a{width:100%;padding:13px 8px;font-size:15px;border-bottom:1px solid #f0f3f7}
+.site-nav .demo-nav{width:100%;justify-content:center;margin-top:14px;text-align:center;color:white;font-size:14px}
+body.menu-open{overflow:hidden}
+.calc-controls,.catalog-showcase{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+body{padding-bottom:72px}
+.sticky-mobile-cta{position:fixed;bottom:0;left:0;right:0;z-index:45;background:#fff;border-top:1px solid #e4e8ee;padding:9px 14px;display:flex;gap:10px;box-shadow:0 -8px 25px #14233a13}
+.sticky-mobile-cta a{flex:1;text-align:center;font-size:13px;padding:12px 9px}
+.affiliate-kpis{grid-template-columns:1fr 1fr}
+.steps-grid{grid-template-columns:1fr}
+}
+@media(max-width:390px){.affiliate-kpis{grid-template-columns:1fr}.catalog-items{grid-template-columns:1fr 1fr;gap:6px;padding:9px}.catalog-items article{padding:12px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.months-strip{scroll-behavior:auto}}
+</style></head><body><header id="site-header" class="site-header"><a class="logo" href="#inicio"><img src="/zoco-icon.svg" width="33" height="33" alt=""> ZoCo <b>POS</b></a><nav id="site-nav" class="site-nav" aria-label="Secciones"><a href="#inicio">Inicio</a><a href="#funciones">Funciones</a><a href="#agentes">Agente IA</a><a href="#negocios">Negocios</a><a href="#integraciones">Integraciones</a><a href="#afiliados">Afiliados</a><a href="#planes">Planes</a><a href="#preguntas">Preguntas</a><a class="btn demo-nav" href="/demo">Probar demo</a></nav><button type="button" class="menu-toggle" id="menu-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Abrir menú de navegación"><span></span><span></span><span></span></button></header><div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div><main><section class="hero" id="inicio">
+<div class="hero-copy"><span class="eyebrow">Gratis durante la fase de prueba</span><h1>El POS inteligente que se adapta <em>a tu negocio</em></h1><p>Ventas, inventario, compras, caja, clientes, sucursales y asistencia con inteligencia artificial desde una sola aplicación.</p><ul class="checks"><li>Control de productos, tallas y colores</li><li>Se adapta a distintos giros</li><li>Sin tarjeta para probar la demo</li></ul><div class="hero-actions"><a class="btn" href="/demo">Probar demo sin registro</a><a class="btn classic" href="/?registro=1">Crear mi cuenta gratis</a></div><small><strong>GRATIS en fase de prueba</strong> · Seguimos agregando y mejorando funciones.</small></div><div class="hero-gallery">
 <div class="hero-art">
   <div class="monitor"><img class="devices" src="/assets/landing-2/resumen-escritorio.webp" alt="Resumen real de ZoCo POS en computadora"></div>
   <div class="phone"><img id="phone-screen" width="719" height="1536" src="/assets/landing-2/tienda-movil.webp" alt="Pantalla de venta de ZoCo en celular"></div>
@@ -21,15 +270,15 @@
   <button type="button" data-screen="asistente-movil" aria-pressed="false">Asistente IA</button>
 </div></div>
 </section><section id="funciones" aria-label="Funciones de ZoCo"><div class="feature-row"><div><span aria-hidden="true">▤</span>Ventas y caja</div><div><span aria-hidden="true">▣</span>Inventario avanzado</div><div><span aria-hidden="true">♙</span>Clientes y CRM</div><div><span aria-hidden="true">▥</span>Reportes y análisis</div><div><span aria-hidden="true">✦</span>Asistente IA</div><div><span aria-hidden="true">⌂</span>Multi-sucursal</div><div><span aria-hidden="true">▢</span>Tienda en línea</div><div><span aria-hidden="true">◇</span>Apartados y cupones</div><div><span aria-hidden="true">▤</span>Compras y gastos</div><div><span aria-hidden="true">▥</span>Finanzas</div><a href="#equipo">Reloj checador</a><a href="#nomina">Nómina</a></div></section><section id="agentes"><div class="agents-layout"><div class="chat" aria-label="Demostración del asistente ZoCo"><div class="chat-head"><b class="chat-identity"><span class="pearl"><img src="/assets/landing-2/mascota-perla.webp" alt="" width="340" height="234"><span class="pearl-mouth" aria-hidden="true"></span></span>Asistente ZoCo <small>beta</small></b><select id="provider" aria-label="Proveedor de IA"><option>Google Gemini</option><option>OpenAI</option><option>DeepSeek</option><option>Claude</option><option>Compatible OpenAI</option></select></div><div class="messages" id="messages" tabindex="0" aria-label="Conversación de ejemplo">
-  <p class="bubble user">¿Qué se vendió esta semana?</p>
-  <p class="bubble">Vendiste $48,750 MXN esta semana. Lo más vendido fueron los tenis casuales, los botines y las sandalias.</p>
-  <p class="bubble user">Aplica un 20% de descuento al modelo 482, negro, en #5.</p>
-  <p class="bubble">✓ Descuento aplicado al modelo 482, negro, talla #5. Precio anterior: $750 MXN. Nuevo precio: $600 MXN.</p>
+  <p class="bubble user">¿Qué puedo consultar sobre mis ventas?</p>
+  <p class="bubble">Puedes consultar ventas por fecha, productos más vendidos y resultados por sucursal, según los datos de tu negocio.</p>
+  <p class="bubble user">Prepara un descuento del 20% para el modelo 246 rojo, talla 5.</p>
+  <p class="bubble">Vista de demostración: modelo 246 rojo, talla 5. Precio de ejemplo $750 → $600. Confirma el cambio en ZoCo antes de aplicarlo.</p>
 </div>
 <div class="demo-toolbar">
   <span id="demo-status" aria-hidden="true">Conversación de ejemplo</span>
   <button id="demo-toggle" type="button">Reproducir demo</button>
-</div></div><div class="agents-copy"><span class="eyebrow">Agentes IA integrados</span><h2>Elige el agente de IA que impulse tu negocio</h2><p>Un mismo chat, varios agentes de inteligencia artificial. Analiza, crea, recomienda y ejecuta acciones en tu negocio.</p><div class="agent-row"><button type="button" class="agent-card" data-agent="0" aria-pressed="true"><img src="/assets/landing-2/agente-0.webp" alt="">Google Gemini</button><button type="button" class="agent-card" data-agent="1" aria-pressed="false"><img src="/assets/landing-2/agente-1.webp" alt="">OpenAI (GPT)</button><button type="button" class="agent-card" data-agent="2" aria-pressed="false"><img src="/assets/landing-2/agente-2.webp" alt="">DeepSeek</button><button type="button" class="agent-card" data-agent="3" aria-pressed="false"><img src="/assets/landing-2/claude.svg" alt="">Claude</button><button type="button" class="agent-card" data-agent="4" aria-pressed="false"><img src="/assets/landing-2/agente-4.webp" alt="">Compatible OpenAI</button></div><ul class="checks agent-checks"><li>Análisis de ventas</li><li>Gestión de inventario</li><li>Recomendaciones</li><li>Ideas de promoción</li><li>Reportes al instante</li><li>Cambios de precios</li><li>Alta de productos</li><li>Y mucho más</li></ul></div></div></section><section id="equipo" aria-labelledby="equipo-title">
+</div></div><div class="agents-copy"><span class="eyebrow">Agentes IA integrados</span><h2>Elige el agente de IA que impulse tu negocio</h2><p>Un mismo chat, varios agentes de inteligencia artificial. Consulta información del negocio y solicita acciones sujetas a permisos y confirmación. Cada negocio configura su propia clave API.</p><div class="agent-row"><button type="button" class="agent-card" data-agent="0" aria-pressed="true"><img src="/assets/landing-2/agente-0.webp" alt="">Google Gemini</button><button type="button" class="agent-card" data-agent="1" aria-pressed="false"><img src="/assets/landing-2/agente-1.webp" alt="">OpenAI (GPT)</button><button type="button" class="agent-card" data-agent="2" aria-pressed="false"><img src="/assets/landing-2/agente-2.webp" alt="">DeepSeek</button><button type="button" class="agent-card" data-agent="3" aria-pressed="false"><img src="/assets/landing-2/claude.svg" alt="">Claude</button><button type="button" class="agent-card" data-agent="4" aria-pressed="false"><img src="/assets/landing-2/agente-4.webp" alt="">Compatible OpenAI</button></div><ul class="checks agent-checks"><li>Análisis de ventas</li><li>Gestión de inventario</li><li>Recomendaciones</li><li>Ideas de promoción</li><li>Reportes al instante</li><li>Cambios de precios</li><li>Alta de productos</li><li>Y mucho más</li></ul></div></div></section><section id="equipo" aria-labelledby="equipo-title">
   <h2 id="equipo-title">Asistencia y nómina de tu equipo</h2>
   <div class="team-grid">
     <article class="card team-card">
@@ -55,41 +304,12 @@
     </article>
   </div>
 </section>
-<section id="negocios"><h2>Se adapta a tu giro de negocio</h2><p>Agrega los productos o servicios que ofreces y organiza tu catálogo con tus propias categorías, tallas, colores o unidades. Puedes empezar con una plantilla y ajustarla a la forma en que trabaja tu negocio.</p><div class="business-row"><button type="button" class="business-card" data-type="Restaurante"><img src="/assets/landing-2/giro-0.webp" alt="">Restaurante</button><button type="button" class="business-card" data-type="Boutique"><img src="/assets/landing-2/giro-1.webp" alt="">Ropa</button><button type="button" class="business-card active" data-type="Zapatería"><img src="/assets/landing-2/giro-2.webp" alt="">Zapatería</button><button type="button" class="business-card" data-type="Abarrotes"><img src="/assets/landing-2/giro-3.webp" alt="">Abarrotes</button><button type="button" class="business-card" data-type="Ferretería"><img src="/assets/landing-2/giro-4.webp" alt="">Ferretería</button><button type="button" class="business-card" data-type="Electrónica"><img src="/assets/landing-2/giro-5.webp" alt="">Electrónica</button><button type="button" class="business-card" data-type="Farmacia"><img src="/assets/landing-2/giro-6.webp" alt="">Farmacia</button></div><div class="split"><div class="card"><h3 id="typeTitle">👟 Zapatería</h3><p id="typeDesc">Modelos, tallas, medias tallas, colores y variantes.</p><div class="chips" id="typeExamples"><span>24</span><span>24½</span><span>25</span><span>25½</span><span>26</span></div></div><div class="card"><h3>¿No encuentras tu giro?</h3><p>Cuéntanos qué necesitas para seguir mejorando ZoCo durante las pruebas.</p><a href="#planes" class="btn">Conoce ZoCo</a></div></div></section><div class="commerce"><section id="integraciones"><div class="eyebrow">Tu negocio conectado</div><h2>Conecta y vende más</h2><div class="grid">
-<div class="card"><img class="integration-logo" src="/assets/landing-2/mercado-pago.svg" alt=""><h3>Mercado Pago</h3><p>Opciones de cobro e integración por negocio.</p></div>
-<div class="card"><img class="integration-logo" src="/assets/landing-2/envia.svg" alt=""><h3>Envia.com</h3><p>Integración de envíos según configuración.</p></div>
-</div><p class="sub">La disponibilidad de integraciones depende de su etapa de implementación y configuración.</p></section><section id="afiliados" aria-labelledby="afiliados-titulo">
-  <div class="eyebrow">Oportunidad de ingresos recurrentes</div>
-  <h2 id="afiliados-titulo">Programa de afiliados</h2>
-  <p>Simula cuánto podrías ganar al referir clientes con una suscripción activa.</p>
-  <div class="card calc">
-    <label for="clients">Clientes nuevos por mes</label>
-    <input id="clients" type="number" inputmode="numeric" min="0" max="999999" step="1" value="5">
-    <div class="sim-plan" role="group" aria-label="Paquete de los clientes referidos">
-      <button type="button" data-referral-plan="esencial" aria-pressed="false">Esencial</button>
-      <button type="button" data-referral-plan="pro" aria-pressed="true">Pro</button>
-      <button type="button" data-referral-plan="empresarial" aria-pressed="false">Empresarial</button>
-    </div>
-    <p class="sub" id="referral-rate">$150 MXN al mes por cliente activo con ZoCo Pro.</p>
-    <label for="referral-month">Mes de la proyección <strong id="selected-month">1</strong> de 12</label>
-    <input id="referral-month" type="range" min="1" max="12" step="1" value="1">
-    <div class="month-markers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span></div>
-  </div>
-  <div class="dark referral-results" aria-live="polite">
-    <div class="results">
-      <div><small id="month-caption">Comisión del mes 1</small><div class="stat" id="month-income">$750</div></div>
-      <div><small id="total-caption">Acumulado al mes 1</small><div class="stat" id="referral-total">$750</div></div>
-      <div><small>Clientes activos</small><div class="stat" id="referral-active">5</div></div>
-    </div>
-  </div>
-  <details class="monthly-breakdown">
-    <summary>Ver los 12 meses</summary>
-    <table><thead><tr><th scope="col">Mes</th><th scope="col">Comisión</th><th scope="col">Acumulado</th></tr></thead><tbody id="referral-table"></tbody></table>
-  </details>
-  <p class="sub">Estimación en pesos mexicanos. Supone que todos los clientes permanecen activos y pagan el mismo plan. Las comisiones se activarán al terminar la fase de prueba.</p>
-</section></div>
-<section id="planes"><div class="eyebrow">Pruebas y retroalimentación</div><h2>Prueba ZoCo <em>GRATIS por el momento</em></h2><p class="plan-conditions">Durante la fase de prueba puedes explorar ZoCo y crear tu cuenta gratis.</p><a href="/demo" class="btn">Probar ZoCo GRATIS ›</a> <a href="/?registro=1" class="btn classic">Crear mi cuenta</a>
-<h3 class="plans-heading">Planes para después de la prueba</h3><div class="grid public-plans"><article class="card public-plan"><h3>ZoCo Esencial</h3><p class="plan-price"><strong>$149</strong> MXN/mes</p><p>1 sucursal</p><p>Comisión de afiliado de $50 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Pro</h3><p class="plan-price"><strong>$349</strong> MXN/mes</p><p>2 sucursales</p><p>Comisión de afiliado de $150 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Empresarial</h3><p class="plan-price"><strong>$599</strong> MXN/mes</p><p>10 sucursales</p><p>Comisión de afiliado de $250 MXN al mes por cliente activo</p></article></div><p class="plan-conditions">Todos incluyen usuarios y productos ilimitados, inventario, caja, reportes, catálogo, afiliados y agente IA con tu propia clave.</p></section></main><footer>ZoCo POS · Ventas, inventario y agentes IA</footer><script>const types={Zapatería:["👟","Modelos, tallas, medias tallas, colores y variantes.",["24","24½","25","25½","26"]],Abarrotes:["🛒","Productos, códigos de barras y control de existencias.",["Leche","Arroz","Aceite","Frijol"]],Restaurante:["🍔","Platillos, bebidas, pedidos e ingredientes.",["Hamburguesa","Torta","Pizza","Café"]],Ferretería:["🛠️","Herramientas, materiales y refacciones.",["Taladro","Martillo","Tornillos"]],Boutique:["👗","Prendas por talla, color y modelo.",["Blusa","Pantalón","Vestido"]],Electrónica:["🎧","Equipos y accesorios por modelo y existencia.",["Audífonos","Cargador","Cable USB"]],Farmacia:["💊","Medicamentos, presentaciones y existencias.",["Caja","Frasco","Tabletas"]]};document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active");let t=types[b.dataset.type];document.querySelector("#typeTitle").textContent=t[0]+" "+b.dataset.type;document.querySelector("#typeDesc").textContent=t[1];document.querySelector("#typeExamples").textContent=t[2].join(" · ")});document.querySelectorAll('[data-agent]').forEach(button => {
+<section id="negocios"><h2>Se adapta a tu giro de negocio</h2><p>Agrega los productos o servicios que ofreces y organiza tu catálogo con tus propias categorías, tallas, colores o unidades. Puedes empezar con una plantilla y ajustarla a la forma en que trabaja tu negocio.</p><div class="business-row"><button type="button" class="business-card" data-type="Restaurante"><img src="/assets/landing-2/giro-0.webp" alt="">Restaurante</button><button type="button" class="business-card" data-type="Boutique"><img src="/assets/landing-2/giro-1.webp" alt="">Ropa</button><button type="button" class="business-card active" data-type="Zapatería"><img src="/assets/landing-2/giro-2.webp" alt="">Zapatería</button><button type="button" class="business-card" data-type="Abarrotes"><img src="/assets/landing-2/giro-3.webp" alt="">Abarrotes</button><button type="button" class="business-card" data-type="Ferretería"><img src="/assets/landing-2/giro-4.webp" alt="">Ferretería</button><button type="button" class="business-card" data-type="Electrónica"><img src="/assets/landing-2/giro-5.webp" alt="">Electrónica</button><button type="button" class="business-card" data-type="Farmacia"><img src="/assets/landing-2/giro-6.webp" alt="">Farmacia</button></div><div class="split"><div class="card"><h3 id="typeTitle">👟 Zapatería</h3><p id="typeDesc">Modelos, tallas, medias tallas, colores y variantes.</p><div class="chips" id="typeExamples"><span>24</span><span>24½</span><span>25</span><span>25½</span><span>26</span></div></div><div class="card"><h3>¿No encuentras tu giro?</h3><p>Cuéntanos qué necesitas para seguir mejorando ZoCo durante las pruebas.</p><a href="#planes" class="btn">Conoce ZoCo</a></div></div></section><div class="commerce"><section id="integraciones"><div class="eyebrow">Tu negocio conectado</div><h2>Conecta y vende más</h2><div class="grid integration-grid">
+<div class="card"><img class="integration-logo" src="/assets/landing-2/mercado-pago.svg" alt=""><h3>Mercado Pago</h3><p>Opciones de cobro y terminal Point por negocio. Conexión y funciones en desarrollo.</p></div>
+<div class="card"><img class="integration-logo" src="/assets/landing-2/envia.svg" alt=""><h3>Envia.com</h3><p>Gestión de envíos y paqueterías según configuración. Cotización y guías en desarrollo.</p></div>
+<article class="card integration-note"><h3>¿Qué más estamos integrando?</h3><p>Seguimos ampliando las conexiones y herramientas para negocios de distintos tamaños. Las funciones disponibles se indican dentro del POS.</p></article></div><p class="sub">La disponibilidad de integraciones depende de su etapa de implementación y configuración.</p></section><section id="afiliados" aria-labelledby="aff-title"><span class="eyebrow">Programa de afiliados</span><h2 id="aff-title">Recomienda ZoCo y prepara tus ingresos recurrentes</h2><p>Durante la fase gratuita puedes compartir tu enlace y registrar referidos. Las comisiones empezarán cuando se activen las suscripciones de pago y se confirmen cobros elegibles.</p><div class="card calc affiliate-simulator"><div class="calc-controls"><div><label for="clients">Nuevos comercios referidos por mes</label><div class="linked-inputs"><input id="clients" type="number" inputmode="numeric" min="1" max="40" step="1" value="5"><input id="clients-range" type="range" min="1" max="40" value="5" aria-label="Nuevos comercios por mes"></div></div><div><label for="ref-plan">Paquete proyectado</label><select id="ref-plan"><option value="esencial">ZoCo Esencial · $149/mes · Comisión $50</option><option value="pro" selected>ZoCo Pro · $349/mes · Comisión $150</option><option value="empresarial">ZoCo Empresarial · $599/mes · Comisión $250</option></select></div></div><p class="sub" id="referral-rate">Comisión prevista por cada cliente activo de pago.</p><div class="affiliate-kpis" aria-live="polite"><div><small>Este mes (mes 12)</small><strong id="month-income">$0</strong><small id="month-caption">Proyección mensual</small></div><div><small>Acumulado al mes 12</small><strong id="referral-total">$0</strong><small>Proyección anual</small></div></div><div class="strip-head"><h3>Mes a mes</h3><div class="strip-controls"><button id="months-prev" type="button" aria-label="Meses anteriores">←</button><button id="months-next" type="button" aria-label="Meses siguientes">→</button></div></div><div class="months-strip" id="months-strip" tabindex="0" role="region" aria-label="Desglose de comisiones de los doce meses; usa flechas izquierda y derecha"></div><p class="sub">Simulación con permanencia del 100 % y pagos puntuales, sin impuestos, bajas, devoluciones ni contracargos. Durante la fase gratuita no se generan comisiones pagaderas. Al activar los cobros, la intención es abonar las comisiones tras confirmar el pago; los tiempos de dispersión y las anualidades dependerán de las condiciones y del proveedor de pagos.</p></div></section></div>
+<section id="catalogo" class="additional-section"><div class="section-heading"><span class="eyebrow">Catálogo online y WhatsApp</span><h2>Comparte tus productos sin montar otra tienda</h2><p>Cada negocio puede compartir un catálogo público. El cliente ve productos y precios, y puede iniciar su pedido mediante WhatsApp con información preparada.</p></div><div class="catalog-showcase"><div class="catalog-browser"><div class="catalog-top">ZoCo · Catálogo Online <small>Ejemplo de interfaz</small></div><div class="catalog-items"><article><b>Tenis casual</b><span>Modelo y talla</span><strong>$690</strong><span class="sample-button">Pedir por WhatsApp</span></article><article><b>Bolsa de mano</b><span>Color a elegir</span><strong>$420</strong><span class="sample-button">Pedir por WhatsApp</span></article></div></div><div><h3>Cómo funciona</h3><p>Publicas tus productos, compartes tu enlace y el cliente puede solicitar el artículo por WhatsApp. Tú confirmas existencias y el pedido desde el negocio.</p><a class="btn classic" href="/demo">Probar catálogo en la demo</a><p class="sub">Vista ilustrativa: la disponibilidad de acciones depende del catálogo configurado.</p></div></div></section><section id="pasos" class="additional-section"><div class="section-heading"><span class="eyebrow">Empieza sin complicaciones</span><h2>Comienza en tres pasos</h2></div><div class="steps-grid"><article class="card"><span>01</span><h3>Crea tu cuenta</h3><p>Regístrate gratis durante las pruebas, sin tarjeta bancaria.</p></article><article class="card"><span>02</span><h3>Organiza tu catálogo</h3><p>Agrega productos, importa desde Excel o utiliza la plantilla de tu giro cuando esté disponible.</p></article><article class="card"><span>03</span><h3>Empieza a vender</h3><p>Usa ZoCo desde una computadora o un celular compatible.</p></article></div><p class="sub">El tiempo de configuración depende de la cantidad de productos y del negocio.</p></section><section id="beta" class="additional-section beta-section"><span class="eyebrow">Fase de prueba</span><h2>Estamos construyendo ZoCo junto con los primeros comercios</h2><p>Estamos integrando nuevos giros y herramientas. Si ya estás usando ZoCo, tus comentarios nos ayudan a mejorarlo.</p><div class="beta-chips"><span>Zapaterías</span><span>Ropa</span><span>Abarrotes</span><span>Ferreterías</span><span>Restaurantes</span><span>Papelerías</span></div><p class="sub">Estos son giros contemplados por el sistema; no representan testimonios ni clientes verificados.</p></section><section id="comparacion" class="additional-section"><div class="section-heading"><span class="eyebrow">Decide con información</span><h2>ZoCo frente al cuaderno, Excel y otros sistemas</h2><p>Las capacidades de otros programas varían según el proveedor y plan. Esta tabla describe diferencias habituales, no todos los productos del mercado.</p></div><div class="compare-wrap"><table class="compare"><thead><tr><th>Herramienta</th><th>ZoCo POS</th><th>Cuaderno / Excel básico</th><th>POS tradicional*</th></tr></thead><tbody><tr><th>Inventario por talla y color</th><td>Sí</td><td>Manual</td><td>Depende</td></tr><tr><th>Compras y proveedores</th><td>Sí</td><td>Manual</td><td>Depende</td></tr><tr><th>Cuentas por pagar</th><td>Según registro</td><td>Manual</td><td>Depende</td></tr><tr><th>Caja y cortes</th><td>Sí</td><td>Manual</td><td>Habitual</td></tr><tr><th>Catálogo con WhatsApp</th><td>Sí, configurable</td><td>Externo</td><td>Depende</td></tr><tr><th>Varias sucursales</th><td>Sí, según plan</td><td>Manual</td><td>Depende</td></tr><tr><th>Reportes de utilidad</th><td>Según datos registrados</td><td>Manual</td><td>Depende</td></tr><tr><th>Respaldo en nube</th><td>Con nube vinculada</td><td>Depende</td><td>Depende</td></tr><tr><th>Costo de uso</th><td>Gratis en beta</td><td>Variable</td><td>Variable</td></tr></tbody></table></div><p class="sub">*No se refiere a un producto específico. La sincronización y las funciones avanzadas dependen de la configuración.</p></section><section id="preguntas" class="additional-section faq-section"><div class="section-heading"><span class="eyebrow">Preguntas frecuentes</span><h2>Lo que necesitas saber antes de empezar</h2></div><div class="faq-list"><details><summary>¿Necesito internet para vender?</summary><p>ZoCo contempla trabajo local y sincronización cuando regresa la conexión. La operación sin internet en varios dispositivos todavía requiere validación; no recomendamos depender de ella sin probar primero tu configuración.</p></details><details><summary>¿Tengo que capturar todo mi inventario otra vez?</summary><p>Puedes agregar productos de manera manual e importar información desde archivos compatibles. Conviene revisar tallas, colores, precios y existencias después de la importación.</p></details><details><summary>¿Sirve para varias sucursales?</summary><p>Sí. ZoCo permite administrar sucursales y ver información por establecimiento. Los límites previstos después de la prueba son 1 para Esencial, 2 para Pro y 10 para Empresarial.</p></details><details><summary>¿Puedo emitir facturas (CFDI)?</summary><p>La emisión de CFDI todavía no está disponible como función confirmada. No sustituyas tu proceso actual de facturación hasta que se anuncie una integración funcional.</p></details><details><summary>¿Qué pasa si se descompone mi computadora?</summary><p>Si configuraste y sincronizaste correctamente tu cuenta en la nube, podrás consultar los datos respaldados desde otro equipo. Los cambios pendientes de sincronizar podrían no estar disponibles.</p></details><details><summary>¿Cuánto cuesta cuando termine la prueba?</summary><p>Los precios previstos son Esencial $149, Pro $349 y Empresarial $599 MXN al mes. Durante la fase de prueba el acceso es gratuito; informaremos cualquier cambio de condiciones antes de cobrar.</p></details><details><summary>¿Mis empleados pueden ver las finanzas?</summary><p>ZoCo maneja roles y permisos. Puedes limitar el acceso de empleados a las funciones administrativas y financieras según su responsabilidad.</p></details></div></section><section id="planes"><div class="eyebrow">Pruebas y retroalimentación</div><h2>Prueba ZoCo <em>GRATIS por el momento</em></h2><p class="plan-conditions">Durante la fase de prueba puedes explorar ZoCo y crear tu cuenta gratis.</p><div class="final-actions"><a href="/demo" class="btn">Probar demo sin registro</a><a href="/?registro=1" class="btn classic">Crear mi cuenta</a></div>
+<h3 class="plans-heading">Planes para después de la prueba</h3><div class="grid public-plans"><article class="card public-plan"><h3>ZoCo Esencial</h3><p class="plan-price"><strong>$149</strong> MXN/mes</p><p>1 sucursal</p><p>Comisión de afiliado de $50 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Pro</h3><p class="plan-price"><strong>$349</strong> MXN/mes</p><p>2 sucursales</p><p>Comisión de afiliado de $150 MXN al mes por cliente activo</p></article><article class="card public-plan"><h3>ZoCo Empresarial</h3><p class="plan-price"><strong>$599</strong> MXN/mes</p><p>10 sucursales</p><p>Comisión de afiliado de $250 MXN al mes por cliente activo</p></article></div><p class="plan-conditions">Todos incluyen usuarios y productos ilimitados, inventario, caja, reportes, catálogo, afiliados y agente IA con tu propia clave.</p></section></main><footer><strong>ZoCo POS</strong> · Ventas, inventario y asistente IA <span>· Fase de prueba</span></footer><div class="sticky-mobile-cta"><a href="/demo" class="btn classic">Probar demo</a><a href="/?registro=1" class="btn">Crear cuenta</a></div><script>const types={Zapatería:["👟","Modelos, tallas, medias tallas, colores y variantes.",["24","24½","25","25½","26"]],Abarrotes:["🛒","Productos, códigos de barras y control de existencias.",["Leche","Arroz","Aceite","Frijol"]],Restaurante:["🍔","Platillos, bebidas, pedidos e ingredientes.",["Hamburguesa","Torta","Pizza","Café"]],Ferretería:["🛠️","Herramientas, materiales y refacciones.",["Taladro","Martillo","Tornillos"]],Boutique:["👗","Prendas por talla, color y modelo.",["Blusa","Pantalón","Vestido"]],Electrónica:["🎧","Equipos y accesorios por modelo y existencia.",["Audífonos","Cargador","Cable USB"]],Farmacia:["💊","Medicamentos, presentaciones y existencias.",["Caja","Frasco","Tabletas"]]};document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active");let t=types[b.dataset.type];document.querySelector("#typeTitle").textContent=t[0]+" "+b.dataset.type;document.querySelector("#typeDesc").textContent=t[1];document.querySelector("#typeExamples").textContent=t[2].join(" · ")});document.querySelectorAll('[data-agent]').forEach(button => {
   button.addEventListener('click', () => {
     const provider = document.getElementById('provider');
     provider.selectedIndex = Number(button.dataset.agent);
@@ -102,6 +322,117 @@ document.getElementById('provider').addEventListener('change', event => {
     card.setAttribute('aria-pressed', String(Number(card.dataset.agent) === event.target.selectedIndex));
   });
 });
-</script>
-<script defer src="/assets/landing-2/demo.js?v=4"></script><script defer src="/assets/landing-2/referrals.js?v=2"></script>
-</html>
+
+const phone = document.getElementById('phone-screen');
+const screenDescriptions = {
+  'resumen-movil': 'Resumen de ventas de ZoCo en celular',
+  'tienda-movil': 'Pantalla de venta de ZoCo en celular',
+  'restaurante-movil': 'Pantalla de venta de ZoCo Food en celular',
+  'asistente-movil': 'Asistente IA de ZoCo en celular',
+};
+
+const screenButtons = document.querySelectorAll('[data-screen]');
+screenButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const screen = button.dataset.screen;
+    phone.src = '/assets/landing-2/' + screen + '.webp';
+    phone.alt = screenDescriptions[screen];
+    screenButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  });
+});
+
+const messages = document.getElementById('messages');
+const bubbles = [...messages.querySelectorAll('.bubble')];
+const demoStatus = document.getElementById('demo-status');
+const demoToggle = document.getElementById('demo-toggle');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const pearls = document.querySelectorAll('.chat-identity .pearl');
+function setPearlState(state) {
+  pearls.forEach(pearl => { pearl.dataset.state = state; });
+}
+let playbackId = 0;
+let playing = false;
+
+function showConversation() {
+  playbackId++;
+  setPearlState("idle");
+  playing = false;
+  bubbles.forEach(bubble => { bubble.hidden = false; });
+  demoStatus.textContent = 'Conversación de ejemplo';
+  demoToggle.textContent = 'Repetir demo';
+}
+
+async function playConversation() {
+  if (reducedMotion.matches) {
+    showConversation();
+    return;
+  }
+  const currentPlayback = ++playbackId;
+  playing = true;
+  demoToggle.textContent = 'Ver conversación';
+  bubbles.forEach(bubble => { bubble.hidden = true; });
+  messages.scrollTop = 0;
+
+  setPearlState("idle");
+  for (const [index, bubble] of bubbles.entries()) {
+    const owner = bubble.classList.contains('user');
+    setPearlState(owner ? "idle" : "thinking");
+    const draft = owner ? Array.from(bubble.textContent) : ['.', '.', '.'];
+    let written = owner ? '' : 'ZoCo está respondiendo';
+    for (const character of draft) {
+      written += character;
+      demoStatus.textContent = written;
+      await new Promise(resolve => setTimeout(resolve, owner ? 27 : 360));
+      if (currentPlayback !== playbackId) return;
+    }
+    demoStatus.textContent = 'Conversación de ejemplo';
+    if (!owner && index === bubbles.length - 1) {
+      setPearlState("working");
+      demoStatus.textContent = 'ZoCo está aplicando el descuento…';
+      await new Promise(resolve => setTimeout(resolve, 850));
+      if (currentPlayback !== playbackId) return;
+      demoStatus.textContent = 'Conversación de ejemplo';
+    }
+    bubble.hidden = false;
+    if (!owner) setPearlState(index === bubbles.length - 1 ? "success" : "working");
+    messages.scrollTop = messages.scrollHeight;
+    await new Promise(resolve => setTimeout(resolve, 1450));
+    if (currentPlayback !== playbackId) return;
+  }
+  showConversation();
+}
+
+demoToggle.addEventListener('click', () => {
+  if (playing) showConversation();
+  else playConversation();
+});
+
+if ('IntersectionObserver' in window && !reducedMotion.matches) {
+  const observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      observer.disconnect();
+      if (playbackId === 0) playConversation();
+    }
+  }, { threshold: 0.5 });
+  observer.observe(messages);
+}
+
+
+// Navegación móvil accesible.
+const menuButton=document.getElementById('menu-toggle'),nav=document.getElementById('site-nav'),backdrop=document.getElementById('nav-backdrop');
+function closeMenu(){nav.classList.remove('open');backdrop.classList.remove('open');document.body.classList.remove('menu-open');menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Abrir menú de navegación')}
+menuButton.addEventListener('click',()=>{const open=!nav.classList.contains('open');if(open){nav.classList.add('open');backdrop.classList.add('open');document.body.classList.add('menu-open');menuButton.setAttribute('aria-expanded','true');menuButton.setAttribute('aria-label','Cerrar menú de navegación')}else closeMenu()});
+backdrop.addEventListener('click',closeMenu);
+nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){closeMenu();menuButton.focus()}});
+window.addEventListener('resize',()=>{if(window.innerWidth>860)closeMenu()});
+// Simulador de referidos: 12 meses siempre a la vista por desplazamiento horizontal.
+const affiliateRates={esencial:{name:'Esencial',commission:50},pro:{name:'Pro',commission:150},empresarial:{name:'Empresarial',commission:250}};
+const affInput=document.getElementById('clients'),affSlider=document.getElementById('clients-range'),affPlan=document.getElementById('ref-plan'),months=document.getElementById('months-strip');
+const fmtCash=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(n);
+function updateSimulator(){let n=Math.max(1,Math.min(40,Number(affInput.value)||1));affInput.value=n;affSlider.value=n;const p=affiliateRates[affPlan.value];document.getElementById('month-income').textContent=fmtCash(12*n*p.commission);document.getElementById('referral-total').textContent=fmtCash(78*n*p.commission);document.getElementById('referral-rate').textContent='Proyección: '+fmtCash(p.commission)+' de comisión mensual por comercio activo con ZoCo '+p.name+'.';months.replaceChildren(...Array.from({length:12},(_,i)=>{const m=i+1;const el=document.createElement('article');el.className='month-card';el.innerHTML='<small>Mes '+m+'</small><b>'+fmtCash(m*n*p.commission)+'</b><small>Activos: '+(m*n)+'</small><small>Acumulado: '+fmtCash((m*(m+1)/2)*n*p.commission)+'</small>';return el}))}
+affInput.addEventListener('input',()=>{if(affInput.value!=='')updateSimulator()});affInput.addEventListener('change',updateSimulator);affSlider.addEventListener('input',()=>{affInput.value=affSlider.value;updateSimulator()});affPlan.addEventListener('change',updateSimulator);updateSimulator();
+function moveMonths(dir){months.scrollBy({left:dir*190,behavior:'smooth'})}
+document.getElementById('months-prev').addEventListener('click',()=>moveMonths(-1));document.getElementById('months-next').addEventListener('click',()=>moveMonths(1));months.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();moveMonths(e.key==='ArrowLeft'?-1:1)}});
+let dragX=0,dragScroll=0,dragging=false;months.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){dragging=true;dragX=e.clientX;dragScroll=months.scrollLeft;months.setPointerCapture(e.pointerId)}});months.addEventListener('pointermove',e=>{if(dragging)months.scrollLeft=dragScroll-(e.clientX-dragX)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])months.addEventListener(ev,()=>dragging=false);
+</script></body></html>
