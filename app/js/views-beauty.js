@@ -143,9 +143,23 @@ export function beautyView(){
       '<label>Tipo de comisión<select name="type"><option value="pct">Porcentaje (%)</option><option value="fixed">Monto fijo (MXN)</option></select></label>'+
       '<label>Valor de comisión<input type="number" name="value" min="0" step="0.01" value="0" required></label></div>'+
       '<button type="submit" class="btn">Agregar servicio</button></form></div>'+
+      '<div class="by-box"><h3>Comisión especial por profesional</h3><p class="by-help">Si un estilista o barbero recibe una comisión diferente en un servicio, configúrala aquí. Si no existe una comisión especial, se usa la comisión general del servicio.</p>'+
+      '<form id="by-override"><div class="by-grid"><label>Servicio<select name="serviceId" required><option value="">Elegir</option>'+options(list)+'</select></label>'+
+      '<label>Profesional<select name="professionalId" required><option value="">Elegir</option>'+options(professionals())+'</select></label>'+
+      '<label>Tipo de comisión<select name="type"><option value="pct">Porcentaje (%)</option><option value="fixed">Monto fijo (MXN)</option></select></label>'+
+      '<label>Valor de comisión<input type="number" min="0" step="0.01" name="value" required></label></div>'+
+      '<button class="btn" type="submit">Guardar comisión especial</button></form></div>'+
       '<div class="by-service-grid">'+list.map(p=>'<article class="by-box"><strong>'+E(p.name)+'</strong>'+
-      '<small>'+money2(p.price)+' · '+E(p.bookingMinutes||30)+' min · Comisión '+E(p.beautyCommissionType==='fixed'?money2(p.beautyCommissionValue||0):(Number(p.beautyCommissionValue)||0)+'%')+'</small>'+
+      '<small>'+money2(p.price)+' · '+E(p.bookingMinutes||30)+' min · Comisión base '+E(p.beautyCommissionType==='fixed'?money2(p.beautyCommissionValue||0):(Number(p.beautyCommissionValue)||0)+'%')+'</small>'+'<small>'+E(Object.keys(p.beautyCommissionOverrides||{}).length)+' comisión(es) especial(es)</small>'+
       '<button type="button" class="btn ghost sm" data-edit="'+E(p.id)+'">Editar servicio</button></article>').join('')+'</div>';
+    body.querySelector('#by-override').onsubmit=ev=>{
+      ev.preventDefault();const f=new FormData(ev.target),service=state.products.find(p=>p.id===f.get('serviceId')&&p.section==='servicios');
+      const user=professionals().find(u=>u.id===f.get('professionalId')),type=String(f.get('type')),value=Number(f.get('value'));
+      if(!service||!user||!['pct','fixed'].includes(type)||!Number.isFinite(value)||value<0||type==='pct'&&value>100)return toast('Revisa los datos de la comisión especial');
+      const map={...(service.beautyCommissionOverrides||{})};
+      map[user.id]={type,value};upsertProduct({id:service.id,beautyCommissionOverrides:map});
+      toast('Comisión especial guardada para '+user.name);paintBody();
+    };
     body.querySelector('#by-service').onsubmit=ev=>{
       ev.preventDefault();const f=new FormData(ev.target);
       const price=Number(f.get('price')),minutes=Number(f.get('minutes')),value=Number(f.get('value')),type=f.get('type');
