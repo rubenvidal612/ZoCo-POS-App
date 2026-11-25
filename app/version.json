@@ -1,7 +1,7 @@
 {
-    "version":  "2.85.2",
+    "version":  "2.85.3",
     "date":  "2026-11-24",
     "notes":  [
-                  "Salon 3D: mesas con volumen real y texto legible"
+                  "Salon: mesas con sillas alrededor, sombras y mejor volumen"
               ]
 }

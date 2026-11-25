@@ -236,11 +236,24 @@ export function foodServiceView() {
     if (!iso) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
   };
+  function sillasHTML(n, ocupadas) {
+    const total = Math.max(1, Math.min(12, Number(n) || 4));
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      const ang = (360 / total) * i - 90;
+      const rad = (ang * Math.PI) / 180;
+      const x = 50 + Math.cos(rad) * 62;
+      const y = 50 + Math.sin(rad) * 62;
+      html += '<span class="fd-silla' + (i < ocupadas ? ' on' : '') + '" style="left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%"></span>';
+    }
+    return html;
+  }
   function mesaHTML(t, orden, totales) {
     const est = estadoMesa(t);
     const mins = est.order ? minutos(est.order.openedAt) : 0;
-    const gente = est.order ? (est.order.people || 1) : t.seats;
+    const gente = est.order ? (est.order.people || 1) : 0;
     const mesa = est.order ? money(totales) : '';
+    const sillas = sillasHTML(t.seats || 4, gente);
     return '<button type="button" class="fd-mesa ' + est.key + (t.shape === 'round' ? ' round' : '') + '"'
       + ' data-mesa="' + e(t.id) + '" style="--x:' + Number(t.x) + '%;--y:' + Number(t.y) + '%;--seats:' + (t.seats || 4) + '">'
       + '<span class="fd-mesa-top">'
@@ -252,6 +265,7 @@ export function foodServiceView() {
         : '<small class="fd-mesa-meta">👥 ' + (t.seats || 4) + ' lugares</small>'
           + '<small class="fd-mesa-libre">Libre</small>')
       + '</span>'
+      + sillas
       + '<span class="fd-mesa-shadow" aria-hidden="true"></span>'
       + '</button>';
   }
