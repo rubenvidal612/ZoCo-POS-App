@@ -17,7 +17,7 @@ import { stopAllCams } from './camera.js';
 import { startSync, sbReady, pullCloud } from './sync.js';
 import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
-import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth, claimInvites } from './auth.js';
+import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, cloudSession, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth, claimInvites } from './auth.js';
 import { adminView } from './views-admin.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money, esc, modal } from './ui.js';
@@ -661,6 +661,41 @@ bootOAuth().then(async (oauth) => {
       setTimeout(() => subscribePush(), 3000);
     }
 });
+
+// Avisos de solicitudes nuevas de ZoCo Belleza mientras el POS esté abierto.
+let beautyAlertBusy=false;
+async function pollBeautyBookings(){
+  if(beautyAlertBusy||window.__ZOCO_DEMO__)return;
+  const user=currentUser();
+  if(!user||!['OWNER','ADMIN'].includes(String(user.role).toUpperCase())||state.company?.mode!=='barberia')return;
+  const access=cloudSession()?.access_token;if(!access)return;
+  const company=state.currentCompany||'default';
+  beautyAlertBusy=true;
+  try{
+    const from=new Date(Date.now()-86400000).toISOString(),to=new Date(Date.now()+90*86400000).toISOString();
+    const r=await fetch('/api/beauty-appointments?c='+encodeURIComponent(company)+'&from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to),{
+      headers:{Authorization:'Bearer '+access},cache:'no-store',
+    });
+    if(!r.ok)return;
+    const data=await r.json();if(!data.ok)return;
+    const requests=(data.appointments||[]).filter(a=>a.status==='requested').map(a=>String(a.id));
+    const key='zoco.beauty.bookings.seen.'+company;
+    let seen=[];try{seen=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
+    const fresh=requests.filter(id=>!seen.includes(id));
+    // La primera apertura también informa si existen solicitudes sin revisar.
+    if(fresh.length){
+      const message='🔔 '+fresh.length+' nueva(s) solicitud(es) de cita. Abre ZoCo Belleza para confirmarlas.';
+      toast(message);
+      if('Notification'in window&&Notification.permission==='granted')
+        new Notification('ZoCo Belleza: nuevas citas',{body:message});
+    }
+    localStorage.setItem(key,JSON.stringify([...new Set([...seen,...requests])].slice(-500)));
+  }catch{}finally{beautyAlertBusy=false}
+}
+if(!window.__ZOCO_DEMO__){
+  setTimeout(pollBeautyBookings,7000);
+  setInterval(pollBeautyBookings,60000);
+}
 
 /* Aviso diario de presupuesto personal (opcional) */
 async function maybeDailyNotice() {
