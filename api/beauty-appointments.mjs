@@ -17,6 +17,14 @@ function supa(path,opts={}) {
 function isValidTime(s) {const date=new Date(s);return !Number.isNaN(date.valueOf())&&date.getTime()>Date.now()+5*60000&&date.getTime()<Date.now()+90*86400000}
 const sameTime=(start,duration)=>new Date(new Date(start).getTime()+duration*60000);
 function overlap(row,start,end) {return new Date(row.start_at)<end && new Date(row.end_at)>start}
+function commissionFor(data,service,professionalId) {
+  const p=(data?.products||[]).find(x=>x?.id===service.id);
+  const override=p?.beautyCommissionOverrides?.[professionalId];
+  if(override&&['pct','fixed'].includes(override.type)&&Number.isFinite(Number(override.value))&&Number(override.value)>=0){
+    return {type:override.type,value:override.type==='pct'?Math.min(100,Number(override.value)):Number(override.value)};
+  }
+  return {type:service.commissionType,value:service.commissionValue};
+}
 function cfgFor(data) {
   const beauty=['barberia','salon','peluqueria'].includes(data?.company?.mode);
   const active=beauty && data?.settings?.beautyBookingEnabled === true;
@@ -95,9 +103,10 @@ export default async function handler(req) {
       const booked=await appointments(company,dayStart,dayEnd);
       if(booked.some(b=>b.branch_id===branch.id&&b.professional_id===pro.id&&b.status!=='cancelled'&&overlap(b,start,end)))
         return response({ok:false,error:'Ese profesional ya tiene una cita a esa hora'},409);
+      const com=commissionFor(data,service,pro.id);
       const record={company_id:company,branch_id:branch.id,professional_id:pro.id,professional_name:pro.name,
         service_id:service.id,service_name:service.name,price:service.price,
-        commission_type:service.commissionType,commission_value:service.commissionValue,
+        commission_type:com.type,commission_value:com.value,
         duration_minutes:service.minutes,start_at:start.toISOString(),end_at:end.toISOString(),
         customer_name:name,customer_phone:phone,notes,status:'requested',source:'web'};
       const insert=await supa('beauty_appointments',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(record)});
@@ -124,7 +133,7 @@ export default async function handler(req) {
       const name=clean(b.name,90),phone=clean(b.phone,20);
       if(!name||!/^[+0-9\s()-]{8,20}$/.test(phone))return response({ok:false,error:'Nombre o teléfono no válido'},400);
       const record={company_id:company,branch_id:branch.id,professional_id:pro.id,professional_name:pro.name,
-        service_id:service.id,service_name:service.name,price:service.price,commission_type:service.commissionType,commission_value:service.commissionValue,
+        service_id:service.id,service_name:service.name,price:service.price,commission_type:com.type,commission_value:com.value,
         duration_minutes:service.minutes,start_at:start.toISOString(),end_at:end.toISOString(),
         customer_name:name,customer_phone:phone,notes:clean(b.notes,300),source:'staff',status:'confirmed'};
       const insert=await supa('beauty_appointments',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(record)});
