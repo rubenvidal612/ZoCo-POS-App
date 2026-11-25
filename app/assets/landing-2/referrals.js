@@ -1,5 +1,5 @@
 const referralPlans = {
-  esencial: { name: 'Esencial', commission: 75 },
+  esencial: { name: 'Esencial', commission: 50 },
   pro: { name: 'Pro', commission: 150 },
   empresarial: { name: 'Empresarial', commission: 250 },
 };
