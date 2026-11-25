@@ -146,7 +146,7 @@ export const MODES = {
   mascotas:    { label: 'Mascotas / veterinaria',     sections: ['alimento_m', 'accesorios_m', 'higiene_m'] },
   muebleria:   { label: 'Mueblería',                  sections: ['muebles', 'colchones', 'deco'] },
   floreria:    { label: 'Florería',                   sections: ['arreglos', 'flores', 'macetas'] },
-  barberia:    { label: 'Salón de belleza / peluquería / barbería',        sections: ['servicios', 'producto_b'] },
+  barberia:    { label: 'Spa, Salón de belleza y Barbería',        sections: ['servicios', 'producto_b'] },
   restaurante: { label: 'Restaurante / cafetería',    sections: ['platillos', 'bebidas_r', 'postres'] },
   merceria:    { label: 'Mercería',                   sections: ['botones', 'listones', 'telas'] },
   refaccionaria: { label: 'Refaccionaria',            sections: ['refacciones', 'aceites', 'llantas'] },
@@ -1277,7 +1277,7 @@ export const sectionOf = (p) => {
 export const BUSINESS_FAMILIES = {
   comercios: { label: 'Tiendas y comercios', modes: ['abarrotes','panaderia','dulceria','fruteria','carniceria','papeleria'] },
   moda: { label: 'Moda y accesorios', modes: ['shoe','boutique','joyeria','optica'] },
-  belleza: { label: 'Belleza y cuidado personal', modes: ['cosmeticos','perfumeria','barberia'] },
+  belleza: { label: 'Spa, Salón de belleza y Barbería', modes: ['cosmeticos','perfumeria','barberia'] },
   tecnologia: { label: 'Tecnología y electrónica', modes: ['electronica'] },
   hogar: { label: 'Hogar y decoración', modes: ['muebleria','floreria'] },
   herramientas: { label: 'Ferretería y refacciones', modes: ['ferreteria','refaccionaria','merceria'] },
