@@ -109,6 +109,13 @@ export default async function handler(req) {
         return response({ok:false,error:'Revisa nombre, teléfono, fecha y hora'},400);
       if(start.getMinutes()%15!==0)return response({ok:false,error:'El horario debe ser cada 15 minutos'},400);
       if(!withinHours(start,end,cfg.hours))return response({ok:false,error:'El horario está fuera de la jornada del negocio'},400);
+      // Límite básico contra solicitudes repetitivas con el mismo teléfono.
+      const recentUrl='beauty_appointments?company_id=eq.'+encodeURIComponent(company)+
+        '&customer_phone=eq.'+encodeURIComponent(phone)+'&created_at=gte.'+encodeURIComponent(new Date(Date.now()-86400000).toISOString())+
+        '&select=id&limit=6';
+      const recentRes=await supa(recentUrl);
+      if(recentRes.ok&&(await recentRes.json()).length>=5)
+        return response({ok:false,error:'Se alcanzó el límite de solicitudes para este teléfono. Contacta al establecimiento.'},429);
       const dayStart=new Date(start.getTime()-86400000).toISOString(),dayEnd=new Date(end.getTime()+86400000).toISOString();
       const booked=await appointments(company,dayStart,dayEnd);
       if(booked.some(b=>b.branch_id===branch.id&&b.professional_id===pro.id&&b.status!=='cancelled'&&overlap(b,start,end)))
