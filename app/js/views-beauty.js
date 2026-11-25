@@ -204,9 +204,20 @@ export function beautyView(){
     body.innerHTML='<div class="by-box"><h3>Tu enlace para reservar citas</h3>'+
       '<p>Comparte el enlace en WhatsApp, Instagram o Facebook. Los clientes podrán seleccionar servicio, sucursal, profesional y horario. Cada solicitud nueva aparecerá en tu calendario para confirmarla.</p>'+
       '<label class="by-toggle"><input id="by-enable" type="checkbox"'+(enabled?' checked':'')+'> Habilitar citas desde internet</label>'+
+      '<div class="by-grid"><label>Abre a las<input id="by-open-hour" type="time" value="'+E(state.settings?.beautyStartHour||'09:00')+'"></label>'+
+      '<label>Cierra a las<input id="by-close-hour" type="time" value="'+E(state.settings?.beautyEndHour||'20:00')+'"></label></div>'+
+      '<p class="by-help">Estos horarios se aplican a todos los días. Agenda local del centro de México (UTC-6 en noviembre).</p>'+
+      '<button type="button" class="btn ghost sm" id="by-save-hours">Guardar horario</button>'+
       '<label>Enlace público<input readonly id="by-link" value="'+E(link)+'"></label>'+
       '<div class="by-link-actions"><button type="button" class="btn" id="by-copy">Copiar enlace</button><a class="btn ghost" href="'+E(link)+'" target="_blank" rel="noopener">Abrir como cliente</a></div>'+
       '<p class="by-help">Antes de activarlo, registra al menos un servicio y marca a tus profesionales. ZoCo mostrará nuevas solicitudes cuando el dueño consulte la agenda. Para avisos fuera de la app se necesitará configurar notificaciones push o mensajes automáticos.</p></div>';
+
+    body.querySelector('#by-save-hours').onclick=()=>{
+      const open=body.querySelector('#by-open-hour').value,close=body.querySelector('#by-close-hour').value;
+      if(!open||!close||open>=close)return toast('El horario de cierre debe ser posterior al de apertura');
+      state.settings ||= {};state.settings.beautyStartHour=open;state.settings.beautyEndHour=close;emit();
+      toast('Horario de reservas guardado');
+    };
     body.querySelector('#by-enable').onchange=ev=>{
       state.settings ||= {};
       if(ev.target.checked&&(!serviceList().length||!professionals().length)){
