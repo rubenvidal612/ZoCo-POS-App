@@ -1,8 +1,7 @@
 {
-    "version":  "2.85.0",
+    "version":  "2.85.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "ZoCo Food: salon visual con mesas en 3D, posiciones arrastrables, salones, zoom y estados de mesa",
-                  "Cada mesa muestra mesero, minutos abiertos, comensales y total"
+                  "Salon de ZoCo Food: configuracion colapsada para que el plano ocupe la pantalla"
               ]
 }

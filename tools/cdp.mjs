@@ -177,7 +177,14 @@ for (const step of steps) {
         await realClick(r.value);
         break;
       }
-      case 'viewport': {
+      case 'ua': {
+    await send('Emulation.setUserAgentOverride', {
+      userAgent: step.value || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36',
+      acceptLanguage: 'es-MX,es;q=0.9,en;q=0.8',
+      platform: 'Win32',
+    });
+    break;
+  }  case 'viewport': {
         await send('Emulation.setDeviceMetricsOverride', { width: step.width || 1440, height: step.height || 900, deviceScaleFactor: 1, mobile: false });
         break;
       }

@@ -2140,3 +2140,16 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
   .fd-salon.is3d{transform:scale(var(--zoom,1)) perspective(900px) rotateX(34deg)}
   .fd-salon.is3d .fd-mesa{transform:translate(-50%,-50%) rotateX(-34deg) translateZ(4px)}
 }
+/* Salón: configuración colapsada y barra ordenada */
+.fd-cfg{border:1px solid var(--line);border-radius:14px;background:#fff;margin:0 0 10px;padding:0 14px}
+.fd-cfg summary{cursor:pointer;padding:12px 0;font-size:13px;font-weight:800;color:var(--muted);list-style:none}
+.fd-cfg summary::-webkit-details-marker{display:none}
+.fd-cfg[open] summary{color:var(--text)}
+.fd-cfg .fd-cfg-inline{padding:0 0 14px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.fd-cfg-inline > *{width:auto!important;min-width:0;flex:0 0 auto}
+.fd-cfg-inline label{display:grid;gap:4px;font-size:12px;font-weight:800;color:var(--muted);width:auto!important}
+.fd-cfg-inline input{width:92px!important;padding:9px 10px;border:1px solid var(--line);border-radius:10px;font-size:14px}
+.fd-cfg-inline select{width:auto!important;min-width:160px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;font-size:13.5px}
+.fd-cfg-inline .btn{width:auto!important;padding:9px 16px}
+.fd-salon-tools .btn.on{background:#0F172A;color:#fff;border-color:#0F172A}
+.fd-salon-wrap{width:100%}

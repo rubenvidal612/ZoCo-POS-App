@@ -264,13 +264,12 @@ export function foodServiceView() {
     const ordenes = lista.map(t => orderFor(t.id));
 
     root.querySelector('#fd-body').innerHTML =
-      (manager() ? '<div class="fd-box fd-config">'
+      (manager() ? '<details class="fd-cfg"><summary>⚙ Configurar mesas y salones</summary>'
         + '<div class="fd-cfg-inline"><label>Mesas del local <input id="fd-table-count" type="number" min="1" max="99" value="' + Math.max(todas.length, 8) + '"></label>'
-        + '<button class="btn" id="fd-create-tables">Aplicar</button>'
-        + '<button class="btn ghost sm" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Terminar de mover' : '✥ Mover mesas') + '</button>'
+        + '<button class="btn sm" id="fd-create-tables">Aplicar</button>'
         + '<select id="fd-salon-zone" aria-label="Salón">' + zonas().map(z => '<option value="' + e(z) + '"' + (z === zonaActual ? ' selected' : '') + '>' + e(z) + '</option>').join('') + '</select>'
-        + '<button class="btn ghost sm" id="fd-zone-new">+ Salón</button>'
-        + '</div></div>' : '')
+        + '<button class="btn ghost sm" id="fd-zone-new">+ Salón nuevo</button>'
+        + '</div></details>' : '')
       + '<div class="fd-salon-bar">'
       + '<div class="fd-salones">' + zonas().map(z => '<button type="button" class="fd-zona' + (z === zonaActual ? ' on' : '') + '" data-zona="' + e(z) + '">' + e(z) + '</button>').join('') + '</div>'
       + '<div class="fd-salon-tools">'
@@ -278,6 +277,7 @@ export function foodServiceView() {
       + '<button type="button" class="btn ghost sm" id="fd-zoom-out" aria-label="Alejar">−</button>'
       + '<span class="fd-zoom-val">' + cfg.zoom + '%</span>'
       + '<button type="button" class="btn ghost sm" id="fd-zoom-in" aria-label="Acercar">+</button>'
+      + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Mover mesas') + '</button>' : '')
       + '</div></div>'
       + '<div class="fd-salon-wrap' + (cfg.zoom !== 100 ? ' zoom' : '') + '" style="--zoom:' + (cfg.zoom / 100) + '">'
       + '<div class="fd-salon' + (cfg.mode3d ? ' is3d' : '') + (cfg.editing ? ' editing' : '') + '" id="fd-salon">'
