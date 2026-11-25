@@ -909,7 +909,7 @@ function seed() {
    migrate() las usa al arrancar (si se declaran después, el arranque falla). */
 export const PLANS = {
   esencial: {
-    code: 'esencial', name: 'ZoCo Esencial', price: 199, affiliate: 75, zoco: 124,
+    code: 'esencial', name: 'ZoCo Esencial', price: 149, affiliate: 50, zoco: 99,
     limits: { branches: 1 },
     hint: '1 sucursal · usuarios ilimitados',
   },
