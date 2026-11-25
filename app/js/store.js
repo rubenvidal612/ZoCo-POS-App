@@ -1746,7 +1746,7 @@ export function deleteSupplier(id) {
  * Crea una orden de compra. Los artículos quedan "pedidos" hasta recibirlos.
  * items: [{ productId, vkey, qty, cost }]
  */
-export function createPurchase({ supplierId, items, note = '', date = null, photo = null, useCredit = false }) {
+export function createPurchase({ supplierId, items, note = '', date = null, photo = null, useCredit = false, branchId = null }) {
   const list = (items || []).filter((i) => i && i.productId && Number(i.qty) > 0);
   if (!list.length) return { ok: false, msg: 'Agrega al menos un producto' };
   const total = round3(list.reduce((a, i) => a + round3(Number(i.qty) * Number(i.cost || 0)), 0));
@@ -1765,7 +1765,7 @@ export function createPurchase({ supplierId, items, note = '', date = null, phot
     folio: 'OC-' + state.seq++,
     supplierId: supplierId || null,
     date: date || new Date().toISOString(),
-    branchId: state.currentBranch,
+    branchId: branchId || state.currentBranch,
     status: 'ordered',           // ordered | partial | received | cancelled
     items: list.map((i) => ({
       productId: i.productId,
