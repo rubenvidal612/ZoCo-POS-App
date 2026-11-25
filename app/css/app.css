@@ -2053,11 +2053,15 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @media (max-width:900px){
   #upd-card{
     left:50%;right:auto;top:50%;bottom:auto;
-    width:calc(100vw - 24px);max-width:440px;
-    padding:18px;max-height:none;overflow:visible;
+    width:calc(100vw - 16px);max-width:none;
+    padding:22px 20px;max-height:none;overflow:visible;
   }
-  #upd-card .fc-txt b{font-size:17px}
-  #upd-card .fc-txt span{font-size:13px}
-  #upd-card .fc-notes li{font-size:13.5px;line-height:1.5}
-  #upd-card .fc-notes{max-height:40vh;overflow:auto;padding-right:4px}
+  #upd-card .fc-ico{width:50px;height:50px;flex:0 0 50px;font-size:24px}
+  #upd-card .fc-txt b{font-size:21px;line-height:1.22}
+  #upd-card .fc-txt span{font-size:15px;margin-top:4px}
+  #upd-card .fc-notes{margin-top:16px;padding-left:22px;max-height:44vh;overflow:auto;padding-right:4px}
+  #upd-card .fc-notes li{font-size:16px;line-height:1.5;margin-bottom:8px}
+  #upd-card .fc-actions{margin-top:18px;gap:10px}
+  #upd-card .fc-actions .btn{height:50px;font-size:16px}
+  #upd-card .fc-x{font-size:18px;top:14px;right:16px}
 }
