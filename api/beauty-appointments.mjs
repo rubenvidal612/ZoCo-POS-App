@@ -132,6 +132,7 @@ export default async function handler(req) {
       if(existing.some(x=>x.professional_id===pro.id&&x.branch_id===branch.id&&x.status!=='cancelled'&&overlap(x,start,end)))return response({ok:false,error:'Horario ocupado'},409);
       const name=clean(b.name,90),phone=clean(b.phone,20);
       if(!name||!/^[+0-9\s()-]{8,20}$/.test(phone))return response({ok:false,error:'Nombre o teléfono no válido'},400);
+      const com=commissionFor(data,service,pro.id);
       const record={company_id:company,branch_id:branch.id,professional_id:pro.id,professional_name:pro.name,
         service_id:service.id,service_name:service.name,price:service.price,commission_type:com.type,commission_value:com.value,
         duration_minutes:service.minutes,start_at:start.toISOString(),end_at:end.toISOString(),
