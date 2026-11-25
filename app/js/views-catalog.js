@@ -3480,7 +3480,7 @@ export function payrollView() {
 }
 
 /* ================= AFILIADOS ================= */
-export function affiliatesView(ctx, { showLandings = false } = {}) {
+export function affiliatesView(ctx) {
   const root = el(`<div id="aff-root">
     <div class="aff-hero">
       <div>
@@ -3490,12 +3490,11 @@ export function affiliatesView(ctx, { showLandings = false } = {}) {
       <div class="aff-badge">Tu código: <b id="aff-code">—</b></div>
     </div>
 
-    <div role="group" aria-label="Herramientas de afiliados" style="display:flex;gap:8px;margin:14px 0">
-      <button type="button" class="btn ghost sm" id="aff-summary" aria-controls="aff-summary-panel">Resumen</button>
-      <button type="button" class="btn ghost sm" id="aff-pages" aria-controls="aff-pages-panel">Landings</button>
-    </div>
-    <div id="aff-pages-panel" hidden></div>
-    <div id="aff-summary-panel">
+    <section aria-labelledby="aff-pages-title" style="margin:18px 0">
+      <h2 id="aff-pages-title" style="margin:0 0 12px">Landings</h2>
+      <div id="aff-pages-panel"></div>
+    </section>
+
     <div class="aff-grid">
       <div class="panel aff-link-card">
         <div class="panel-head"><h2>Tu link</h2></div>
@@ -3567,7 +3566,6 @@ export function affiliatesView(ctx, { showLandings = false } = {}) {
         <div class="hint" style="margin-top:8px">Cada usuario de la app tiene su propio link y su propio código.</div>
       </div>
     </div>
-    </div>
   </div>`);
 
   const code = myAffCode();
@@ -3576,22 +3574,7 @@ export function affiliatesView(ctx, { showLandings = false } = {}) {
   $('#aff-link', root).value = link;
 
   const gallery = landingGalleryView({ referralCode: code });
-  const summary = $('#aff-summary-panel', root);
-  const pages = $('#aff-pages-panel', root);
-  const summaryButton = $('#aff-summary', root);
-  const pagesButton = $('#aff-pages', root);
-  pages.append(gallery.root);
-  function selectPages(selected) {
-    summary.hidden = selected;
-    pages.hidden = !selected;
-    summaryButton.setAttribute('aria-pressed', String(!selected));
-    pagesButton.setAttribute('aria-pressed', String(selected));
-    summaryButton.classList.toggle('ghost', selected);
-    pagesButton.classList.toggle('ghost', !selected);
-  }
-  summaryButton.onclick = () => selectPages(false);
-  pagesButton.onclick = () => selectPages(true);
-  selectPages(showLandings);
+  $('#aff-pages-panel', root).append(gallery.root);
 
   const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
   const paint = () => {

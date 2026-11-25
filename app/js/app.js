@@ -514,7 +514,7 @@ function mount() {
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
     afiliados: () => affiliatesView(ctx),
-    landing: () => affiliatesView(ctx, { showLandings: true }),
+    landing: () => affiliatesView(ctx),
   plan: guard('settings.edit', () => plansView(ctx)),
   };
 
