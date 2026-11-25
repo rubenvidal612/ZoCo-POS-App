@@ -2,6 +2,7 @@
 // Funciona sobre el estado persistente de ZoCo; no abre conexiones de impresora automáticamente.
 import { state, emit, can, currentUser, productById, commitSale, subscribe, salePriceOf } from './store.js';
 import { esc, toast, money, confirmDialog } from './ui.js';
+import { syncNow } from './sync.js';
 
 const stations = [
   { id: 'cocina', label: 'Cocina', icon: '🍳' },
@@ -109,6 +110,7 @@ export function foodServiceView() {
     if (!waiterAccess()) return toast('Sin permiso');
     const p = productById(selectedMenu);
     if (!p || p.active === false) return toast('Elige un platillo registrado en Productos');
+    if (!(Number(salePriceOf(p)) > 0)) return toast('Configura un precio de venta para este platillo antes de agregarlo');
     const qty = Number(root.querySelector('#fd-qty')?.value);
     if (!validAmount(qty)) return toast('La cantidad debe ser entre 1 y 99');
     const note = String(root.querySelector('#fd-note')?.value || '').trim().slice(0, 220);
@@ -222,7 +224,7 @@ export function foodServiceView() {
       '<p class="fd-help">Comandas listas: ' + readyCount + ' de ' + order.batches.length + ' · Pendientes de enviar: ' + pending.length + '</p>' +
       '<div class="fd-actions"><button class="btn" id="fd-send" ' + (!pending.length ? 'disabled' : '') + '>Enviar comanda</button>' +
       (cashierAccess() ? '<select aria-label="Método de pago" id="fd-pay-method"><option value="cash">Efectivo</option><option value="debit">Tarjeta débito</option><option value="credit">Tarjeta crédito</option></select><button class="btn ghost" id="fd-checkout">Cobrar mesa</button>' : '') +
-      '<button class="btn ghost" id="fd-bill">Imprimir precuenta</button></div></div></div>';
+      '<button class="btn ghost" id="fd-bill">Imprimir precuenta</button>' + (!order.items.length ? '<button class="btn ghost" id="fd-release">Liberar mesa vacía</button>' : '') + '</div></div></div>';
     root.querySelector('#fd-back').onclick = () => {tab='mesas';currentTable=null;render();};
     root.querySelector('#fd-menu').onchange = ev => {selectedMenu = ev.target.value;};
     root.querySelector('#fd-note').oninput = ev => {draftNote = ev.target.value;};
@@ -234,6 +236,13 @@ export function foodServiceView() {
     root.querySelector('#fd-add').onclick = () => {selectedMenu = root.querySelector('#fd-menu').value;addItem(order);draftNote = '';};
     root.querySelector('#fd-send').onclick = () => sendOrder(order);
     root.querySelector('#fd-checkout')?.addEventListener('click', () => closeOrder(order.id));
+    root.querySelector('#fd-release')?.addEventListener('click', async () => {
+      if (order.items.length) return toast('No se puede liberar una mesa con productos; cobra primero');
+      const ok = await confirmDialog({title:'Liberar mesa vacía',message:'Se eliminará el pedido vacío de esta mesa.',okText:'Liberar mesa'});
+      if (!ok) return;
+      model().tableOrders = model().tableOrders.filter(o => o.id !== order.id);
+      save(); tab='mesas'; currentTable=null; render();
+    });
     root.querySelector('#fd-bill').onclick = () => printComanda({
       title: 'PRECUENTA · NO PAGADA', table: table.name, waiter: order.waiterName,
       items: order.items, date: order.openedAt, total: sum(order.items),
@@ -279,8 +288,14 @@ export function foodServiceView() {
     root.innerHTML = '<div class="fd-heading"><h2>Servicio en mesas</h2><p>Meseros, cocina, barra y caja en una misma orden.</p></div>' +
       '<div class="fd-tabs">' + (waiterAccess() ? '<button data-tab="mesas" class="' + (tab === 'mesas' || tab === 'mesa' ? 'active' : '') + '">🪑 Mesas</button>' : '') +
       (kitchenAccess() ? '<button data-tab="cocina" class="' + (tab === 'cocina' ? 'active' : '') + '">🍳 Cocina y barra</button>' : '') + '</div>' +
-      '<div id="fd-body"></div>';
+      '<div class="fd-syncbar"><button type="button" class="btn ghost sm" id="fd-refresh">↻ Actualizar pedidos</button><small>Para ver cambios de otros dispositivos, utiliza la sincronización de tu cuenta.</small></div><div id="fd-body"></div>';
     root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {tab = b.dataset.tab;currentTable=null;render();});
+    root.querySelector('#fd-refresh').onclick=async()=>{
+      const btn=root.querySelector('#fd-refresh');btn.disabled=true;
+      const result=await syncNow().catch(err=>({ok:false,error:err.message}));
+      if(!result.ok){toast(result.error || 'Conecta la nube para actualizar otros dispositivos');btn.disabled=false;return}
+      render();toast('Pedidos actualizados');
+    };
     if (tab === 'mesa') paintTable();
     else if (tab === 'cocina') paintKitchen();
     else paintTables();
