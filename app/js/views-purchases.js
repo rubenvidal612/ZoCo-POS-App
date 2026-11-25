@@ -1,5 +1,6 @@
 // Compras: proveedores, órdenes de compra con recepción parcial y cuentas por pagar.
 import { $, el, money, esc, toast, modal, confirmDialog, readImageCompressed } from './ui.js';
+import { receivingView } from './views-receiving.js';
 import {
   state, productById, sizesFor, fmtSize, variantsOf, totalStock,
   supplierById, upsertSupplier, deleteSupplier,
@@ -18,7 +19,7 @@ export function purchasesView(ctx) {
       <div class="page-head">
         <div>
           <h1>Compras</h1>
-          <p class="muted">Proveedores, órdenes con recepción parcial y cuentas por pagar.</p>
+          <p class="muted">Proveedores, órdenes, recepción por código de barras y cuentas por pagar.</p>
         </div>
         <div class="page-actions">
           ${tab === 'ordenes' ? '<button class="btn" id="po-new">+ Nueva compra</button>' : ''}
@@ -28,6 +29,7 @@ export function purchasesView(ctx) {
       </div>
       <div class="tabs" id="po-tabs">
         <button data-tab="ordenes" class="${tab === 'ordenes' ? 'on' : ''}">Órdenes</button>
+        <button data-tab="escaneo" class="${tab === 'escaneo' ? 'on' : ''}">📦 Recibir con escáner</button>
         <button data-tab="proveedores" class="${tab === 'proveedores' ? 'on' : ''}">Proveedores</button>
         <button data-tab="pagar" class="${tab === 'pagar' ? 'on' : ''}">Por pagar</button>
       </div>
@@ -40,6 +42,7 @@ export function purchasesView(ctx) {
     root.querySelector('#sp-new') && (root.querySelector('#sp-new').onclick = () => openSupplier(null));
     root.querySelector('#pay-refresh') && (root.querySelector('#pay-refresh').onclick = () => render());
 
+    if (tab === 'escaneo') root.querySelector('#po-body').appendChild(receivingView().root);
     if (tab === 'ordenes') paintOrders();
     if (tab === 'proveedores') paintSuppliers();
     if (tab === 'pagar') paintPayables();
@@ -398,5 +401,5 @@ export function purchasesView(ctx) {
   };
 
   render();
-  return { root, refresh: render };
+  return { root, refresh: () => { if (tab !== 'escaneo') render(); } };
 }
