@@ -1,7 +1,7 @@
 {
-    "version":  "2.83.1",
+    "version":  "2.83.2",
     "date":  "2026-11-24",
     "notes":  [
-                  "El aviso de actualizacion ahora sale centrado en la pantalla, tambien en el celular"
+                  "El aviso de actualizacion es mas grande y con letras mas legibles"
               ]
 }
