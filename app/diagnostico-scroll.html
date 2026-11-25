@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico de scroll — ZoCo</title>
+<style>
+  :root{--ink:#0F172A;--mut:#64748B;--line:#E2E8F0;--ok:#059669;--bad:#DC2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:#fff}
+  .bar{position:sticky;top:0;z-index:5;background:#0F172A;color:#fff;padding:10px 14px;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+  .bar div{font-size:11px;color:#94A3B8}
+  .bar div b{display:block;font-size:16px;color:#fff;font-variant-numeric:tabular-nums}
+  .bar .bad{color:#FCA5A5}
+  main{padding:18px 20px 40px;max-width:1000px}
+  h1{font-size:20px;margin:0 0 4px;letter-spacing:-.4px}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 14px;line-height:1.5}
+  .panel{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;background:#fff}
+  .panel b{font-size:13px}
+  .log{font-family:ui-monospace,monospace;font-size:12px;line-height:1.5;max-height:160px;overflow:auto;
+    background:#F8FAFC;border-radius:8px;padding:8px;margin-top:8px;white-space:pre-wrap}
+  .marker{height:340px;border:2px dashed var(--line);border-radius:14px;display:grid;place-items:center;
+    font-size:22px;font-weight:900;color:#CBD5E1;margin-bottom:14px;text-align:center;padding:20px}
+  button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800;cursor:pointer}
+  button.primary{background:#F97316;color:#fff;border-color:#F97316}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div>Rueda recibida<b id="wheelCount">0</b><span id="wheelLast">esperando…</span></div>
+  <div>Scroll de la página<b id="scrollTop">0</b><span id="scrollInfo">—</span></div>
+  <div>Ventana con foco<b id="focus">—</b><span id="activeEl">—</span></div>
+  <div>Zoom<b id="zoom">100%</b><span id="dpr">—</span></div>
+  <div>Modificadores<b id="mods">libre</b><span id="lastKey">—</span></div>
+</div>
+
+<main>
+  <h1>Diagnóstico de scroll</h1>
+  <p class="sub">Mueve la <b>rueda</b> y prueba con las teclas. Los números de arriba se quedan fijos mientras bajas.</p>
+
+  <div class="panel">
+    <b>Qué significa</b>
+    <p class="sub" style="margin:8px 0 0">
+      · Si <b>“Rueda recibida”</b> no sube al girar la rueda → la rueda no llega a Chrome (foco, ratón o tecla atorada).<br>
+      · Si sube pero <b>“Scroll de la página”</b> no cambia → la página bloquea el desplazamiento.<br>
+      · Si <b>“Ventana con foco”</b> dice <b>NO</b> en rojo → por eso no baja.
+    </p>
+  </div>
+
+  <div class="panel">
+    <b>Últimos eventos</b>
+    <div class="log" id="log">…</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button class="primary" id="btnDown">Bajar 600px (programático)</button>
+      <button id="btnUp">Subir al inicio</button>
+      <button id="btnClear">Limpiar registro</button>
+    </div>
+  </div>
+
+  <div class="marker">Sección 1 — baja con la rueda</div>
+  <div class="marker">Sección 2</div>
+  <div class="marker">Sección 3</div>
+  <div class="marker">Sección 4</div>
+  <div class="marker">Sección 5</div>
+  <div class="marker">Sección 6 — si llegaste aquí, el scroll funciona ✅</div>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var wheelCount = 0, logs = [];
+
+  function log(t) {
+    logs.unshift(new Date().toLocaleTimeString('es-MX') + '  ' + t);
+    logs = logs.slice(0, 40);
+    $('log').textContent = logs.join('\n');
+  }
+
+  function medir() {
+    var d = document.scrollingElement || document.documentElement;
+    var zoom = Math.round((window.visualViewport ? window.visualViewport.scale : 1) * 100);
+    $('scrollTop').textContent = Math.round(d.scrollTop) + ' px';
+    $('scrollInfo').textContent = 'total ' + d.scrollHeight + ' · ventana ' + window.innerHeight;
+    $('zoom').textContent = zoom + '%';
+    $('dpr').textContent = 'dpr ' + window.devicePixelRatio + ' · ' + window.innerWidth + '×' + window.innerHeight;
+    var conFoco = document.hasFocus();
+    $('focus').textContent = conFoco ? 'sí' : 'NO';
+    $('focus').className = conFoco ? '' : 'bad';
+    var a = document.activeElement;
+    $('activeEl').textContent = a && a.tagName ? a.tagName + (a.id ? '#' + a.id : '') : '—';
+  }
+
+  window.addEventListener('wheel', function (e) {
+    wheelCount++;
+    $('wheelCount').textContent = wheelCount;
+    $('wheelLast').textContent = 'dy ' + Math.round(e.deltaY) + ' · dx ' + Math.round(e.deltaX) +
+      ' · modo ' + e.deltaMode + (e.ctrlKey ? ' · Ctrl!' : '');
+    if (e.ctrlKey) log('RUEDA con Ctrl → eso hace ZOOM, no scroll');
+    medir();
+  }, { passive: true });
+
+  window.addEventListener('scroll', medir, { passive: true });
+  window.addEventListener('resize', medir);
+  window.addEventListener('focus', function () { log('ventana con foco'); medir(); });
+  window.addEventListener('blur', function () { log('ventana SIN foco'); medir(); });
+
+  window.addEventListener('keydown', function (e) {
+    $('lastKey').textContent = e.key;
+    var m = [];
+    if (e.ctrlKey) m.push('Ctrl');
+    if (e.shiftKey) m.push('Shift');
+    if (e.altKey) m.push('Alt');
+    if (e.metaKey) m.push('Meta');
+    $('mods').textContent = m.length ? m.join(' + ') : 'libre';
+    if (e.key === ' ' || e.key === 'PageDown' || e.key === 'ArrowDown') {
+      log('tecla ' + (e.key === ' ' ? 'espacio' : e.key) + ' → debería bajar');
+    }
+  });
+
+  window.addEventListener('keyup', function () {
+    $('mods').textContent = 'libre';
+    medir();
+  });
+
+  $('btnDown').onclick = function () { window.scrollBy({ top: 600, behavior: 'smooth' }); log('botón: bajar 600'); setTimeout(medir, 600); };
+  $('btnUp').onclick = function () { window.scrollTo({ top: 0, behavior: 'smooth' }); log('botón: subir'); setTimeout(medir, 600); };
+  $('btnClear').onclick = function () { logs = []; $('log').textContent = '…'; };
+
+  var d = document.scrollingElement || document.documentElement;
+  log('navegador: ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 95));
+  log('documento ' + d.scrollHeight + 'px · ventana ' + window.innerHeight + 'px · ' + (d.scrollHeight > window.innerHeight ? 'se puede desplazar' : 'NO hay nada que desplazar'));
+  log('overflow html ' + getComputedStyle(document.documentElement).overflowY + ' · body ' + getComputedStyle(document.body).overflowY);
+  log('scroll-behavior ' + getComputedStyle(document.documentElement).scrollBehavior);
+  medir();
+  setInterval(medir, 700);
+})();
+</script>
+</body>
+</html>

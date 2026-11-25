@@ -1,8 +1,7 @@
 {
-    "version":  "2.84.0",
+    "version":  "2.84.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Regla de giros: cada giro tiene su propio apartado y nunca se mezclan",
-                  "Si cambias de giro estando dentro de un apartado, te regresa a Inicio"
+                  "Pagina de diagnostico de scroll publicada en /diagnostico-scroll"
               ]
 }
