@@ -21,11 +21,16 @@ const bubbles = [...messages.querySelectorAll('.bubble')];
 const demoStatus = document.getElementById('demo-status');
 const demoToggle = document.getElementById('demo-toggle');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const pearls = document.querySelectorAll('.pearl');
+function setPearlState(state) {
+  pearls.forEach(pearl => { pearl.dataset.state = state; });
+}
 let playbackId = 0;
 let playing = false;
 
 function showConversation() {
   playbackId++;
+  setPearlState("idle");
   playing = false;
   bubbles.forEach(bubble => { bubble.hidden = false; });
   demoStatus.textContent = 'Conversación de ejemplo';
@@ -43,8 +48,10 @@ async function playConversation() {
   bubbles.forEach(bubble => { bubble.hidden = true; });
   messages.scrollTop = 0;
 
-  for (const bubble of bubbles) {
+  setPearlState("idle");
+  for (const [index, bubble] of bubbles.entries()) {
     const owner = bubble.classList.contains('user');
+    setPearlState(owner ? "idle" : "thinking");
     const draft = owner ? Array.from(bubble.textContent) : ['.', '.', '.'];
     let written = owner ? '' : 'ZoCo está respondiendo';
     for (const character of draft) {
@@ -54,7 +61,15 @@ async function playConversation() {
       if (currentPlayback !== playbackId) return;
     }
     demoStatus.textContent = 'Conversación de ejemplo';
+    if (!owner && index === bubbles.length - 1) {
+      setPearlState("working");
+      demoStatus.textContent = 'ZoCo está aplicando el descuento…';
+      await new Promise(resolve => setTimeout(resolve, 850));
+      if (currentPlayback !== playbackId) return;
+      demoStatus.textContent = 'Conversación de ejemplo';
+    }
     bubble.hidden = false;
+    if (!owner) setPearlState(index === bubbles.length - 1 ? "success" : "working");
     messages.scrollTop = messages.scrollHeight;
     await new Promise(resolve => setTimeout(resolve, 1450));
     if (currentPlayback !== playbackId) return;
