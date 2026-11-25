@@ -47,7 +47,6 @@ const NAV_GROUPS = [
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
-  { id: 'landing', label: 'Landing', icon: '🚀' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
       { id: 'gastos', label: 'Gastos', icon: '🧾' },
@@ -88,7 +87,7 @@ let current = null;
 const titles = {
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
   reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
-  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Landing', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
+  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados · Landings', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
 function applyTheme() {
@@ -354,7 +353,8 @@ function paintShell() {
               <button class="nav ${route === n.id ? 'on' : ''} ${n.mobile ? 'mo' : ''}" data-r="${n.id}">
                 <span class="ic">${n.icon}</span><span class="lbl">${n.label}</span>
                 ${n.soon ? '<span class="soon">PRONTO</span>' : ''}
-              </button>`).join('')}
+              </button>
+              ${n.id === 'afiliados' ? `<button class="nav ${route === 'landing' ? 'on' : ''}" data-r="landing" style="padding-left:34px;font-size:13px" aria-label="Landings de afiliados"><span class="ic">↳</span><span class="lbl">Landings</span></button>` : ''}`).join('')}
           </div>`;
         }).join('')}
 

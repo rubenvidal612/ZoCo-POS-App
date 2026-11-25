@@ -3502,7 +3502,9 @@ export function affiliatesView(ctx) {
             <div class="aff-linkbox">
               <input id="aff-landing" readonly>
               <button class="btn ghost sm" id="aff-landing-copy">Copiar</button>
+              <button class="btn sm" id="aff-landing-open">Ver mi landing</button>
             </div>
+            <div style="margin-top:8px"><button class="btn ghost sm" id="aff-landing-choose">Elegir entre Landing 1 y Landing 2</button></div>
             <div class="hint" style="margin-top:6px">
               Este link abre la página de presentación con tu código: puedes mandarlo a quien quieras para que primero conozca ZoCo.
             </div>
@@ -3578,9 +3580,13 @@ export function affiliatesView(ctx) {
   $('#aff-link', root).value = link;
 
   // Link de la landing con el código de afiliado
-  const landingUrl = location.origin + '/landing?ref=' + encodeURIComponent(code);
+  const selectedLanding = localStorage.getItem('zoco.affiliate.landing.' + code);
+  const landingPath = selectedLanding === '/landing-2' ? '/landing-2' : '/landing';
+  const landingUrl = location.origin + landingPath + '?ref=' + encodeURIComponent(code);
   const landingInput = $('#aff-landing', root);
   if (landingInput) landingInput.value = landingUrl;
+  $('#aff-landing-open', root).onclick = () => window.open(landingUrl, '_blank', 'noopener');
+  $('#aff-landing-choose', root).onclick = () => ctx.go('landing');
   const landingCopy = $('#aff-landing-copy', root);
   if (landingCopy) {
     landingCopy.onclick = async () => {
