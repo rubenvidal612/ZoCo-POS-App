@@ -1,7 +1,7 @@
 {
-    "version":  "2.83.3",
+    "version":  "2.83.4",
     "date":  "2026-11-24",
     "notes":  [
-                  "Aviso de actualizacion: en el celular ahora se ve mas grande que en la computadora"
+                  "Corregido: ya no aparece ZoCo Belleza junto con ZoCo Lavanderia; cada pestana sale solo con su giro"
               ]
 }
