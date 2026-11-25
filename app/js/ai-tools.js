@@ -3,6 +3,18 @@ import { state, productById, personalSummary, fixedMonthlyTotal, sellerStats, go
 
 export const TOOL_DEFS = [
   {
+    name: 'create_beauty_appointment',
+    description: 'Agenda una cita en ZoCo Belleza, solo después de que el usuario haya dado servicio, nombre completo del profesional, nombre del cliente, teléfono y fecha/hora exacta. Requiere confirmación explícita. Fecha en ISO 8601 con zona horaria local; no inventes datos que falten.',
+    parameters: { type:'object',properties: {
+      service:{type:'string',description:'Nombre EXACTO del servicio configurado'},
+      professional:{type:'string',description:'Nombre EXACTO del profesional que atiende'},
+      customerName:{type:'string'},
+      phone:{type:'string'},
+      start:{type:'string',description:'Fecha y hora con zona horaria ISO 8601'},
+      notes:{type:'string'},
+    },required:['service','professional','customerName','phone','start']},
+  },
+  {
     name: 'buscar_datos',
     description: 'Consulta datos del negocio: productos, ventas, clientes, stock bajo, caja, resumen o ANALISIS FINANCIERO completo (utilidad, márgenes, tendencias, top productos, gastos). Úsala siempre antes de opinar sobre cómo va el negocio.',
     parameters: {
