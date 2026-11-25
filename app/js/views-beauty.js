@@ -46,12 +46,17 @@ export function beautyView(){
   function options(items,selected){return items.map(i=>'<option value="'+E(i.id)+'"'+(i.id===selected?' selected':'')+'>'+E(i.name)+'</option>').join('')}
   function paint(){
     const allowed=validRole();
-    root.innerHTML='<div class="by-heading"><div><span class="by-tag">ZOCO BEAUTY</span><h2>Agenda y comisiones</h2><p>Citas, servicios, estilistas y barberos en un mismo lugar.</p></div><div class="by-heading-actions"><button type="button" class="btn ghost sm" id="by-refresh">↻ Actualizar citas</button></div></div>'+
+    root.innerHTML='<div class="by-heading"><div><span class="by-tag">ZOCO BEAUTY</span><h2>Agenda y comisiones</h2><p>Citas, servicios, estilistas y barberos en un mismo lugar.</p></div><div class="by-heading-actions"><button type="button" class="btn ghost sm" id="by-notifications">🔔 Activar avisos</button><button type="button" class="btn ghost sm" id="by-refresh">↻ Actualizar citas</button></div></div>'+
       '<div id="beauty-alert" class="by-alert" hidden></div>'+
       '<div class="by-tabs"><button data-tab="agenda" class="'+(tab==='agenda'?'active':'')+'">📅 Calendario</button>'+
       '<button data-tab="comisiones" class="'+(tab==='comisiones'?'active':'')+'">💰 Comisiones</button>'+
       (allowed?'<button data-tab="servicios" class="'+(tab==='servicios'?'active':'')+'">✂ Servicios</button><button data-tab="equipo" class="'+(tab==='equipo'?'active':'')+'">👥 Profesionales</button><button data-tab="reservas" class="'+(tab==='reservas'?'active':'')+'">🔗 Reservas online</button>':'')+'</div><div id="beauty-body"></div>';
     root.querySelector('#by-refresh').onclick=()=>refresh();
+    root.querySelector('#by-notifications').onclick=async()=>{
+      if(!('Notification' in window))return toast('Este navegador no admite notificaciones');
+      const result=await Notification.requestPermission();
+      toast(result==='granted'?'Avisos activados mientras ZoCo esté abierto':'Permiso de avisos no concedido');
+    };
     root.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>{
       tab=button.dataset.tab;paint();
     });
