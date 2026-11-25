@@ -13,7 +13,6 @@ export function receivingView() {
   let selectedBranch = state.currentBranch;
   let supplierId = '';
   let busy = false;
-  let lookupSerial = 0;
   let lastMessage = 'Escanea el código original del artículo. Si no hay datos públicos, puedes capturarlo manualmente.';
 
   const branchOptions = () => (state.branches || []).map(b =>
@@ -77,7 +76,6 @@ export function receivingView() {
       cost: 0, price: 0, source: 'Captura manual', searching: true,
     });
     paintItems(); focusScanner();
-    const serial = ++lookupSerial;
     try {
       const found = await lookupBarcode(code, { skipLocal: true });
       const item = pending.get(code);
@@ -214,14 +212,7 @@ export function receivingView() {
         if(!key)throw new Error('Falta variante del producto '+i.code);
         lines.push({productId:p.id,vkey:key,qty:i.qty,cost:Number(i.cost)});
       }
-      // La sucursal activa se cambia solo en memoria durante la creación de la orden;
-      // createPurchase la toma del estado. Se restaura antes de emitir sincronización.
-      const oldBranch=state.currentBranch;
-      let purchase;
-      try{
-        state.currentBranch=selectedBranch;
-        purchase=createPurchase({supplierId:supplierId||null,items:lines,note:'Recepción por escáner · códigos originales de fábrica'});
-      } finally {state.currentBranch=oldBranch}
+      const purchase=createPurchase({supplierId:supplierId||null,items:lines,note:'Recepción por escáner · códigos originales de fábrica',branchId:selectedBranch});
       if(!purchase?.ok)throw new Error(purchase?.msg||'No se pudo crear la orden');
       const result=receivePurchase(purchase.purchase.id,lines,{branchId:selectedBranch});
       if(!result.ok)throw new Error(result.msg||'No se pudieron sumar las existencias');
