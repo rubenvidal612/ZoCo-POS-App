@@ -1336,6 +1336,7 @@ export const BUSINESS_FAMILIES = {
   herramientas: { label: 'Ferretería y refacciones', modes: ['ferreteria','refaccionaria','merceria'] },
   salud: { label: 'Salud y mascotas', modes: ['farmacia','mascotas'] },
   alimentos: { label: 'Restaurante y alimentos preparados', modes: ['restaurante'] },
+  lavanderias: { label: 'Lavanderías y tintorerías', modes: ['lavanderia'] },
   otros: { label: 'Otros negocios', modes: ['general'] },
 };
 export const familyForMode = (mode) => Object.keys(BUSINESS_FAMILIES).find(k => BUSINESS_FAMILIES[k].modes.includes(mode)) || 'otros';
