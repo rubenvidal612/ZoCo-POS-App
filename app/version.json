@@ -1,7 +1,8 @@
 {
-    "version":  "2.84.1",
+    "version":  "2.85.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Pagina de diagnostico de scroll publicada en /diagnostico-scroll"
+                  "ZoCo Food: salon visual con mesas en 3D, posiciones arrastrables, salones, zoom y estados de mesa",
+                  "Cada mesa muestra mesero, minutos abiertos, comensales y total"
               ]
 }
