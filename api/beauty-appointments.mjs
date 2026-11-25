@@ -15,6 +15,13 @@ function supa(path,opts={}) {
   },cache:'no-store'});
 }
 function isValidTime(s) {const date=new Date(s);return !Number.isNaN(date.valueOf())&&date.getTime()>Date.now()+5*60000&&date.getTime()<Date.now()+90*86400000}
+function withinHours(start,end,hours) {
+  // La zona por defecto del negocio es México central; los comercios podrán personalizarla más adelante.
+  const local=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const begin=local.format(start),finish=local.format(end);
+  return begin>=hours.start && finish<=hours.end && hours.start<hours.end;
+}
+
 const sameTime=(start,duration)=>new Date(new Date(start).getTime()+duration*60000);
 function overlap(row,start,end) {return new Date(row.start_at)<end && new Date(row.end_at)>start}
 function commissionFor(data,service,professionalId) {
@@ -28,6 +35,8 @@ function commissionFor(data,service,professionalId) {
 function cfgFor(data) {
   const beauty=['barberia','salon','peluqueria'].includes(data?.company?.mode);
   const active=beauty && data?.settings?.beautyBookingEnabled === true;
+  const start=/^([01]\d|2[0-3]):[0-5]\d$/.test(data?.settings?.beautyStartHour||'')?data.settings.beautyStartHour:'09:00';
+  const end=/^([01]\d|2[0-3]):[0-5]\d$/.test(data?.settings?.beautyEndHour||'')?data.settings.beautyEndHour:'20:00';
   const services=(data?.products||[]).filter(p=>p?.section==='servicios'&&p.active!==false&&Number(p.price)>0).map(p=>({
     id:clean(p.id,100),name:clean(p.name,100),price:Number(p.price),
     minutes:Math.min(480,Math.max(15,Number(p.bookingMinutes)||30)),
@@ -37,7 +46,7 @@ function cfgFor(data) {
   const staff=(data?.users||[]).filter(u=>u.active!==false && u.beautyProfessional===true).map(u=>({
     id:clean(u.id,100),name:clean(u.name,70),
   }));
-  return {active,services,staff,branches:(data.branches||[]).map(b=>({id:clean(b.id,100),name:clean(b.name,100)}))};
+  return {active,hours:{start,end},services,staff,branches:(data.branches||[]).map(b=>({id:clean(b.id,100),name:clean(b.name,100)}))};
 }
 async function companyData(company) {
   const r=await supa('company_state?company_id=eq.'+encodeURIComponent(company)+'&select=data&limit=1');
@@ -65,9 +74,9 @@ async function appointments(company,from,to) {
 }
 function publicList(data,booked) {
   return {ok:true,business:clean(data.company?.name||'ZoCo Beauty',90),...((p)=>{
-    return {services:p.services.map(({id,name,price,minutes})=>({id,name,price,minutes})),
+    return {hours:p.hours,services:p.services.map(({id,name,price,minutes})=>({id,name,price,minutes})),
     professionals:p.staff,branches:p.branches,
-    busy:booked.filter(b=>b.status==='confirmed').map(b=>({professionalId:b.professional_id,branchId:b.branch_id,start:b.start_at,end:b.end_at}))}
+    busy:booked.filter(b=>['requested','confirmed'].includes(b.status)).map(b=>({professionalId:b.professional_id,branchId:b.branch_id,start:b.start_at,end:b.end_at}))}
   })(cfgFor(data))};
 }
 export default async function handler(req) {
@@ -99,6 +108,7 @@ export default async function handler(req) {
       if(!isValidTime(payload.start)||!name||!/^[+0-9\s()-]{8,20}$/.test(phone))
         return response({ok:false,error:'Revisa nombre, teléfono, fecha y hora'},400);
       if(start.getMinutes()%15!==0)return response({ok:false,error:'El horario debe ser cada 15 minutos'},400);
+      if(!withinHours(start,end,cfg.hours))return response({ok:false,error:'El horario está fuera de la jornada del negocio'},400);
       const dayStart=new Date(start.getTime()-86400000).toISOString(),dayEnd=new Date(end.getTime()+86400000).toISOString();
       const booked=await appointments(company,dayStart,dayEnd);
       if(booked.some(b=>b.branch_id===branch.id&&b.professional_id===pro.id&&b.status!=='cancelled'&&overlap(b,start,end)))
@@ -110,7 +120,7 @@ export default async function handler(req) {
         duration_minutes:service.minutes,start_at:start.toISOString(),end_at:end.toISOString(),
         customer_name:name,customer_phone:phone,notes,status:'requested',source:'web'};
       const insert=await supa('beauty_appointments',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(record)});
-      if(!insert.ok)return response({ok:false,error:'No se pudo guardar la solicitud'},502);
+      if(!insert.ok){const error=await insert.text();return response({ok:false,error:/23P01|exclusion/i.test(error)?'El horario acaba de ocuparse. Elige otro.':'No se pudo guardar la solicitud'},/23P01|exclusion/i.test(error)?409:502)}
       return response({ok:true,message:'Solicitud enviada. El negocio debe confirmar tu cita.',id:(await insert.json())?.[0]?.id},201);
     }
     const authed=await authorize(req,company);
@@ -128,6 +138,7 @@ export default async function handler(req) {
       const branch=cfg.branches.find(s=>s.id===clean(b.branchId));
       if(!service||!pro||!branch||!isValidTime(b.start))return response({ok:false,error:'Selecciona una fecha futura, profesional y servicio válidos'},400);
       const start=new Date(b.start),end=sameTime(start,service.minutes);
+      if(!withinHours(start,end,cfg.hours))return response({ok:false,error:'Horario fuera de la jornada configurada'},400);
       const existing=await appointments(company,new Date(start.getTime()-86400000).toISOString(),new Date(end.getTime()+86400000).toISOString());
       if(existing.some(x=>x.professional_id===pro.id&&x.branch_id===branch.id&&x.status!=='cancelled'&&overlap(x,start,end)))return response({ok:false,error:'Horario ocupado'},409);
       const name=clean(b.name,90),phone=clean(b.phone,20);
@@ -138,7 +149,7 @@ export default async function handler(req) {
         duration_minutes:service.minutes,start_at:start.toISOString(),end_at:end.toISOString(),
         customer_name:name,customer_phone:phone,notes:clean(b.notes,300),source:'staff',status:'confirmed'};
       const insert=await supa('beauty_appointments',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(record)});
-      if(!insert.ok)return response({ok:false,error:'No se pudo crear cita'},502);
+      if(!insert.ok){const error=await insert.text();return response({ok:false,error:/23P01|exclusion/i.test(error)?'Horario ocupado':'No se pudo crear cita'},/23P01|exclusion/i.test(error)?409:502)}
       return response({ok:true,appointment:(await insert.json())?.[0]},201);
     }
     if(req.method==='PATCH') {
