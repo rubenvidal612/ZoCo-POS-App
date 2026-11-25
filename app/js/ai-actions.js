@@ -4,6 +4,7 @@ import {
   openRegister, closeRegister, emit, stockOf, upsertCustomer, upsertExpense,
 } from './store.js';
 import { money } from './ui.js';
+import { cloudSession } from './auth.js';
 
 const cleanName = (s) => String(s || '')
   .replace(/^(el|la|los|las|un|una|del|de la|de los|de las|de)\s+/i, '')
@@ -19,6 +20,44 @@ const findProduct = (txt) => {
 };
 
 export const ACTIONS = {
+
+  create_beauty_appointment: {
+    label: 'Agendar cita de belleza',
+    perm: 'products.edit',
+    describe(p) {
+      return 'Agendar ' + String(p.service || 'servicio') + ' con ' + String(p.professional || 'profesional') +
+        ' para ' + String(p.customerName || 'cliente') + ' el ' + String(p.start || 'día pendiente') +
+        '. Se comprobará disponibilidad antes de guardar.';
+    },
+    async run(p) {
+      if (state.company?.mode !== 'barberia') return {ok:false,msg:'Esta función es para negocios de belleza y barbería'};
+      const access=cloudSession()?.access_token;
+      if(!access)return {ok:false,msg:'Inicia sesión con tu cuenta en la nube para agendar citas'};
+      const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+      const service=(state.products||[]).find(s=>s.section==='servicios'&&s.active!==false&&norm(s.name)===norm(p.service));
+      const pro=(state.users||[]).find(u=>u.beautyProfessional&&u.active!==false&&norm(u.name)===norm(p.professional));
+      const date=new Date(p.start);
+      if(!service||!pro)return {ok:false,msg:'No encontré el servicio o profesional exacto. Revísalos en ZoCo Belleza.'};
+      if(!p.customerName||!p.phone||isNaN(date.getTime()))return {ok:false,msg:'Necesito nombre, teléfono, servicio, profesional y fecha/hora exacta'};
+      const company=state.currentCompany,body={
+        serviceId:service.id,professionalId:pro.id,branchId:state.currentBranch,
+        name:String(p.customerName).slice(0,90),phone:String(p.phone).slice(0,20),
+        notes:String(p.notes||'Cita registrada con ZoCo IA').slice(0,300),
+        start:date.toISOString(),
+      };
+      try {
+        const r=await fetch('/api/beauty-appointments?c='+encodeURIComponent(company),{
+          method:'POST',headers:{Authorization:'Bearer '+access,'Content-Type':'application/json'},
+          body:JSON.stringify(body),
+        });
+        const result=await r.json();
+        return result.ok
+          ?{ok:true,msg:'Cita creada para '+p.customerName+' con '+pro.name+'. Revisa el calendario de ZoCo Belleza.'}
+          :{ok:false,msg:result.error||'No se pudo registrar la cita'};
+      } catch {return {ok:false,msg:'Sin conexión para registrar la cita'};}
+    },
+  },
+
   cancel_sale: {
     label: 'Cancelar venta',
     perm: 'sales.cancel',
