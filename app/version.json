@@ -1,9 +1,7 @@
 {
-  "version": "2.77.4",
+  "version": "2.77.5",
   "date": "2026-11-24",
   "notes": [
-    "Landings ahora está dentro de Afiliados",
-    "Enlaces personalizados y botón Ver mi landing",
-    "Actualización del caché para mostrar la nueva versión"
+    "Restaurada la navegación y las pantallas originales de Afiliados y Landing"
   ]
 }
