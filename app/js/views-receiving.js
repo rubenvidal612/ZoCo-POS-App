@@ -170,6 +170,7 @@ export function receivingView() {
     root.querySelector('#rcv-camera').onclick=async()=>{const code=await scanWithCameraSoft();if(code)await addCode(code)};
     root.querySelector('#rcv-save').onclick=saveReception;
     paintItems();
+    focusScanner();
   }
   async function saveReception() {
     if (busy || !pending.size) return;
@@ -185,10 +186,11 @@ export function receivingView() {
       if (currentCodes.has(i.code)) { errors.push('Código duplicado '+i.code); continue; }
       currentCodes.add(i.code);
       if (!positiveQty(i.qty)) errors.push('Cantidad inválida en '+i.code);
-      if (!allowedPrice(i.cost) || !allowedPrice(i.price)) errors.push('Precio o costo inválido en '+i.code);
+      if (!allowedPrice(i.cost) || !allowedPrice(i.price) || (!i.productId && Number(i.price) <= 0)) errors.push('Indica un precio de venta válido y costo no negativo en '+i.code);
       if (!i.productId && (!i.name.trim() || !sections().some(([s])=>s===i.section))) errors.push('Falta nombre o categoría en '+i.code);
       const keys=p?getVariants(p):sizesFor(i.section).map(fmtSize);
-      if (!(i.fixedVariant || (i.variant && keys.includes(i.variant)) || (keys.length===1))) errors.push('Selecciona talla/variante para '+i.code);
+      if (i.fixedVariant && !keys.includes(i.fixedVariant)) errors.push('La variante vinculada a '+i.code+' ya no existe.');
+      else if (!(i.fixedVariant || (i.variant && keys.includes(i.variant)) || (keys.length===1))) errors.push('Selecciona talla/variante para '+i.code);
     }
     if(errors.length){toast(errors[0]);setMessage('Corrige: '+errors.join(' · '));return}
     const confirmation=await confirmDialog({title:'Confirmar recepción de mercancía',message:'Se registrarán '+snapshot.length+' códigos y '+snapshot.reduce((n,i)=>n+i.qty,0)+' piezas en la sucursal seleccionada. Los cambios de stock se guardarán.',okText:'Confirmar recepción'});
