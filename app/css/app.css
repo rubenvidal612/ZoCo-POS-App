@@ -2033,3 +2033,24 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .ld-qr img{width:150px;height:150px;display:block}
 .ld-link{font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:6px;font-family:ui-monospace,monospace}
 .ld-textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:12.5px;line-height:1.45;resize:vertical}
+/* ===== Aviso de actualización: centrado en la pantalla ===== */
+#upd-card{
+  left:50%;right:auto;top:50%;bottom:auto;
+  width:min(430px,calc(100vw - 28px));max-width:none;
+  padding:18px;border-radius:20px;z-index:340;
+  transform:translate(-50%,-50%) scale(.96);
+  box-shadow:0 30px 70px rgba(2,6,23,.6),0 0 0 100vmax rgba(2,6,23,.45);
+}
+#upd-card.in{transform:translate(-50%,-50%) scale(1)}
+#upd-card .fc-x{top:10px;right:12px;font-size:14px}
+#upd-card .fc-txt b{font-size:15px}
+#upd-card .fc-notes li{font-size:12px}
+#upd-card .fc-actions .btn{height:42px;font-size:13.5px}
+@media (max-width:900px){
+  #upd-card{
+    left:50%;right:auto;top:50%;bottom:auto;
+    width:calc(100vw - 28px);max-width:420px;
+    padding:16px;max-height:none;overflow:visible;
+  }
+  #upd-card .fc-notes{max-height:38vh;overflow:auto;padding-right:4px}
+}

@@ -1,7 +1,7 @@
 {
-    "version":  "2.83.0",
+    "version":  "2.83.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Catalogo base de lavanderia: 53 servicios (lavado, planchado, tintoreria, tenis, edredones e insumos) con precios de referencia en MXN"
+                  "El aviso de actualizacion ahora sale centrado en la pantalla, tambien en el celular"
               ]
 }
