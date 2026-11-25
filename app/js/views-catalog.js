@@ -45,7 +45,7 @@ export function productsView(ctx) {
             <input id="pq" placeholder="Artículo, código o talla…"><span class="k">F3</span></div>
           <div class="ph-tools">
             <button class="btn ghost sm" id="px-photos" title="Buscar fotos faltantes en bases abiertas">📷 Traer fotos</button>
-            ${['abarrotes', 'farmacia', 'papeleria'].includes(state.company.mode) ? `<button class="btn sm" id="cat-base" title="Catálogo base del giro con fotos">🛒 Catálogo base</button>` : ''}
+            ${['abarrotes', 'farmacia', 'papeleria', 'lavanderia'].includes(state.company.mode) ? `<button class="btn sm" id="cat-base" title="Catálogo base del giro con fotos">🛒 Catálogo base</button>` : ''}
             <button class="btn ghost sm" id="imp">⬆ Importar</button>
             <button class="btn ghost sm" id="undo-imp">↩ Deshacer</button>
             <button class="btn ghost sm" id="adj">↺ Merma</button>
@@ -679,13 +679,14 @@ export function productsView(ctx) {
       const giro = state.company.mode;
       let lista = [];
       try {
-        if (giro === 'farmacia') lista = (await import('./catalog-farmacia.js')).CATALOGO_FARMACIA || [];
+        if (giro === 'lavanderia') lista = (await import('./catalog-lavanderia.js')).CATALOGO_LAVANDERIA || [];
+        else if (giro === 'farmacia') lista = (await import('./catalog-farmacia.js')).CATALOGO_FARMACIA || [];
         else if (giro === 'papeleria') lista = (await import('./catalog-papeleria.js')).CATALOGO_PAPELERIA || [];
         else lista = (await import('./catalog-abarrotes.js')).CATALOGO_ABARROTES || [];
       } catch { lista = []; }
       if (!lista.length) { toast('El catálogo base no está disponible'); return; }
       const ok = await confirmDialog({
-        title: 'Catálogo base de ' + (state.company.mode === 'farmacia' ? 'farmacia' : state.company.mode === 'papeleria' ? 'papelería' : 'abarrotes'),
+        title: 'Catálogo base de ' + (state.company.mode === 'lavanderia' ? 'lavandería' : state.company.mode === 'farmacia' ? 'farmacia' : state.company.mode === 'papeleria' ? 'papelería' : 'abarrotes'),
         message: `Se agregarán ${lista.length} productos típicos con nombre, código y foto. Tú solo pones precios y existencias. Los productos que ya tengas con el mismo código se actualizan.`,
         okText: 'Agregar ' + lista.length,
       });

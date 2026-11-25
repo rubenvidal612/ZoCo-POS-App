@@ -1,7 +1,7 @@
 {
-    "version":  "2.82.2",
+    "version":  "2.83.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Lavanderia / tintoreria ya aparece en la lista de giros al configurar el negocio"
+                  "Catalogo base de lavanderia: 53 servicios (lavado, planchado, tintoreria, tenis, edredones e insumos) con precios de referencia en MXN"
               ]
 }
