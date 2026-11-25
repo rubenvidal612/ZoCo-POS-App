@@ -40,7 +40,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'productos', label: 'Productos', icon: '▦', mobile: true, perm: 'products.edit' },
       { id: 'compras', label: 'Compras', icon: '📦', perm: 'products.edit' },
-      { id: 'food', label: 'ZoCo Food', icon: '🍽', perm: 'products.edit' },
+      { id: 'food', label: 'ZoCo Food', icon: '🍽' },
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
@@ -322,10 +322,15 @@ function paintShell() {
   applyTheme();
   const app = $('#app');
   const u = currentUser();
+  // Las cuentas de mesero y cocina nunca exponen páginas financieras mediante URL ni menú.
+  if (['WAITER','KITCHEN'].includes(String(u.role || '').toUpperCase()) && route !== 'food') {
+    route = 'food';
+    if (location.hash !== '#/food') history.replaceState(null, '', '#/food');
+  }
   const br = state.branches.find((b) => b.id === state.currentBranch) || state.branches[0];
   const initials = (u.name || 'Z').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const isHome = route === 'inicio';
-  const roleLabel = { OWNER: 'OWNER', ADMIN: 'ADMIN', CASHIER: 'CAJERO', STOCK: 'ALMACÉN', ACCOUNT: 'CONTADOR' }[u.role] || u.role;
+  const roleLabel = { OWNER: 'OWNER', ADMIN: 'ADMIN', CASHIER: 'CAJERO', STOCK: 'ALMACÉN', ACCOUNT: 'CONTADOR', WAITER: 'MESERO', KITCHEN: 'COCINA' }[u.role] || u.role;
 
   app.innerHTML = `
     <div class="shell">
@@ -339,7 +344,7 @@ function paintShell() {
         </div>
 
         ${NAV_GROUPS.map((g) => {
-          const items = g.items.filter((n) => (n.id !== 'food' || state.company?.mode === 'restaurante') && (!n.perm || can(n.perm)) && (!n.super || state.superadmin));
+          const items = g.items.filter((n) => (!['WAITER','KITCHEN'].includes(String(u.role || '').toUpperCase()) || n.id === 'food') && (n.id !== 'food' || (state.company?.mode === 'restaurante' && (can('food.order') || can('food.kitchen') || can('products.edit')))) && (!n.perm || can(n.perm)) && (!n.super || state.superadmin));
           if (!items.length) return '';
           return `<div class="nav-group">
             <div class="nav-group-label">${g.label}</div>
@@ -494,7 +499,7 @@ function mount() {
     }),
     ventas: () => salesView(ctx),
     compras: guard('products.edit', () => purchasesView(ctx)),
-    food: guard('products.edit', () => foodView(ctx)),
+    food: () => (state.company?.mode === 'restaurante' && (can('food.order') || can('food.kitchen') || can('products.edit')) ? foodView(ctx) : soonView('Sin acceso a ZoCo Food')),
     integraciones: guard('settings.edit', () => integrationsView()),
     clientes: guard('customers.manage', () => customersView(ctx)),
     usuarios: guard('users.manage', () => usersView(ctx)),
