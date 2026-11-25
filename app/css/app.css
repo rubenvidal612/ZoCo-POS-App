@@ -1856,3 +1856,54 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .fd-empty{padding:18px;border-radius:12px;background:var(--surface-2,#f6f8fb);color:var(--muted,#64748b);line-height:1.5}
 @media(max-width:840px){.fd-two,.fd-kds{grid-template-columns:1fr}}
 @media(max-width:490px){.fd-tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fd-table{padding:13px;min-height:124px}.fd-two>.fd-box{padding:13px}.fd-inline{gap:8px}.fd-actions button{flex:1}.fd-actions select{max-width:none;width:100%}}
+
+
+/* ZoCo Belleza: agenda, servicios, equipo y comisiones */
+.beauty-app{max-width:1220px;margin:0 auto;padding:14px 4px 45px;color:var(--ink,#12233e)}
+.by-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.by-heading h2{font-size:clamp(25px,3vw,32px);margin:3px 0 6px;letter-spacing:-.04em}
+.by-heading p{color:var(--muted,#61728a);margin:0}
+.by-tag{display:inline-block;color:#b64a09;background:#fff1e4;border-radius:20px;padding:5px 10px;font-weight:900;font-size:11px;letter-spacing:.05em}
+.by-tabs{display:flex;gap:9px;overflow-x:auto;padding:4px 0 16px;scrollbar-width:thin}
+.by-tabs button{white-space:nowrap;border:1px solid var(--line,#dfe5ef);border-radius:13px;color:var(--ink,#182c4a);background:var(--surface,#fff);padding:12px 15px;font-size:13px;font-weight:800;cursor:pointer}
+.by-tabs button.active{background:#fff0e1;color:#af4d0a;border-color:#ffd0aa}
+.by-alert{background:#fff3e9;color:#984009;padding:15px;border-radius:13px;font-size:13px;margin:8px 0}
+.by-box{background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0);border-radius:20px;padding:clamp(16px,2vw,26px);margin:0 0 17px}
+.by-box h3{font-size:19px;margin:0 0 13px}
+.by-box p{line-height:1.6;color:var(--muted,#68778b)}
+.by-box label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800}
+.by-box input,.by-box select{min-width:0;width:100%;padding:12px;border:1px solid var(--line,#d7e1ed);border-radius:12px;color:var(--ink,#142841);background:var(--surface,#fff);font-size:14px}
+.by-box :is(input,select,button,a):focus-visible,.by-tabs button:focus-visible{outline:3px solid #f97316;outline-offset:2px}
+.by-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:18px}
+.by-stats>div{padding:20px 17px;background:var(--surface,#fff);border:1px solid var(--line,#e0e6ee);border-radius:16px}
+.by-stats small{display:block;font-size:12px;color:var(--muted,#697b90);line-height:1.5}.by-stats strong{display:block;margin-top:5px;font-size:clamp(21px,2.4vw,32px);overflow-wrap:anywhere}
+.by-datebar{display:flex;align-items:end;justify-content:center;gap:12px;margin:0 0 16px}
+.by-datebar label{max-width:200px}.by-datebar button{border:1px solid var(--line,#dbe2ed);background:var(--surface-2,#f5f7fb);color:var(--ink,#12233d);border-radius:10px;font-size:21px;padding:10px 16px;cursor:pointer}
+.by-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.by-week button{border:1px solid var(--line,#e2e8f1);background:var(--surface-2,#f8faff);border-radius:13px;padding:9px 4px;cursor:pointer;color:var(--ink,#12233d)}
+.by-week button.active{border-color:#f97316;background:#fff0e3;color:#a33d08}
+.by-week small{font-size:10px;display:block;text-transform:capitalize}.by-week b{font-size:21px}
+.by-help{font-size:12px!important;color:var(--muted,#65758a)!important;margin:10px 0 17px!important;line-height:1.65}
+.by-appointments{display:grid;gap:11px}.by-appt{border:1px solid var(--line,#e1e6ee);background:var(--surface,#fff);border-left:4px solid #f97316;border-radius:13px;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.by-appt.completed{border-left-color:#12a56c}.by-appt.cancelled{border-left-color:#9ca3af;opacity:.7}
+.by-appt-main{display:flex;align-items:center;gap:16px;min-width:0}
+.by-time{font-size:18px;font-weight:900;color:#e57011;white-space:nowrap}
+.by-appt-main strong{font-size:14px}.by-appt-main p{margin:4px 0;color:var(--muted,#61738b);font-size:13px}.by-appt-main small{font-size:12px;color:var(--muted,#64748b)}
+.by-appt-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}.by-appt-actions b{font-size:16px}
+.by-empty{text-align:center;padding:35px 10px;background:var(--surface-2,#f7f9fd);border-radius:13px;color:var(--muted,#68788b)}
+.by-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.by-create form>button{margin-top:14px}
+.by-table-wrap{overflow-x:auto}.by-table-wrap table{border-collapse:collapse;width:100%;min-width:480px;font-size:13px}
+.by-table-wrap th,.by-table-wrap td{text-align:left;padding:14px;border-bottom:1px solid var(--line,#e6eaf2)}
+.by-table-wrap th{font-size:12px;color:var(--muted,#65758a)}
+.by-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.by-service-grid .by-box{display:flex;flex-direction:column;gap:12px}
+.by-service-grid small{display:block;color:var(--muted,#607087);line-height:1.6}
+.by-team{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.by-pro{display:flex!important;align-items:center;flex-direction:row!important;gap:12px;border:1px solid var(--line,#e1e6ee);padding:13px;border-radius:13px;cursor:pointer}
+.by-pro input{flex:none;width:21px;height:21px;accent-color:#f97316}
+.by-pro span{display:flex;flex-direction:column;gap:4px}.by-pro small{color:var(--muted,#65758a);font-weight:400}
+.by-link-actions{display:flex;align-items:center;gap:10px;margin:13px 0;flex-wrap:wrap}
+.by-toggle{flex-direction:row!important;align-items:center;gap:10px!important;margin-bottom:18px}.by-toggle input{width:21px!important;height:21px!important;accent-color:#f97316}
+@media(max-width:900px){.by-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.by-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.by-stats{grid-template-columns:1fr 1fr}.by-stats>div:last-child{grid-column:1/-1}.by-grid,.by-team,.by-service-grid{grid-template-columns:1fr}.by-appt{align-items:stretch;flex-direction:column}.by-appt-actions{justify-content:flex-start}.by-week{gap:3px}.by-week button{padding:8px 1px}.by-week b{font-size:18px}}
