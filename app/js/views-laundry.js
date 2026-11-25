@@ -118,8 +118,8 @@ export function laundryView(ctx) {
     if (!o) return;
     const estado = COLUMNAS.find((c) => c.key === o.status)?.label || o.status;
     const link = trackUrl(o);
-    const mensajeBase = `Hola ${o.customer}! Tu orden ${o.folio} está ${estado.toLowerCase()}. Total ${money(o.total)}.` +
-      (o.status === 'listo' ? ` Ya puedes pasar por ella.` : '') +
+    const mensajeBase = `Hola ${o.customer}! Tu orden ${o.folio}: ${estado}. Total ${money(o.total)}.` +
+      (o.status === 'listo' ? ` Ya está lista, puedes pasar por ella.` : '') +
       `\nSigue tu orden aquí: ${link}`;
 
     const m = modal({

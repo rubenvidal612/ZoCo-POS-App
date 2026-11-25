@@ -1,5 +1,5 @@
 {
-    "version":  "2.81.0",
+    "version":  "2.81.1",
     "date":  "2026-11-24",
     "notes":  [
                   "Lavanderia: QR de seguimiento en el ticket y pagina publica /orden para que el cliente vea el estado",
