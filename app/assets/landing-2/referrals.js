@@ -1,7 +1,7 @@
 const referralPlans = {
-  esencial: { name: 'Esencial', commission: 50 },
-  pro: { name: 'Pro', commission: 150 },
-  empresarial: { name: 'Empresarial', commission: 250 },
+  esencial: { name: 'Esencial', price: 149, commission: 50 },
+  pro: { name: 'Pro', price: 295, commission: 150 },
+  empresarial: { name: 'Empresarial', price: 499, commission: 250 },
 };
 
 const byId = id => document.getElementById(id);
@@ -30,7 +30,7 @@ function renderProjection() {
   const base = entrants * plan.commission;
   byId('selected-month').textContent = month;
   timeline.setAttribute('aria-valuetext', 'Mes ' + month + ' de 12');
-  byId('referral-rate').textContent = currency.format(plan.commission) + ' MXN al mes por cliente activo con ZoCo ' + plan.name + '.';
+  byId('referral-rate').textContent = `ZoCo ${plan.name} cuesta ${currency.format(plan.price)} MXN al mes. La comisión es de ${currency.format(plan.commission)} MXN al mes por cliente activo.`;
   byId('month-caption').textContent = 'Comisión del mes ' + month;
   byId('month-income').textContent = currency.format(base * month);
   byId('total-caption').textContent = 'Acumulado al mes ' + month;
