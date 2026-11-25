@@ -1447,7 +1447,8 @@ export function addLine(cart, product, size, qty = 1, color = '') {
   const vkey = variantKey(size, color);
   const key = product.id + '|' + vkey;
   const found = cart.lines.find((l) => l.key === key);
-  const available = stockOf(product, vkey);
+  // Servicios de belleza no requieren existencias físicas para poder cobrarse.
+  const available = product.section === 'servicios' ? Number.POSITIVE_INFINITY : stockOf(product, vkey);
   const unit = unitOf(product);
   const amount = round3(isFractional(product) ? (Number(qty) || 0) : Math.max(1, Math.round(Number(qty) || 1)));
   if (amount <= 0) return { ok: false, msg: 'Cantidad inválida' };
@@ -1587,7 +1588,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
     const b = p?.branchStock?.[state.currentBranch];
     // Si se prepara al momento, no se descuenta el producto terminado: se descuentan ingredientes
     const vk = l.vkey || l.size;
-    if (!preparaAlVender && b && b[vk] != null) b[vk] = Math.max(0, round3(Number(b[vk]) - l.qty));
+    if (!preparaAlVender && p?.section !== 'servicios' && b && b[vk] != null) b[vk] = Math.max(0, round3(Number(b[vk]) - l.qty));
     if (preparaAlVender) {
       try { consumeRecipe(p, l.qty, state.currentBranch, sale.id); } catch {}
     }
