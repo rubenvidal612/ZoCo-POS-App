@@ -146,7 +146,7 @@ export const MODES = {
   mascotas:    { label: 'Mascotas / veterinaria',     sections: ['alimento_m', 'accesorios_m', 'higiene_m'] },
   muebleria:   { label: 'Mueblería',                  sections: ['muebles', 'colchones', 'deco'] },
   floreria:    { label: 'Florería',                   sections: ['arreglos', 'flores', 'macetas'] },
-  barberia:    { label: 'Barbería / estética',        sections: ['servicios', 'producto_b'] },
+  barberia:    { label: 'Salón de belleza / peluquería / barbería',        sections: ['servicios', 'producto_b'] },
   restaurante: { label: 'Restaurante / cafetería',    sections: ['platillos', 'bebidas_r', 'postres'] },
   merceria:    { label: 'Mercería',                   sections: ['botones', 'listones', 'telas'] },
   refaccionaria: { label: 'Refaccionaria',            sections: ['refacciones', 'aceites', 'llantas'] },
