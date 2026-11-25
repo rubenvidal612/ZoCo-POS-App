@@ -151,7 +151,7 @@ export function beautyView(){
       const price=Number(f.get('price')),minutes=Number(f.get('minutes')),value=Number(f.get('value')),type=f.get('type');
       if(!Number.isFinite(price)||price<=0||!Number.isFinite(value)||value<0||
         type==='pct'&&value>100||!Number.isInteger(minutes)||minutes<15||minutes>480)return toast('Revisa el precio, duración y comisión');
-      upsertProduct({name:String(f.get('name')).trim(),section:'servicios',price,cost:0,
+      upsertProduct({name:String(f.get('name')).trim(),code:'SERV-'+Date.now().toString(36).toUpperCase(),section:'servicios',price,cost:0,
         bookingMinutes:minutes,beautyCommissionType:type,beautyCommissionValue:value,
         branchStock:{},sellBy:'pza',catalog:false,active:true});
       toast('Servicio agregado');paintBody();
@@ -202,8 +202,8 @@ export function beautyView(){
     };
   }
   paint();
-  // Conexión de la nube es necesaria para recibir reservas de otros dispositivos.
-  refresh();
+  // Se monta después de que app.js inserte la vista al DOM.
+  setTimeout(()=>refresh(),0);
   interval=setInterval(()=>refresh({notify:true}),60000);
   const unsubscribe=subscribe(()=>{if(root.isConnected&&tab!=='servicios'&&tab!=='equipo'&&tab!=='reservas')paintBody()});
   return {root,refresh:()=>{if(root.isConnected)refresh()},destroy:()=>{clearInterval(interval);unsubscribe()}};
