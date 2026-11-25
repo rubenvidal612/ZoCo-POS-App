@@ -1,4 +1,6 @@
 const phone = document.getElementById('phone-screen');
+const desktop = document.getElementById('desktop-screen');
+const desktopNames = { resumen:'Resumen de ventas', tienda:'Pantalla de ventas de tienda', restaurante:'Pantalla de ventas de restaurante', asistente:'Asistente IA' };
 const screenDescriptions = {
   'resumen-movil': 'Resumen de ventas de ZoCo en celular',
   'tienda-movil': 'Pantalla de venta de ZoCo en celular',
@@ -12,6 +14,9 @@ screenButtons.forEach(button => {
     const screen = button.dataset.screen;
     phone.src = '/assets/landing-2/' + screen + '.webp';
     phone.alt = screenDescriptions[screen];
+    const view = screen.replace('-movil', '');
+    desktop.src = '/assets/landing-2/' + view + '-escritorio.webp';
+    desktop.alt = desktopNames[view] + ' de ZoCo en computadora';
     screenButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
   });
 });
@@ -91,3 +96,24 @@ if ('IntersectionObserver' in window && !reducedMotion.matches) {
   }, { threshold: 0.5 });
   observer.observe(messages);
 }
+
+const interactiveMascots = document.querySelectorAll('.pearl');
+let gazeFrame;
+function trackGaze(event) {
+  if (reducedMotion.matches) return;
+  const { clientX, clientY } = event;
+  cancelAnimationFrame(gazeFrame);
+  gazeFrame = requestAnimationFrame(() => {
+    interactiveMascots.forEach(mascot => {
+      const box = mascot.getBoundingClientRect();
+      const x = clientX - (box.left + box.width / 2);
+      const y = clientY - (box.top + box.height * 0.6);
+      const distance = Math.hypot(x, y) || 1;
+      const strength = Math.min(distance / 110, 1);
+      mascot.style.setProperty('--gaze-x', (31 * x / distance * strength) + '%');
+      mascot.style.setProperty('--gaze-y', (31 * y / distance * strength) + '%');
+    });
+  });
+}
+document.addEventListener('pointermove', trackGaze, { passive: true });
+document.addEventListener('pointerdown', trackGaze, { passive: true });

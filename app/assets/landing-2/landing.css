@@ -144,32 +144,34 @@ section { padding:26px var(--gutter); scroll-margin-top:86px; }
 #planes .plan-conditions { font-size:clamp(18px,2vw,23px); max-width:68ch; line-height:1.5; color:#f4f7ff; }
 @media (max-width:680px) { .team-grid { grid-template-columns:1fr; } }
 
-.pearl { transition:filter .12s ease-out; }
-.chat-identity { display:inline-flex; align-items:center; gap:6px; }
-.chat-identity .pearl { object-fit:contain; }
-.pearl[data-state="thinking"] { filter:sepia(1) saturate(3) hue-rotate(165deg) drop-shadow(0 3px 5px #315da235); }
-.pearl[data-state="working"] { filter:sepia(1) saturate(4) hue-rotate(339deg) drop-shadow(0 3px 5px #9b570435); }
-.pearl[data-state="success"] { filter:sepia(1) saturate(2.7) hue-rotate(76deg) drop-shadow(0 3px 5px #16824a35); }
-@media(prefers-reduced-motion:reduce) { .pearl { transition:none; } }
 
-.pearl { display:inline-block; aspect-ratio:340 / 234; }
+html { height:auto; overflow-y:auto; }
+body { height:auto; min-height:100vh; overflow:visible; }
+.monitor .devices { object-fit:contain; background:#111929; }
+.pearl { display:inline-block; aspect-ratio:340 / 234; filter:var(--mint-pearl); transition:filter .2s ease; }
+:root {
+  --mint-pearl:sepia(1) saturate(3) hue-rotate(86deg) drop-shadow(0 5px 10px #16824a35);
+  --blue-pearl:sepia(1) saturate(3) hue-rotate(158deg) drop-shadow(0 5px 10px #315da235);
+}
+.pearl[data-state="thinking"], .pearl[data-state="working"] { filter:var(--blue-pearl); }
+.chat-identity { display:inline-flex; align-items:center; gap:6px; }
 .chat-identity .pearl { position:relative; flex:0 0 38px; width:38px; }
 .pearl img { display:block; width:100%; height:auto; }
-.pearl-mouth { display:none; position:absolute; inset:0; pointer-events:none; }
-.pearl[data-state="thinking"] .pearl-mouth,
-.pearl[data-state="working"] .pearl-mouth { display:block; }
-.pearl-mouth::before { content:""; position:absolute; left:45%; top:68.5%; width:10%; height:10%; background:radial-gradient(ellipse,#e3d8d0 46%,transparent 72%); }
-.pearl-mouth::after { content:""; position:absolute; left:50%; top:73%; transform:translate(-50%,-50%); background:#231c18; border-radius:50%; }
-.pearl[data-state="thinking"] .pearl-mouth::after { width:5%; height:1.8%; }
-.pearl[data-state="working"] .pearl-mouth::after { width:4.8%; height:7%; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .mascot.pearl { animation:bob-zoco 3.4s ease-in-out infinite, pearl-colors 6s linear infinite; }
+.pearl-eye { position:absolute; top:60.1%; width:15.1%; height:21%; translate:-50% -50%; overflow:hidden; border-radius:50%; background:#211c1a; border:1px solid #3f3934; box-sizing:border-box; }
+.pearl-eye.left { left:34%; }
+.pearl-eye.right { left:65%; }
+.pearl-eye::after { content:""; position:absolute; inset:13%; border-radius:50%; background:radial-gradient(circle at 68% 23%, #fff 0 11%, #151414 20% 63%, #4b3e35 83%); transform:translate(var(--gaze-x,0%),var(--gaze-y,0%)); transition:transform .12s ease-out; }
+.pearl-mouth { position:absolute; left:50%; top:73%; width:10%; height:8%; translate:-50% -50%; background:radial-gradient(ellipse,#e3d8d0 48%,transparent 76%); pointer-events:none; }
+.pearl-mouth::after { content:""; position:absolute; inset:15% 20% 24%; border-bottom:max(1px,.19vw) solid #211c1a; border-radius:0 0 60% 60%; }
+.chat-identity .pearl-mouth::after { border-width:1px; }
+.pearl[data-state="thinking"] .pearl-mouth::after { border-radius:0; }
+.pearl[data-state="working"] .pearl-mouth::after { background:#211c1a; border:0; border-radius:50%; }
+.pearl[data-state="success"] .pearl-mouth::after { inset:0 8% 19%; }
+@media (prefers-reduced-motion:no-preference) {
+  .mascot.pearl { animation:bob-zoco 3.4s ease-in-out infinite, pearl-colors 5s ease-in-out infinite; }
 }
 @keyframes pearl-colors {
-  0%, 20%, 100% { filter:sepia(0) saturate(1) hue-rotate(0deg) drop-shadow(0 8px 10px #17274635); }
-  24%, 44% { filter:sepia(1) saturate(3) hue-rotate(165deg) drop-shadow(0 8px 10px #315da235); }
-  48%, 68% { filter:sepia(1) saturate(4) hue-rotate(339deg) drop-shadow(0 8px 10px #9b570435); }
-  72%, 90% { filter:sepia(1) saturate(2.7) hue-rotate(76deg) drop-shadow(0 8px 10px #16824a35); }
-  94% { filter:sepia(0) saturate(1) hue-rotate(0deg) drop-shadow(0 8px 10px #17274635); }
+  0%, 40%, 100% { filter:var(--mint-pearl); }
+  52%, 87% { filter:var(--blue-pearl); }
 }
+@media (prefers-reduced-motion:reduce) { .pearl,.pearl-eye::after { transition:none; } }
