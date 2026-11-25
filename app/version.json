@@ -1,8 +1,9 @@
 {
-    "version":  "2.80.1",
+    "version":  "2.81.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Nuevo giro Lavanderia / tintoreria con su pestana ZoCo Lavanderia: ordenes con folio, tablero por estado (recibido, en proceso, listo, entregado), estante, cargos extra, ticket y aviso por WhatsApp",
-                  "Insumos con alerta de stock bajo para lavanderias"
+                  "Lavanderia: QR de seguimiento en el ticket y pagina publica /orden para que el cliente vea el estado",
+                  "Mensaje de WhatsApp editable antes de enviarlo",
+                  "Fotos de evidencia por orden (hasta 4)"
               ]
 }

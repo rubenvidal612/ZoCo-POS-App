@@ -2571,6 +2571,8 @@ export function createLaundryOrder({ customer = '', phone = '', items = [], extr
     note: String(note || '').trim(),
     shelf: String(shelf || '').trim().toUpperCase(),
     status: 'recibido',
+    trackCode: String(Math.floor(1000 + Math.random() * 9000)),
+    photos: [],
     createdAt: new Date().toISOString(),
     readyAt: null,
     deliveredAt: null,
@@ -2602,6 +2604,24 @@ export function updateLaundryOrder(id, patch = {}) {
   Object.assign(orden, patch);
   emit();
   return { ok: true, order: orden };
+}
+
+export function addLaundryPhoto(id, dataUrl) {
+  const orden = laundryStore().orders.find((o) => o.id === id);
+  if (!orden) return { ok: false };
+  if (!Array.isArray(orden.photos)) orden.photos = [];
+  if (orden.photos.length >= 4) return { ok: false, msg: 'Máximo 4 fotos por orden' };
+  if (dataUrl) orden.photos.push({ url: dataUrl, at: new Date().toISOString() });
+  emit();
+  return { ok: true, photos: orden.photos };
+}
+
+export function removeLaundryPhoto(id, index) {
+  const orden = laundryStore().orders.find((o) => o.id === id);
+  if (!orden || !Array.isArray(orden.photos)) return { ok: false };
+  orden.photos.splice(Number(index), 1);
+  emit();
+  return { ok: true };
 }
 
 export function laundryStats() {

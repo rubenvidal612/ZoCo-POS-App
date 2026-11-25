@@ -2020,3 +2020,16 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
   .ld-kpis{grid-template-columns:repeat(2,1fr)}
   .ld-board{grid-template-columns:1fr}
 }
+/* Lavandería: fotos, QR y mensaje editable */
+.ld-block{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.ld-block-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.ld-block-head b{font-size:13px}
+.ld-block-head .hint{font-size:11px;margin:0}
+.ld-photos{display:flex;gap:8px;flex-wrap:wrap}
+.ld-photo{position:relative;width:82px;height:82px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.ld-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ld-photo button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(15,23,42,.75);color:#fff;font-size:11px;cursor:pointer;line-height:1}
+.ld-qr{display:flex;justify-content:center;padding:8px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.ld-qr img{width:150px;height:150px;display:block}
+.ld-link{font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:6px;font-family:ui-monospace,monospace}
+.ld-textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:12.5px;line-height:1.45;resize:vertical}
