@@ -1,7 +1,8 @@
 {
-    "version":  "2.92.0",
-    "date":  "2026-11-24",
+    "version":  "2.92.1",
+    "date":  "2026-11-25",
     "notes":  [
-                  "Nombre del negocio por giro: Ramber Zapatos / Aguas frescas Ramber; se usa en ticket, catalogo online y QR de mesa"
+                  "Corte de caja: el efectivo de las ventas y los gastos ya no se cuenta dos veces, y el corte solo suma el turno abierto",
+                  "Seguridad: nadie puede mover su membresía a otra empresa ni crearse como dueño de una ajena (migración 0007)"
               ]
 }

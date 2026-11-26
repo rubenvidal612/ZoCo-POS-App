@@ -1,6 +1,7 @@
 import { shoeDemoRows, boutiqueDemoRows } from './demo-catalog.js';
 // Estado + persistencia (localStorage) + API del servidor
 import { uid } from './ui.js';
+import { round2, cashBreakdownOf } from './cash.js';
 
 // Modo demo: datos aislados por navegador y sin tocar servidor ni nube.
 const DEMO = (typeof window !== 'undefined') && window.__ZOCO_DEMO__ === true;
@@ -1699,7 +1700,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
   state.sales.unshift(sale);
   // movimiento de caja por la parte en efectivo
   const cashPart = hasSplit ? payments.filter((p) => p.method === 'cash').reduce((a, p) => a + p.amount, 0) : (method === 'cash' ? t.total : 0);
-  if (cashPart > 0) addCash('in', cashPart, 'Venta ' + sale.code);
+  if (cashPart > 0) addCash('in', cashPart, 'Venta ' + sale.code, 'sale');
   emit();
   return sale;
 }
@@ -2003,20 +2004,16 @@ export function closeRegister() {
   addCash('close', 0, 'Cierre de caja');
   emit();
 }
-function addCash(type, amount, note) {
+function addCash(type, amount, note, origin = 'manual') {
   state.cashMovements.push({
-    id: uid('cm'), type, amount: Number(amount) || 0, note,
+    id: uid('cm'), type, amount: Number(amount) || 0, note, origin,
     user: state.user.name, date: new Date().toISOString(), branchId: state.currentBranch,
   });
 }
+/** Resumen del turno. Delega en `cashBreakdown` para no contar el efectivo dos veces. */
 export function registerSummary() {
-  const mv = state.cashMovements.filter((m) => m.branchId === state.currentBranch);
-  const inc = mv.filter((m) => m.type === 'in' || m.type === 'open').reduce((a, m) => a + m.amount, 0);
-  const out = mv.filter((m) => m.type === 'out').reduce((a, m) => a + m.amount, 0);
-  const cashSales = state.sales
-    .filter((s) => s.status === 'done' && s.method === 'cash' && s.branchId === state.currentBranch)
-    .reduce((a, s) => a + s.total, 0);
-  return { opening: state.register.opening, inc, out, cashSales, expected: state.register.opening + cashSales + inc - out };
+  const d = cashBreakdown();
+  return { opening: d.opening, inc: d.cashIn, out: d.cashOut, cashSales: d.cashSales, expected: d.expected };
 }
 
 
@@ -2188,53 +2185,9 @@ export function setCommissionStatus(id, status) {
   return { ok: true, commission: rec };
 }
 /* ================= Corte de caja Z ================= */
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
-
-/** Desglose de caja del periodo (por defecto: todo lo del turno abierto). */
+/** Desglose de caja del periodo (por defecto: el turno abierto). */
 export function cashBreakdown({ branchId = state.currentBranch, from = null, to = null } = {}) {
-  const ok = (d) => (!from || new Date(d) >= new Date(from)) && (!to || new Date(d) <= new Date(to));
-  const b = branchId;
-
-  const sales = (state.sales || []).filter((s) => s.branchId === b && s.status !== 'cancelled' && ok(s.date));
-  const methods = { cash: 0, debit: 0, credit: 0, transfer: 0, credit_sale: 0, other: 0 };
-  let totalSales = 0, countSales = 0;
-
-  sales.forEach((s) => {
-    totalSales += Number(s.total) || 0;
-    countSales++;
-    if (Array.isArray(s.payments) && s.payments.length) {
-      s.payments.forEach((pm) => { methods[pm.method] = round2((methods[pm.method] || 0) + (Number(pm.amount) || 0)); });
-    } else {
-      const m = methods[s.method] != null ? s.method : 'other';
-      methods[m] = round2(methods[m] + (Number(s.total) || 0));
-    }
-  });
-
-  const returns = (state.returns || []).filter((r) => r.branchId === b && ok(r.date));
-  const refunds = { cash: 0, card: 0, total: 0 };
-  returns.forEach((r) => {
-    refunds.total = round2(refunds.total + (Number(r.total) || 0));
-    if (r.method === 'cash' || r.method === 'credit_note') refunds.cash = round2(refunds.cash + (Number(r.total) || 0));
-    else refunds.card = round2(refunds.card + (Number(r.total) || 0));
-  });
-
-  const expenses = (state.expenses || []).filter((e) => (e.branchId || b) === b && e.paid && ok(e.paidAt || e.date));
-  const expenseCash = round2(expenses.reduce((a, e) => a + (Number(e.amount) || 0), 0));
-
-  const moves = (state.cashMovements || []).filter((m) => m.branchId === b && ok(m.date) && m.type !== 'open' && m.type !== 'close');
-  const cashIn = round2(moves.filter((m) => m.type === 'in').reduce((a, m) => a + (Number(m.amount) || 0), 0));
-  const cashOut = round2(moves.filter((m) => m.type === 'out').reduce((a, m) => a + (Number(m.amount) || 0), 0));
-
-  const opening = Number(state.register?.opening) || 0;
-  const expected = round2(opening + methods.cash - refunds.cash - expenseCash + cashIn - cashOut);
-
-  return {
-    branchId: b, from: from || state.register?.openedAt || null, to: to || new Date().toISOString(),
-    opening, countSales, totalSales: round2(totalSales), methods,
-    returns: refunds, expenseCash, cashIn, cashOut,
-    cashSales: methods.cash, cardSales: round2(methods.debit + methods.credit),
-    expected,
-  };
+  return cashBreakdownOf(state, { branchId, from, to });
 }
 
 /** Cierra el turno y guarda el corte Z. */
@@ -2273,7 +2226,7 @@ export function upsertExpense(data) {
 }
 export function payExpense(id) {
   const e = state.expenses.find((x) => x.id === id);
-  if (e) { e.paid = true; addCash('out', e.amount, 'Gasto: ' + e.name); emit(); }
+  if (e) { e.paid = true; e.paidAt = e.paidAt || new Date().toISOString(); addCash('out', e.amount, 'Gasto: ' + e.name, 'expense'); emit(); }
 }
 /* ================= Multiempresa ================= */
 export function switchCompany(id) {

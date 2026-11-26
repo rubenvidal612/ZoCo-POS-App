@@ -56,6 +56,14 @@ Los datos se guardan por empresa en `data/zoco-<empresa>.json`.
 - `data/` y las llaves VAPID **no** se versionan (están en `.gitignore`).
 - La API key de IA se guarda por empresa y se envía al proveedor a través del servidor local.
 
+## Pruebas
+
+```bash
+npm test        # node --test test/*.test.mjs
+```
+
+Cubren el corte de caja (`app/js/cash.js`). Para las políticas de Supabase, sigue `docs/PRUEBA-RLS.md`.
+
 ## Licencia
 
 Uso privado.

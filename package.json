@@ -1,0 +1,11 @@
+{
+  "name": "zoco-pos",
+  "version": "2.92.0",
+  "private": true,
+  "type": "module",
+  "description": "Punto de venta para tiendas: sin build, sin dependencias (ES modules + servidor Node mínimo).",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
