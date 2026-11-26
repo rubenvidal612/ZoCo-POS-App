@@ -1130,11 +1130,13 @@ export function settingsView(ctx) {
         <div class="panel-head"><h2>Negocio</h2></div>
         <div style="padding:16px">
           <div class="field"><label>Nombre comercial</label><input id="c-name" value="${esc(state.company.name)}"></div>
+${((Object.keys(state.branchesByMode || {}).length > 1) || (Object.keys(state.company.nameByMode || {}).length > 0)) ? `
 <div class="field">
   <label>Nombre en este giro <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
   <input id="c-name-mode" value="${esc((state.company.nameByMode || {})[state.company.mode] || "")}" placeholder="${esc(state.company.name)} · ${esc((MODES[state.company.mode]?.label || "este giro"))}">
   <div class="hint">Sirve para diferenciar tus negocios: por ejemplo <b>Ramber Zapatos</b> o <b>Aguas frescas Ramber</b>. Aparece en el ticket y en el catálogo de este giro.</div>
 </div>
+` : ""}
           <div class="field"><label>RFC / Identificación</label><input id="c-rfc" value="${esc(state.company.legalId || '')}" placeholder="Opcional"></div>
           <div class="field">
             <label>WhatsApp del catálogo</label>
