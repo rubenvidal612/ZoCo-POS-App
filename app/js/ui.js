@@ -1,3 +1,4 @@
+import { mascotAsset, playMascotGreeting } from './mascot.js';
 // Utilidades de UI compartidas
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -18,12 +19,13 @@ export function el(html) {
 }
 
 let noticeCount = 0;
-const noticeMascot = (mood = 'happy') => '<span class="zoco-notice-mascot ' + mood + '" aria-hidden="true"><img src="/assets/landing-2/mascota-perla.webp" alt=""></span>';
+const noticeMascot = (mood = 'happy') => '<span class="zoco-notice-mascot ' + mood + '" aria-hidden="true"><img data-zoco-mascot-img src="' + mascotAsset() + '" alt=""></span>';
 export function toast(msg, ms = 2200) {
   const root = $('#toast-root');
   const mood = ['happy','excited','curious'][noticeCount++ % 3];
   const node = el(`<div class="toast zoco-mascot-toast">${noticeMascot(mood)}<span>${esc(msg)}</span></div>`);
   root.appendChild(node);
+  playMascotGreeting(node);
   setTimeout(() => { node.style.opacity = '0'; node.style.transition = 'opacity .2s'; setTimeout(() => node.remove(), 220); }, ms);
 }
 

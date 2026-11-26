@@ -1,5 +1,5 @@
 import { landingGalleryView } from './views-landing-gallery.js';
-import { MASCOT_CHOICES, getMascotChoice, setMascotChoice } from './mascot.js';
+import { MASCOT_CHOICES, getMascotChoice, setMascotChoice, mascotPreviewAsset } from './mascot.js';
 // Vistas: Productos, Ventas, Reportes, Configuración
 import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompressed, captureVideoFrame, pad } from './ui.js';
 import { requestNotifyPermission, subscribePush } from './notify.js';
@@ -1125,7 +1125,7 @@ export function settingsView(ctx) {
             <p>Escoge el personaje que te acompañará en el menú y los avisos. Puedes cambiarlo cuando quieras.</p>
             <div class="mascot-choices" id="mascot-choices" role="radiogroup" aria-label="Mascota de ZoCo">
               ${MASCOT_CHOICES.map(item => `<button type="button" class="mascot-choice" data-choice="${item.id}" role="radio" aria-checked="${getMascotChoice() === item.id ? 'true' : 'false'}">
-                <span class="mascot-choice-icon" data-preview-mascot="${item.id}"><img src="/assets/landing-2/mascota-perla.webp" alt=""></span>
+                <span class="mascot-choice-icon" data-preview-mascot="${item.id}"><img src="${mascotPreviewAsset(item.id)}" loading="lazy" alt=""></span>
                 <strong>${item.label}</strong><small>${item.detail}</small>
               </button>`).join('')}
             </div>
