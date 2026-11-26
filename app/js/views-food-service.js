@@ -198,6 +198,8 @@ export function foodServiceView() {
     const c = state.food.salon;
     if (!c.zone) c.zone = ZONAS_BASE[0];
     if (typeof c.mode3d !== 'boolean') c.mode3d = true;
+    // Migración: la vista plana se ve mejor; se aplica una sola vez.
+    if (c.ver !== 2) { c.mode3d = false; c.ver = 2; }
     if (!Number(c.zoom)) c.zoom = 100;
     c.editing = !!c.editing;
     return c;
@@ -304,13 +306,14 @@ export function foodServiceView() {
         + '<button class="btn ghost sm" id="fd-zone-new">+ Salón nuevo</button>'
         + '</div></details>' : '')
       + '<div class="fd-salon-bar">'
-      + '<div class="fd-salones">' + zonas().map(z => '<button type="button" class="fd-zona' + (z === zonaActual ? ' on' : '') + '" data-zona="' + e(z) + '">' + e(z) + '</button>').join('') + '</div>'
+      + '<div class="fd-salones" data-fd-ver="' + e(state.appVersion || '') + '">' + zonas().map(z => '<button type="button" class="fd-zona' + (z === zonaActual ? ' on' : '') + '" data-zona="' + e(z) + '">' + e(z) + '</button>').join('') + '</div>'
       + '<div class="fd-salon-tools">'
       + '<button type="button" class="btn ghost sm" id="fd-view3d">' + (cfg.mode3d ? '▦ Vista plana' : '⬒ Vista 3D') + '</button>'
       + '<button type="button" class="btn ghost sm" id="fd-zoom-out" aria-label="Alejar">−</button>'
       + '<span class="fd-zoom-val">' + cfg.zoom + '%</span>'
       + '<button type="button" class="btn ghost sm" id="fd-zoom-in" aria-label="Acercar">+</button>'
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reservas-todas">📅 Reservas</button>' : '')
+      + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reacomodar" title="Acomodar las mesas en rejilla">↺ Reacomodar</button>' : '')
       + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Mover mesas') + '</button>' : '')
       + '</div></div>'
       + '<div class="fd-salon-wrap' + (cfg.zoom !== 100 ? ' zoom' : '') + '" style="--zoom:' + (cfg.zoom / 100) + '">'
@@ -342,6 +345,13 @@ export function foodServiceView() {
     // Modo mover
     root.querySelector('#fd-salon-edit')?.addEventListener('click', () => { const c = salonCfg(); c.editing = !c.editing; render(); });
     root.querySelector('#fd-reservas-todas')?.addEventListener('click', () => abrirReservas(null));
+    root.querySelector('#fd-reacomodar')?.addEventListener('click', () => {
+      const zona = salonCfg().zone;
+      activeTables().filter(t => (t.zone || ZONAS_BASE[0]) === zona).forEach((t) => { delete t.x; delete t.y; });
+      save();
+      render();
+      toast('Mesas acomodadas');
+    });
 
     const salon = root.querySelector('#fd-salon');
     if (!salon) return;
