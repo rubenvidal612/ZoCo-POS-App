@@ -2192,7 +2192,7 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .fd-split-res .on b{color:#fff}
 .fd-split-tabs{display:flex;gap:6px;margin-bottom:6px}
 .fd-split-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer}
-.fd-split-tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.fd-split-tabs button.on{background:#0F172A;border-color:#0F172A;color:#fff}
 .fd-split-people{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .fd-split-people input{width:80px;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px}
 .fd-split-people span{font-weight:900;font-size:16px}
