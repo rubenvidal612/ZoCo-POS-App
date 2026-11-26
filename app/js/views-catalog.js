@@ -1203,8 +1203,13 @@ export function settingsView(ctx) {
         <div class="panel-head"><h2>Sucursales</h2></div>
         <div style="padding:16px">
           <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">
-            Una <b>sucursal</b> es una tienda del mismo negocio: comparte catálogo y clientes,
+            Una <b>sucursal</b> es una tienda de <b>este negocio</b>: comparte catálogo y clientes,
             pero cada una lleva <b>su propio inventario</b> y sus ventas.
+            <div class="hint" style="margin-top:6px">
+              <b>${esc(state.company?.name || "Tu negocio")} · ${esc(MODES[state.company?.mode]?.label || "giro actual")}</b>
+              tiene sus propias sucursales. Si agregas otro giro (por ejemplo aguas frescas),
+              ese giro maneja su lista aparte.
+            </div>
           </div>
           <div id="br-list" class="sec-list"></div>
           <div class="row2" style="margin-top:12px">
@@ -1713,8 +1718,9 @@ export function settingsView(ctx) {
             Solo reemplazan a otros ejemplos. <b>Tus productos reales no se tocan.</b>
           </div>
           <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) en total y ${demoCount()} de ejemplo.</div>
-          <div class="hint" style="margin-top:8px"><b>Cada giro tiene sus propias sucursales.</b>
-            Las de este giro se manejan por separado de las de otros giros.</div>
+          <div class="hint" style="margin-top:8px"><b>Cada giro es un negocio aparte.</b>
+            En este giro, ${esc(state.company?.name || "tu negocio")} tendrá sus propias sucursales,
+            su catálogo y sus ventas, por separado de tus otros giros.</div>
           ${state.products.length ? `<div class="hint" style="margin-top:10px">
             ¿Quieres que <b>tus ${state.products.length} productos actuales</b> (por ejemplo zapatos) se quiten para empezar limpio con este giro?
             Se guarda una copia por si te arrepientes.</div>` : ''}

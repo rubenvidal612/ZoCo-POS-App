@@ -1,8 +1,7 @@
 {
-    "version":  "2.91.0",
+    "version":  "2.91.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Sucursales separadas por giro: zapateria, restaurante, lavanderia y cada giro maneja su propia lista de sucursales",
-                  "El historico de ventas conserva el nombre de la sucursal donde se hizo cada venta"
+                  "Textos claros: cada giro es un negocio aparte, con sus propias sucursales, catalogo y ventas"
               ]
 }
