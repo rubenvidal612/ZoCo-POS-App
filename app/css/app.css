@@ -2338,3 +2338,22 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="excited"],
 .sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="happy"]{animation:zoco-celebrate .9s ease both!important}
 @media(prefers-reduced-motion:reduce){.sidebar .uc-avatar .zoco-mascot-cycle{animation:none!important}}
+
+/* Mascotas de animales ZoCo: preservar colores originales, sin filtros turquesa. */
+:root[data-zoco-mascot="jaguar"],:root[data-zoco-mascot="manati"],
+:root[data-zoco-mascot="aguila"],:root[data-zoco-mascot="ajolote"],
+:root[data-zoco-mascot="quetzal"]{--zoco-character-filter:none}
+.sidebar .uc-avatar .zoco-mascot.zoco-animal{
+ display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+ filter:none!important;animation:none!important;transform:none!important;overflow:visible
+}
+.sidebar .uc-avatar .zoco-mascot.zoco-animal img{
+ display:block;width:100%;height:100%;object-fit:contain;transform:none!important;transition:none!important
+}
+.mascot-choice-icon[data-preview-mascot="jaguar"],.mascot-choice-icon[data-preview-mascot="manati"],
+.mascot-choice-icon[data-preview-mascot="aguila"],.mascot-choice-icon[data-preview-mascot="ajolote"],
+.mascot-choice-icon[data-preview-mascot="quetzal"]{background:linear-gradient(145deg,#fff,#f0f5fa);overflow:visible}
+.mascot-choice-icon[data-preview-mascot="jaguar"] img,.mascot-choice-icon[data-preview-mascot="manati"] img,
+.mascot-choice-icon[data-preview-mascot="aguila"] img,.mascot-choice-icon[data-preview-mascot="ajolote"] img,
+.mascot-choice-icon[data-preview-mascot="quetzal"] img{width:95%;height:100%;object-fit:contain;filter:none!important}
+.mascot-choice:focus-visible{outline:3px solid #f97316;outline-offset:2px}
