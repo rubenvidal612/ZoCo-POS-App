@@ -2357,3 +2357,8 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .mascot-choice-icon[data-preview-mascot="aguila"] img,.mascot-choice-icon[data-preview-mascot="ajolote"] img,
 .mascot-choice-icon[data-preview-mascot="quetzal"] img{width:95%;height:100%;object-fit:contain;filter:none!important}
 .mascot-choice:focus-visible{outline:3px solid #f97316;outline-offset:2px}
+
+/* Mantener proporciones correctas en avatar circular y no agregar rebotes CSS al GIF. */
+.sidebar .uc-avatar .zoco-mascot.zoco-animal{aspect-ratio:1 / 1!important;max-width:100%;max-height:100%}
+.sidebar .uc-avatar .zoco-mascot.zoco-animal.zoco-mascot-cycle{animation:none!important}
+@media(prefers-reduced-motion:reduce){.sidebar .uc-avatar .zoco-mascot.zoco-animal{animation:none!important}}
