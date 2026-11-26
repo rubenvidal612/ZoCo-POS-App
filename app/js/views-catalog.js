@@ -1712,6 +1712,11 @@ export function settingsView(ctx) {
             Solo reemplazan a otros ejemplos. <b>Tus productos reales no se tocan.</b>
           </div>
           <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) en total y ${demoCount()} de ejemplo.</div>
+          ${(state.branches || []).some(b => !/^Sucursal/i.test(String(b.name || ""))) ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:12.5px;font-weight:700">
+            <input type="checkbox" id="renombrar-sucursales" checked style="margin-top:2px">
+            <span>Renombrar sucursales a nombres neutros<br><span class="hint" style="font-weight:400">
+              Hoy se llaman: ${(state.branches || []).map(b => esc(b.name)).join(", ")}. Quedarán como Sucursal Principal, Sucursal 2…</span></span>
+          </label>` : ""}
           ${state.products.length ? `<div class="hint" style="margin-top:10px">
             ¿Quieres que <b>tus ${state.products.length} productos actuales</b> (por ejemplo zapatos) se quiten para empezar limpio con este giro?
             Se guarda una copia por si te arrepientes.</div>` : ''}
@@ -1720,6 +1725,20 @@ export function settingsView(ctx) {
                <button class="btn ghost sm" id="demo-blank">Empezar en blanco</button>
                <button class="btn sm" id="demo-load">Cargar ejemplos</button>
                ${state.products.length ? '<button class="btn sm" id="demo-replace" style="background:var(--danger)">Reemplazar TODO</button>' : ''}`,
+      });
+      // Renombrar sucursales si el usuario lo dejó marcado
+      const renombrarSucursales = () => {
+        const chk = m.root.querySelector("#renombrar-sucursales");
+        if (!chk || !chk.checked) return;
+        const lista = state.branches || [];
+        if (!lista.length) return;
+        lista.forEach((b, i) => { b.name = i === 0 ? "Sucursal Principal" : "Sucursal " + (i + 1); });
+        emit();
+        toast("Sucursales renombradas");
+      };
+      m.root.querySelector("[data-close]")?.addEventListener("click", renombrarSucursales);
+      ["#demo-load", "#demo-blank", "#demo-replace"].forEach((sel) => {
+        m.root.querySelector(sel)?.addEventListener("click", renombrarSucursales);
       });
       m.root.classList.add('mode-demo-overlay');
       m.root.querySelector('#demo-load').onclick = async () => {

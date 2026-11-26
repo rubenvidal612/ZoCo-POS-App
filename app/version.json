@@ -1,7 +1,7 @@
 {
-    "version":  "2.90.0",
+    "version":  "2.90.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Auto-acomodo de mesas: calcula filas y columnas y encoge las mesas para que quepan todas (hasta 99 en un salon)"
+                  "Al cambiar de giro puedes renombrar las sucursales a nombres neutros (Sucursal Principal, Sucursal 2) para no arrastrar los nombres del giro anterior"
               ]
 }
