@@ -1,8 +1,7 @@
 {
-    "version":  "2.86.0",
+    "version":  "2.87.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Panel de mesa: asignar mesero, personas, cliente y comentario",
-                  "Las mesas se pueden renombrar (opcion 6 en el menu de la mesa)"
+                  "Mesa: QR propio para pedir desde el celular (/menu), transferir mesa a otro mesero y dividir cuenta por persona o por producto"
               ]
 }

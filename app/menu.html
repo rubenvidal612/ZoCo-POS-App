@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menú · ZoCo</title>
+<meta name="theme-color" content="#F97316">
+<link rel="icon" href="/zoco-icon.svg" type="image/svg+xml">
+<style>
+  :root{--brand:#F97316;--ink:#0F172A;--mut:#64748B;--line:#E7EAF0;--ok:#059669}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#F8FAFC;color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding-bottom:96px}
+  header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+  .brand i{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:900}
+  .mesa{margin-left:auto;background:#FFF3E8;color:#C2410C;font-weight:900;font-size:13px;padding:6px 12px;border-radius:999px}
+  main{max-width:720px;margin:0 auto;padding:14px 14px 20px}
+  h2{font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);margin:18px 4px 8px}
+  .item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+  .item img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#F1F5F9}
+  .item .info{flex:1;min-width:0}
+  .item b{display:block;font-size:14.5px;line-height:1.25}
+  .item small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+  .item .precio{font-weight:900;font-size:14px;white-space:nowrap}
+  .stepper{display:flex;align-items:center;gap:6px;flex:none}
+  .stepper button{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:900;cursor:pointer}
+  .stepper button.add{background:var(--brand);border-color:var(--brand);color:#fff}
+  .stepper span{min-width:18px;text-align:center;font-weight:900;font-size:14px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 0 4px;-webkit-overflow-scrolling:touch}
+  .tabs button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800;color:var(--mut)}
+  .tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:12px;align-items:center;max-width:720px;margin:0 auto}
+  .bar .tot{flex:1}
+  .bar .tot small{display:block;color:var(--mut);font-size:11px;font-weight:800;text-transform:uppercase}
+  .bar .tot b{font-size:19px;letter-spacing:-.4px}
+  .bar button{background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:900;cursor:pointer}
+  .bar button:disabled{opacity:.5}
+  .empty{text-align:center;color:var(--mut);font-size:14px;padding:40px 20px}
+  .aviso{background:#FFF7ED;border:1px solid #FED7AA;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#9A3412;margin:10px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i>Z</i> <span id="negocio">ZoCo</span> <span class="mesa" id="mesaTag">Mesa</span></div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main id="main"><div class="empty">Cargando menú…</div></main>
+<div class="bar">
+  <div class="tot"><small>Tu pedido</small><b id="total">$0.00</b></div>
+  <button id="enviar" disabled>Pedir por WhatsApp</button>
+</div>
+
+<script>
+(function () {
+  var p = new URLSearchParams(location.search);
+  var company = (p.get('c') || '').trim();
+  var mesa = (p.get('m') || '').trim();
+  var estado = { productos: [], wa: '', negocio: 'ZoCo', carrito: {}, seccion: '' };
+
+  document.getElementById('mesaTag').textContent = mesa || 'Mesa';
+  if (mesa) document.title = mesa + ' · Menú';
+
+  var fmt = function (n) {
+    try { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n) || 0); }
+    catch (e) { return '$' + (Number(n) || 0).toFixed(2); }
+  };
+
+  function pintar() {
+    var main = document.getElementById('main');
+    var tabs = document.getElementById('tabs');
+    var secs = [];
+    estado.productos.forEach(function (pr) { if (secs.indexOf(pr.seccion) === -1) secs.push(pr.seccion); });
+    tabs.innerHTML = secs.map(function (s) {
+      return '<button data-s="' + s + '" class="' + (estado.seccion === s ? 'on' : '') + '">' + s + '</button>';
+    }).join('');
+    tabs.querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () { estado.seccion = b.dataset.s; pintar(); };
+    });
+
+    var lista = estado.productos.filter(function (pr) { return !estado.seccion || pr.seccion === estado.seccion; });
+    if (!lista.length) { main.innerHTML = '<div class="empty">Este menú todavía no tiene productos.</div>'; return; }
+
+    main.innerHTML = lista.map(function (pr) {
+      var cant = estado.carrito[pr.id] || 0;
+      return '<div class="item">'
+        + (pr.imagen ? '<img src="' + pr.imagen + '" alt="">' : '<img alt="">')
+        + '<div class="info"><b>' + pr.nombre + '</b>' + (pr.marca ? '<small>' + pr.marca + '</small>' : '') + '</div>'
+        + '<div class="precio">' + fmt(pr.precio) + '</div>'
+        + '<div class="stepper">'
+        + (cant > 0 ? '<button data-menos="' + pr.id + '">−</button><span>' + cant + '</span>' : '')
+        + '<button class="add" data-mas="' + pr.id + '">+</button>'
+        + '</div></div>';
+    }).join('');
+
+    main.querySelectorAll('[data-mas]').forEach(function (b) {
+      b.onclick = function () {
+        var id = b.dataset.mas;
+        estado.carrito[id] = (estado.carrito[id] || 0) + 1;
+        pintar(); recalcular();
+      };
+    });
+    main.querySelectorAll('[data-menos]').forEach(function (b) {
+      b.onclick = function () {
+        var id = b.dataset.menos;
+        estado.carrito[id] = Math.max(0, (estado.carrito[id] || 0) - 1);
+        if (!estado.carrito[id]) delete estado.carrito[id];
+        pintar(); recalcular();
+      };
+    });
+  }
+
+  function recalcular() {
+    var total = 0, items = 0;
+    estado.productos.forEach(function (pr) {
+      var c = estado.carrito[pr.id] || 0;
+      total += c * pr.precio; items += c;
+    });
+    document.getElementById('total').textContent = fmt(total);
+    document.getElementById('enviar').disabled = items === 0;
+  }
+
+  document.getElementById('enviar').onclick = function () {
+    var lineas = [];
+    estado.productos.forEach(function (pr) {
+      var c = estado.carrito[pr.id] || 0;
+      if (c > 0) lineas.push('• ' + c + ' × ' + pr.nombre + ' — ' + fmt(c * pr.precio));
+    });
+    var texto = 'Pedido desde ' + (mesa || 'el menú') + '\n\n' + lineas.join('\n')
+      + '\n\nTotal: ' + document.getElementById('total').textContent;
+    var tel = String(estado.wa || '').replace(/\D/g, '');
+    var url = tel ? 'https://wa.me/' + tel + '?text=' + encodeURIComponent(texto)
+      : 'https://wa.me/?text=' + encodeURIComponent(texto);
+    window.open(url, '_blank');
+  };
+
+  if (!company) {
+    document.getElementById('main').innerHTML = '<div class="empty">Este menú no está disponible.<br>Pide el enlace en el mostrador.</div>';
+    return;
+  }
+
+  fetch('/api/catalog?c=' + encodeURIComponent(company))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.ok) throw new Error((d && d.error) || 'Sin datos');
+      estado.negocio = (d.company && d.company.name) || 'ZoCo';
+      estado.wa = d.whatsapp || '';
+      estado.productos = (d.products || []).map(function (x) {
+        return { id: x.id || x.name, nombre: x.name, precio: Number(x.price) || 0, seccion: x.section || 'Menú', marca: '', imagen: x.image || '' };
+      }).filter(function (x) { return x.nombre; });
+      document.getElementById('negocio').textContent = estado.negocio;
+      estado.seccion = estado.productos.length ? estado.productos[0].seccion : '';
+      pintar(); recalcular();
+    })
+    .catch(function (e) {
+      document.getElementById('main').innerHTML = '<div class="empty">No pudimos cargar el menú.<br><small>' + (e.message || '') + '</small></div>';
+    });
+})();
+</script>
+</body>
+</html>

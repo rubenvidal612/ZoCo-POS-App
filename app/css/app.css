@@ -2173,3 +2173,32 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .fd-back{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .fd-back h3{margin:0;font-size:20px}
 .fd-two label select,.fd-box label select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff}
+/* Mesa: QR, transferir y dividir cuenta */
+.fd-qr-box{display:flex;justify-content:center;padding:10px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.fd-qr-box img{display:block;width:230px;height:230px}
+.fd-qr-link{font-size:10.5px;color:var(--muted);word-break:break-all;text-align:center;margin-top:8px;font-family:ui-monospace,monospace}
+.fd-transfer{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.fd-transfer-op{display:grid;gap:2px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer}
+.fd-transfer-op b{font-size:13.5px}
+.fd-transfer-op small{font-size:11px;color:var(--muted);text-transform:capitalize}
+.fd-transfer-op.on{border-color:var(--brand);background:#FFF7ED}
+.fd-transfer-op:hover{border-color:#CBD5E1}
+.fd-split-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.fd-split-res > div{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.fd-split-res small{display:block;font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fd-split-res b{display:block;font-size:18px;font-weight:900;letter-spacing:-.4px;margin-top:2px}
+.fd-split-res .on{background:#0F172A;border-color:#0F172A}
+.fd-split-res .on small{color:#94A3B8}
+.fd-split-res .on b{color:#fff}
+.fd-split-tabs{display:flex;gap:6px;margin-bottom:6px}
+.fd-split-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer}
+.fd-split-tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.fd-split-people{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fd-split-people input{width:80px;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px}
+.fd-split-people span{font-weight:900;font-size:16px}
+.fd-split-item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px;cursor:pointer}
+.fd-split-item input{width:18px;height:18px}
+.fd-split-item span{flex:1}
+.fd-split-item small{color:var(--muted)}
+.fd-split-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.fd-split-foot b{font-size:18px;font-weight:900}
