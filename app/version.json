@@ -1,7 +1,7 @@
 {
-    "version":  "2.90.1",
+    "version":  "2.90.2",
     "date":  "2026-11-24",
     "notes":  [
-                  "Al cambiar de giro puedes renombrar las sucursales a nombres neutros (Sucursal Principal, Sucursal 2) para no arrastrar los nombres del giro anterior"
+                  "Corregido: el renombrado de sucursales al cambiar de giro ahora si se guarda"
               ]
 }

@@ -1733,7 +1733,8 @@ export function settingsView(ctx) {
         const lista = state.branches || [];
         if (!lista.length) return;
         lista.forEach((b, i) => { b.name = i === 0 ? "Sucursal Principal" : "Sucursal " + (i + 1); });
-        emit();
+        ctx.persist();
+        ctx.refreshShell?.();
         toast("Sucursales renombradas");
       };
       m.root.querySelector("[data-close]")?.addEventListener("click", renombrarSucursales);
