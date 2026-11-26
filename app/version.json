@@ -1,8 +1,9 @@
 {
-    "version":  "2.92.1",
-    "date":  "2026-11-25",
-    "notes":  [
-                  "Corte de caja: el efectivo de las ventas y los gastos ya no se cuenta dos veces, y el corte solo suma el turno abierto",
-                  "Seguridad: nadie puede mover su membresía a otra empresa ni crearse como dueño de una ajena (migración 0007)"
-              ]
+    "version": "2.92.2",
+    "date": "2026-11-25",
+    "notes": [
+        "Corte de caja: el efectivo de ventas y gastos ya no se cuenta dos veces, y el corte solo suma el turno abierto",
+        "Seguridad: las membresías ya no permiten entrar a la empresa de otro (migración 0007)",
+        "Proxy de IA: solo habla con los proveedores permitidos y con límite de peticiones; el servidor local ya no desactiva TLS por su cuenta"
+    ]
 }

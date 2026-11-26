@@ -141,8 +141,8 @@ Esfuerzo: **S** ≤ 3 h · **M** ≤ 1 día · **L** > 1 día. Cada punto incluy
 | P0.1 ✅ | Arreglar el corte Z: una sola fuente de verdad para el efectivo, ventana del turno obligatoria, gastos/ventas marcados con `refType` | `store.js:2194-2250` | Fondo $500 + venta en efectivo de $690 + gasto de $100 → esperado **$1,090** (hoy da **$1,680**) | S |
 | P0.2 ✅ | Cerrar los 3 agujeros de RLS: `members_update` con campos fijos, `members_insert` real en `setup-all.sql`, `bootstrap_company` sin `company_id` libre | migración 4, `setup-all.sql`, `init.sql` | Un usuario B no puede leer ni escribir `company_state` de A (probado con dos cuentas) | S |
 | P0.3 | Autenticar `/api/state`, `/api/print*`, `/api/secret` + bind `127.0.0.1` | `tools/serve.mjs` | Sin token → 401; desde otra máquina de la LAN → conexión rechazada | M |
-| P0.4 | Quitar `NODE_TLS_REJECT_UNAUTHORIZED='0'` y proteger `decodeURIComponent` | `serve.mjs:5`, `:243` | `GET /%zz` → 400 (no muere); TLS vuelve a verificarse | S |
-| P0.5 | Allowlist de `baseUrl` en el proxy de IA y rate limit | `api/ai.mjs`, `serve.mjs` | `provider:"custom", baseUrl:"https://attacker"` → 400, la llave no sale | S |
+| P0.4 ✅ | Quitar `NODE_TLS_REJECT_UNAUTHORIZED='0'` y proteger `decodeURIComponent` | `serve.mjs:5`, `:243` | `GET /%zz` → 400 (no muere); TLS vuelve a verificarse | S |
+| P0.5 ✅ | Allowlist de `baseUrl` en el proxy de IA y rate limit | `api/ai.mjs`, `serve.mjs` | `provider:"custom", baseUrl:"https://attacker"` → 400, la llave no sale | S |
 
 ### P1 — corrección del dinero y del inventario (2-3 días)
 
@@ -228,3 +228,16 @@ Esfuerzo: **S** ≤ 3 h · **M** ≤ 1 día · **L** > 1 día. Cada punto incluy
 - **P0.3** autenticar `/api/state`, `/api/print*`, `/api/secret` y bind a `127.0.0.1`.
 - **P0.4** quitar `NODE_TLS_REJECT_UNAUTHORIZED='0'` y proteger `decodeURIComponent`.
 - **P0.5** allowlist de `baseUrl` en el proxy de IA + rate limit.
+
+### P0.4 · TLS y caída del servidor ✅
+
+- `tools/serve.mjs` ya **no** desactiva la verificación TLS al arrancar. Si una red con interceptación lo necesita, hay que pedirlo explícitamente con `ZOCO_INSECURE_TLS=1` (avisa por consola); la vía recomendada es `NODE_EXTRA_CA_CERTS=/ruta/ca.pem`.
+- `decodeURIComponent` va dentro de `try/catch`: `GET /%zz` responde **400** en vez de matar el proceso (verificado: antes el servidor moría y `/api/health` daba 000).
+
+### P0.5 · Proxy de IA ✅
+
+- Nuevo **`api/ai-hosts.mjs`**: el destino lo decide el proveedor. `gemini/openai/deepseek/anthropic` usan su host fijo e **ignoran `baseUrl`**; `custom` solo acepta `https`, sin credenciales ni puertos raros, y únicamente contra hosts de `ZOCO_AI_ALLOWED_HOSTS`.
+- Con la **llave guardada** en el servidor solo se permiten los cuatro proveedores conocidos, así que nadie puede apuntar el proxy a su servidor y quedarse con la llave.
+- **Rate limit** en memoria: 30 peticiones/minuto por IP a `/api/ai` → 429.
+- Verificado en vivo: `baseUrl` a un host atacante devuelve *"Destino no autorizado"*; con `provider:"openai"` y un `baseUrl` falso la petición sale a `api.openai.com` (error real de OpenAI, no del atacante); a la petición 31 responde 429.
+- **Pruebas:** `test/ai-hosts.test.mjs`, 8 casos. Total del proyecto: `npm test` → 18/18.

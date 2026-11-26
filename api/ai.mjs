@@ -1,5 +1,6 @@
 // Proxy de IA para Vercel (serverless) — evita CORS y problemas de TLS
 export const config = { runtime: 'edge' };
+import { resolveBaseUrl } from './ai-hosts.mjs';
 
 function upper(s) {
   if (!s || typeof s !== 'object') return s;
@@ -74,10 +75,15 @@ export default async function handler(req) {
 
   const { provider, model, baseUrl, messages = [], system = '', tools = [], images = [] } = body;
   let { key } = body;
+  let serverKey = false;
 
   // Si el cliente no manda llave, se usa la guardada cifrada de su empresa
   if (!key && body.company) {
     try { key = await storedKey(body.company, req.headers.get('authorization') || ''); } catch {}
+    serverKey = !!key;
+  }
+  if (serverKey && !['gemini', 'openai', 'deepseek', 'anthropic'].includes(String(provider || '').toLowerCase())) {
+    return json({ error: 'Proveedor no permitido para la llave guardada' }, 400);
   }
   if (!key) return json({ error: 'Falta API key (configúrala en Configuración → Agente IA)' });
 
@@ -133,9 +139,9 @@ export default async function handler(req) {
       });
     }
 
-    const base = provider === 'openai' ? 'https://api.openai.com/v1'
-      : provider === 'deepseek' ? 'https://api.deepseek.com'
-      : String(baseUrl || '').replace(/\/$/, '');
+    const dest = resolveBaseUrl({ provider, baseUrl });
+    if (!dest.ok) return json({ error: dest.error }, 400);
+    const base = dest.base;
     const r = await fetch(base + '/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },

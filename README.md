@@ -56,6 +56,15 @@ Los datos se guardan por empresa en `data/zoco-<empresa>.json`.
 - `data/` y las llaves VAPID **no** se versionan (están en `.gitignore`).
 - La API key de IA se guarda por empresa y se envía al proveedor a través del servidor local.
 
+## Variables de entorno del servidor local
+
+| Variable | Para qué |
+|---|---|
+| `PORT` | Puerto (por defecto 4321) |
+| `HOST` | Interfaz donde escucha (por defecto `0.0.0.0`, para usarlo desde el celular) |
+| `ZOCO_AI_ALLOWED_HOSTS` | Hosts extra permitidos para `provider: "custom"`, separados por coma |
+| `ZOCO_INSECURE_TLS=1` | Desactiva la verificación TLS (solo si tu red intercepta HTTPS; mejor `NODE_EXTRA_CA_CERTS`) |
+
 ## Pruebas
 
 ```bash

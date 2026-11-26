@@ -1,8 +1,13 @@
 // Servidor ZoCo POS: estático + API mínima con persistencia en disco (sin dependencias)
-// Nota: algunas redes/antivirus interceptan TLS con un certificado propio.
-// Para que el proxy de IA pueda salir a internet en esas redes, se relaja la verificación
-// SOLO en este proceso local. Si tu red no intercepta TLS, puedes quitar la línea siguiente.
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// TLS: por defecto se verifica el certificado. Si tu red o antivirus intercepta TLS
+// con un certificado propio (el proxy de IA falla con "self-signed certificate"),
+// arranca con ZOCO_INSECURE_TLS=1 consciente de que ese salto desactiva la verificación
+// para TODO el proceso. Mejor opción: NODE_EXTRA_CA_CERTS=/ruta/al/ca.pem
+if (process.env.ZOCO_INSECURE_TLS === '1') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  console.warn('[ZoCo] Aviso: verificación TLS desactivada (ZOCO_INSECURE_TLS=1).');
+}
+import { resolveBaseUrl } from '../api/ai-hosts.mjs';
 
 import http from 'node:http';
 import { loadVapid, loadSubs, saveSubs, sendPush } from './push.mjs';
@@ -189,9 +194,10 @@ async function callProvider({ provider, key, model, baseUrl, messages, system, t
       };
     }
 
-    const base = provider === 'openai' ? 'https://api.openai.com/v1'
-      : provider === 'deepseek' ? 'https://api.deepseek.com'
-      : String(baseUrl || '').replace(/\/$/, '');
+    // El destino lo decide el proveedor, no el cliente (ver api/ai-hosts.mjs).
+    const dest = resolveBaseUrl({ provider, baseUrl });
+    if (!dest.ok) return { error: dest.error };
+    const base = dest.base;
     const r = await fetch(base + '/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
@@ -239,8 +245,27 @@ function readBody(req) {
   });
 }
 
+/* ---------- Límite de peticiones en memoria (por clave) ---------- */
+const buckets = new Map();
+function rateLimit(key, max, windowMs) {
+  const now = Date.now();
+  const b = buckets.get(key);
+  if (!b || now - b.start > windowMs) {
+    buckets.set(key, { start: now, count: 1 });
+    return { ok: true, remaining: max - 1 };
+  }
+  b.count++;
+  if (b.count > max) return { ok: false, retry: Math.ceil((b.start + windowMs - now) / 1000) };
+  return { ok: true, remaining: max - b.count };
+}
+
 const server = http.createServer(async (req, res) => {
-  const url = decodeURIComponent((req.url || '/').split('?')[0]);
+  let url;
+  try {
+    url = decodeURIComponent((req.url || '/').split('?')[0]);
+  } catch {
+    return json(res, 400, { ok: false, error: 'URL inválida' });
+  }
 
   /* ---------- API ---------- */
   if (url.startsWith('/api/')) {
@@ -336,12 +361,24 @@ const server = http.createServer(async (req, res) => {
         return json(res, 200, { ok: true, companies: list });
       }
       if (url === '/api/ai' && req.method === 'POST') {
+        const ip = (req.socket && req.socket.remoteAddress) || 'local';
+        const rl = rateLimit('ai:' + ip, 30, 60_000);
+        if (!rl.ok) return json(res, 429, { error: 'Demasiadas peticiones a la IA. Espera ' + rl.retry + ' s.' });
+
         const body = await readBody(req);
         // si el cliente no manda llave, se usa la guardada cifrada para esa empresa
         if (!body?.key) {
           const c = String(body?.company || company || 'default');
           const saved = getAiKey(c);
-          if (saved) body.key = saved;
+          if (saved) { body.key = saved; body.serverKey = true; }
+        }
+        // Con la llave guardada en el servidor no se aceptan destinos personalizados:
+        // así nadie puede apuntar el proxy a su servidor y quedarse con la llave.
+        if (body?.serverKey) {
+          const p = String(body?.provider || '').toLowerCase();
+          if (!['gemini', 'openai', 'deepseek', 'anthropic'].includes(p)) {
+            return json(res, 400, { error: 'Proveedor no permitido para la llave guardada' });
+          }
         }
         const out = await callProvider(body || {});
         return json(res, 200, out);
