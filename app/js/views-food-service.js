@@ -380,7 +380,7 @@ export function foodServiceView() {
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reservas-todas">📅 Reservas</button>' : '')
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reacomodar" title="Acomodar las mesas en rejilla">↺ Reacomodar</button>' : '')
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-restore-table" ' + (removedTables().some(t => t.branchId === state.currentBranch) ? '' : 'disabled') + '>↶ Recuperar mesa</button>' : '')
-      + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Mover mesas') + '</button>' : '')
+      + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Editar mesas / mover') + '</button>' : '')
       + '</div></div>'
       + '<div class="fd-salon-wrap' + (cfg.zoom !== 100 ? ' zoom' : '') + '" style="--zoom:' + (cfg.zoom / 100) + '">'
       + '<div class="fd-salon' + (cfg.mode3d ? ' is3d' : '') + (cfg.editing ? ' editing' : '') + '" id="fd-salon" style="--mesa:' + rejillaPara(lista.length).tam + 'px">'
