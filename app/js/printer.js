@@ -346,7 +346,7 @@ export function cutText(cut) {
   const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
 
   center('CORTE DE CAJA ' + (cut.folio || ''));
-  center(state.company.name || '');
+  center((state.company?.nameByMode || {})[state.company?.mode] || state.company?.name || '');
   center(cut.branchName || '');
   L.push('');
   pair('Fecha', new Date(cut.date).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }));

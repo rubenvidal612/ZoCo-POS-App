@@ -82,7 +82,7 @@ export default async function handler(req) {
     return json({
       ok: true,
       company: {
-        name: String(data.company?.name || 'ZoCo').slice(0, 80),
+        name: String((data.company?.nameByMode || {})[data.company?.mode] || data.company?.name || 'ZoCo').slice(0, 80),
         theme: String(data.company?.theme || 'classic'),
         mode: String(data.company?.mode || ''),
       },

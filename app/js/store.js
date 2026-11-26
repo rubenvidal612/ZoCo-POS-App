@@ -1088,6 +1088,12 @@ function migrate(s) {
   return s;
 }
 
+/** Nombre del negocio en el giro actual (cae al nombre comercial). */
+export function businessName() {
+  const c = state.company || {};
+  const porGiro = (c.nameByMode || {})[c.mode];
+  return String(porGiro || c.name || "ZoCo");
+}
 /* ================= Sucursales por giro =================
  * Cada giro (zapateria, restaurante, lavanderia...) maneja sus propias
  * sucursales. Las ventas guardan branchId + branchName, asi que el

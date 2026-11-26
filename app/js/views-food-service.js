@@ -576,7 +576,7 @@ export function foodServiceView() {
       if (!w) { toast('Permite las ventanas emergentes'); return; }
       w.document.write('<!doctype html><meta charset="utf-8"><title>QR ' + esc(table.name) + '</title>'
         + '<body style="font-family:system-ui;text-align:center;padding:24px">'
-        + '<h2 style="margin:0 0 4px">' + esc(state.company?.name || 'ZoCo') + '</h2>'
+        + '<h2 style="margin:0 0 4px">' + esc((state.company?.nameByMode || {})[state.company?.mode] || state.company?.name || 'ZoCo') + '</h2>'
         + '<p style="margin:0 0 16px;font-size:20px;font-weight:800">' + esc(table.name) + '</p>'
         + (png ? '<img src="' + png + '" style="width:260px;height:260px">' : '')
         + '<p style="font-size:13px;margin-top:14px">Escanea para ver el menú y pedir desde tu mesa</p>'
