@@ -1,9 +1,9 @@
 {
-  "version": "2.78.1",
+  "version": "2.78.2",
   "date": "2026-11-26",
   "notes": [
-    "Mascota animada en la esquina y al navegar",
-    "Mascota en avisos de actualización",
-    "Gestos suaves de celebración, curiosidad y bienvenida"
+    "Mascota turquesa uniforme en menú y avisos",
+    "Rostro sin boca superpuesta; ojos y sonrisa se mueven juntos",
+    "Avisos de actualización con mejor alineación"
   ]
 }
