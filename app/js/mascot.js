@@ -1,3 +1,26 @@
+
+/** Apariencia personal del personaje ZoCo: se conserva en este dispositivo. */
+export const MASCOT_CHOICES = [
+  {id:'perla',label:'Perla turquesa',detail:'La original'},
+  {id:'sol',label:'Sol naranja',detail:'Energética'},
+  {id:'nube',label:'Nube blanca',detail:'Minimalista'},
+  {id:'luna',label:'Luna violeta',detail:'Creativa'},
+  {id:'oceano',label:'Océano azul',detail:'Tranquila'},
+];
+const KEY = 'zoco.mascot.choice';
+export function getMascotChoice() {
+  try {
+    const choice = localStorage.getItem(KEY) || 'perla';
+    return MASCOT_CHOICES.some(item => item.id === choice) ? choice : 'perla';
+  } catch {return 'perla';}
+}
+export function setMascotChoice(choice) {
+  if (!MASCOT_CHOICES.some(item => item.id === choice)) return false;
+  try {localStorage.setItem(KEY,choice);} catch {}
+  document.documentElement.dataset.zocoMascot = choice;
+  return true;
+}
+if (typeof document !== 'undefined') document.documentElement.dataset.zocoMascot = getMascotChoice();
 export function mascotMarkup(variant = '', thinking = false) {
   return `<span class="zoco-mascot ${variant}" data-mascot-state="${thinking ? 'thinking' : 'ready'}" aria-hidden="true">
     <img src="/assets/landing-2/mascota-perla.webp" width="340" height="234" alt="">
