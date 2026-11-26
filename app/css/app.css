@@ -2270,3 +2270,36 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 #upd-card .fc-ico.fc-mascot-update{width:78px;height:68px;flex:0 0 78px}
 @media(max-width:520px){#upd-card .fc-ico.fc-mascot-update{width:64px;height:60px;flex:0 0 64px}}
 @media(prefers-reduced-motion:reduce){.sidebar .uc-avatar .zoco-mascot,.sidebar .uc-avatar .zoco-mascot.zoco-mascot-react,.fc-mascot-update{animation:none!important}.sidebar .uc-avatar .zoco-mascot img{transform:none!important;transition:none!important}}
+
+/* Refinamiento de la mascota oficial: turquesa constante, una sola boca y rostro alineado. */
+.zoco-mascot{
+  --mascot-turquoise: sepia(1) saturate(3.2) hue-rotate(143deg);
+  filter:var(--mascot-turquoise)!important;
+}
+.zoco-mascot-cycle{animation:none!important}
+.zoco-mascot-smile{display:none!important}
+.sidebar .uc-avatar .zoco-mascot{
+  display:block;
+  width:100%;
+  height:auto;
+  overflow:visible;
+}
+.sidebar .uc-avatar .zoco-mascot img{
+  width:100%;
+  height:auto;
+  /* Ojos y boca están en la misma imagen: se desplazan juntos, no se duplican. */
+  transform:translate(var(--look-x,0px),var(--look-y,0px));
+}
+#upd-card .fc-mascot-update img,.float-card .fc-mascot-update img{
+  filter:sepia(1) saturate(3.2) hue-rotate(143deg);
+}
+#upd-card .fc-ico.fc-mascot-update{
+  display:flex;justify-content:center;align-items:center;
+  background:none!important;flex-shrink:0;overflow:visible;
+}
+#upd-card .fc-top{align-items:center;min-width:0}
+#upd-card .fc-txt{min-width:0;overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){
+  .zoco-mascot-cycle{animation:none!important}
+  .sidebar .uc-avatar .zoco-mascot img{transform:none!important}
+}
