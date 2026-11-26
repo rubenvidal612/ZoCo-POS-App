@@ -2330,3 +2330,11 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .mascot-choice-icon[data-preview-mascot="nube"] img{filter:grayscale(1) brightness(1.23) contrast(.85)}
 .mascot-choice-icon[data-preview-mascot="luna"] img{filter:sepia(1) saturate(3.2) hue-rotate(230deg)}
 .mascot-choice-icon[data-preview-mascot="oceano"] img{filter:sepia(1) saturate(3.2) hue-rotate(171deg)}
+
+/* El selector no debe desactivar las animaciones que el avatar ya tenía. */
+.sidebar .uc-avatar .zoco-mascot-cycle{animation:zoco-float 4.8s ease-in-out infinite!important}
+.sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="hello"]{animation:zoco-wave 1.1s ease both!important}
+.sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="curious"]{animation:zoco-tilt 1.1s ease both!important}
+.sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="excited"],
+.sidebar .uc-avatar .zoco-mascot-cycle.zoco-mascot-react[data-mood="happy"]{animation:zoco-celebrate .9s ease both!important}
+@media(prefers-reduced-motion:reduce){.sidebar .uc-avatar .zoco-mascot-cycle{animation:none!important}}
