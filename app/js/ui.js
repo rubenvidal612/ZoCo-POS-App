@@ -17,9 +17,12 @@ export function el(html) {
   return t.content.firstElementChild;
 }
 
+let noticeCount = 0;
+const noticeMascot = (mood = 'happy') => '<span class="zoco-notice-mascot ' + mood + '" aria-hidden="true"><img src="/assets/landing-2/mascota-perla.webp" alt=""></span>';
 export function toast(msg, ms = 2200) {
   const root = $('#toast-root');
-  const node = el(`<div class="toast">${esc(msg)}</div>`);
+  const mood = ['happy','excited','curious'][noticeCount++ % 3];
+  const node = el(`<div class="toast zoco-mascot-toast">${noticeMascot(mood)}<span>${esc(msg)}</span></div>`);
   root.appendChild(node);
   setTimeout(() => { node.style.opacity = '0'; node.style.transition = 'opacity .2s'; setTimeout(() => node.remove(), 220); }, ms);
 }
@@ -53,7 +56,7 @@ export function confirmDialog({ title, message, okText = 'Confirmar', danger = f
     const m = modal({
       title,
       body: `
-        <p style="margin:0 0 14px;color:var(--text-2);line-height:1.5">${esc(message)}</p>
+        <div class="zoco-notice-message">${noticeMascot(danger ? 'concerned' : 'happy')}<p style="margin:0 0 14px;color:var(--text-2);line-height:1.5">${esc(message)}</p></div>
         ${requireReason ? `<div class="field"><label>Motivo</label>
           <select id="cf-reason">
             <option value="Error de captura">Error de captura</option>
