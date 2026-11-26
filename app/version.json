@@ -1,7 +1,7 @@
 {
-    "version":  "2.94.2",
+    "version":  "2.94.3",
     "date":  "2026-11-26",
     "notes":  [
-                  "Cobrar ya no falla si la sesion no tiene usuario cargado (usa el nombre del negocio)"
+                  "Caja y ventas ya no fallan si la sesion no tiene usuario: usan el nombre del negocio"
               ]
 }

@@ -2060,10 +2060,15 @@ export function closeRegister() {
   addCash('close', 0, 'Cierre de caja');
   emit();
 }
+/** Nombre de quien opera, con respaldo si la sesión no está cargada. */
+function nombreOperador() {
+  return state.user?.name || state.company?.name || 'Caja';
+}
+
 function addCash(type, amount, note, origin = 'manual') {
   state.cashMovements.push({
     id: uid('cm'), type, amount: Number(amount) || 0, note, origin,
-    user: state.user.name, date: new Date().toISOString(), branchId: state.currentBranch,
+    user: state.user?.name || state.company?.name || 'Caja', date: new Date().toISOString(), branchId: state.currentBranch,
   });
 }
 /** Resumen del turno. Delega en `cashBreakdown` para no contar el efectivo dos veces. */
