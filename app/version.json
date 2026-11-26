@@ -1,7 +1,7 @@
 {
-    "version":  "2.94.1",
+    "version":  "2.94.2",
     "date":  "2026-11-26",
     "notes":  [
-                  "Corregido: el carrito volvia a exportarse mal y la app quedaba en blanco (se restauro el export de cartTotals)"
+                  "Cobrar ya no falla si la sesion no tiene usuario cargado (usa el nombre del negocio)"
               ]
 }

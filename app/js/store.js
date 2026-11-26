@@ -1701,7 +1701,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
   const sale = {
     id: uid('s'), code: takeFolio(esFiscal ? 'fiscal' : 'interno'), date: new Date().toISOString(),
     branchId: state.currentBranch, branchName: branch().name,
-    user: state.user.name, customer: customerName || '-', customerId: customerId || null,
+    user: state.user?.name || state.company?.name || 'Caja', customer: customerName || '-', customerId: customerId || null,
     note: note || '',
     items: cart.lines.map((l) => ({ ...l })),
     subtotal: t.subtotal, discount: t.discount, total: t.total,
@@ -1716,7 +1716,7 @@ export function commitSale({ cart, method, received, customerName, note, custome
   };
   sale.foodStockChanges = foodChanges;
   sale.foodStockWarnings = foodPlan.warnings || [];
-  sale.userId = state.user.id;
+  sale.userId = state.user?.id || null;
   sale.commission = commissionOf(sale);
   sale.items.forEach((l) => {
     const p = productById(l.productId);
