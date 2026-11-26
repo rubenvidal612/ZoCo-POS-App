@@ -1,4 +1,4 @@
-import { mascotMarkup } from './mascot.js';
+import { mascotMarkup, setupMascotMotion, reactMascot } from './mascot.js';
 // Shell + router + login de ZoCo POS
 import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
@@ -408,6 +408,7 @@ function paintShell() {
     </div>`;
 
   mountInstallButtons();
+  setupMascotMotion();
   app.querySelectorAll('[data-r]').forEach((b) => b.onclick = () => {
     if (b.dataset.r === 'salir') {
       if (confirm('¿Cerrar sesión?')) { logout(); paintLogin(); }
@@ -423,6 +424,7 @@ function paintShell() {
     if (b.dataset.r === 'mifin') { window.open('/finanzas.html', '_blank'); return; }
     if (b.dataset.r === 'chat') { window.open('/chat.html', '_blank'); return; }
     shellEl.classList.remove('mob-open');
+    reactMascot('curious');
     location.hash = '#/' + b.dataset.r;
   });
   $('#brnch')?.addEventListener('click', switchBranch);
