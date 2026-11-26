@@ -2303,3 +2303,30 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
   .zoco-mascot-cycle{animation:none!important}
   .sidebar .uc-avatar .zoco-mascot img{transform:none!important}
 }
+
+/* Opciones de la mascota ZoCo — comparten el mismo personaje original en cinco apariencias. */
+.mascot-preferences{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.mascot-preferences h3{font-size:16px;font-weight:800;margin:0 0 4px}
+.mascot-preferences p{font-size:12.5px;color:var(--muted);margin:0 0 13px;line-height:1.5}
+.mascot-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:0 0 10px}
+.mascot-choice{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 8px;border-radius:16px;border:2px solid var(--line);background:var(--surface,#fff);color:var(--text);cursor:pointer;min-height:148px}
+.mascot-choice:hover{border-color:#f97316}
+.mascot-choice.selected{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+.mascot-choice-icon{display:grid;place-items:center;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 40% 20%,#edf9ff,#dfeafa);overflow:hidden}
+.mascot-choice-icon img{display:block;width:100%;height:auto;object-fit:contain}
+.mascot-choice strong{font-size:12px;text-align:center}
+.mascot-choice small{font-size:11px;color:var(--muted);text-align:center}
+/* Imagen original coloreada para cada apariencia; no hay elementos faciales duplicados. */
+:root[data-zoco-mascot="perla"]{--zoco-character-filter:sepia(1) saturate(3.2) hue-rotate(143deg)}
+:root[data-zoco-mascot="sol"]{--zoco-character-filter:sepia(1) saturate(4.2) hue-rotate(330deg)}
+:root[data-zoco-mascot="nube"]{--zoco-character-filter:grayscale(1) brightness(1.23) contrast(.85)}
+:root[data-zoco-mascot="luna"]{--zoco-character-filter:sepia(1) saturate(3.2) hue-rotate(230deg)}
+:root[data-zoco-mascot="oceano"]{--zoco-character-filter:sepia(1) saturate(3.2) hue-rotate(171deg)}
+.zoco-mascot{filter:var(--zoco-character-filter,sepia(1) saturate(3.2) hue-rotate(143deg))!important}
+#upd-card .fc-mascot-update img,.float-card .fc-mascot-update img,
+.zoco-notice-mascot img{filter:var(--zoco-character-filter,sepia(1) saturate(3.2) hue-rotate(143deg))!important}
+.mascot-choice-icon[data-preview-mascot="perla"] img{filter:sepia(1) saturate(3.2) hue-rotate(143deg)}
+.mascot-choice-icon[data-preview-mascot="sol"] img{filter:sepia(1) saturate(4.2) hue-rotate(330deg)}
+.mascot-choice-icon[data-preview-mascot="nube"] img{filter:grayscale(1) brightness(1.23) contrast(.85)}
+.mascot-choice-icon[data-preview-mascot="luna"] img{filter:sepia(1) saturate(3.2) hue-rotate(230deg)}
+.mascot-choice-icon[data-preview-mascot="oceano"] img{filter:sepia(1) saturate(3.2) hue-rotate(171deg)}
