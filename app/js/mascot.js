@@ -28,7 +28,7 @@ export function setMascotChoice(choice) {
 }
 if (typeof document !== 'undefined') document.documentElement.dataset.zocoMascot = getMascotChoice();
 export function mascotMarkup(variant = '', thinking = false) {
-  return `<span class="zoco-mascot ${variant}" data-mascot-state="${thinking ? 'thinking' : 'ready'}" aria-hidden="true">
+  return `<span class="zoco-mascot ${variant} ${mascotIsAnimal() ? 'zoco-animal' : ''}" data-mascot-state="${thinking ? 'thinking' : 'ready'}" aria-hidden="true">
     <img data-zoco-mascot-img src="${mascotAsset()}" alt="">
   </span>`;
 }
