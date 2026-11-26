@@ -1,9 +1,9 @@
 {
-  "version": "2.78.2",
+  "version": "2.78.3",
   "date": "2026-11-26",
   "notes": [
-    "Mascota turquesa uniforme en menú y avisos",
-    "Rostro sin boca superpuesta; ojos y sonrisa se mueven juntos",
-    "Avisos de actualización con mejor alineación"
+    "En Ajustes → Apariencia puedes elegir entre cinco estilos de mascota",
+    "La mascota elegida también aparece en los avisos",
+    "La personalización es individual por dispositivo"
   ]
 }
