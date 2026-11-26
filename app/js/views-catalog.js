@@ -1130,7 +1130,7 @@ export function settingsView(ctx) {
         <div class="panel-head"><h2>Negocio</h2></div>
         <div style="padding:16px">
           <div class="field"><label>Nombre comercial</label><input id="c-name" value="${esc(state.company.name)}"></div>
-${((Object.keys(state.branchesByMode || {}).length > 1) || (Object.keys(state.company.nameByMode || {}).length > 0)) ? `
+${(Object.keys(state.branchesByMode || {}).length > 1) ? `
 <div class="field">
   <label>Nombre en este giro <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
   <input id="c-name-mode" value="${esc((state.company.nameByMode || {})[state.company.mode] || "")}" placeholder="${esc(state.company.name)} · ${esc((MODES[state.company.mode]?.label || "este giro"))}">
