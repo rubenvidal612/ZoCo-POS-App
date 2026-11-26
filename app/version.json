@@ -1,8 +1,7 @@
 {
-    "version":  "2.88.0",
+    "version":  "2.88.1",
     "date":  "2026-11-24",
     "notes":  [
-                  "Reservas por mesa: nombre, telefono, fecha, hora, personas y nota; la mesa se ve en morado cuando esta reservada",
-                  "Menu digital rediseñado: encabezado, categorias, tarjetas con foto, carrito y hoja de pedido con nota"
+                  "La mesa reservada se muestra en morado aunque se haya abierto sin pedido"
               ]
 }

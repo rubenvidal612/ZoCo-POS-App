@@ -236,7 +236,9 @@ export function foodServiceView() {
     .sort((x, y) => String(x.time).localeCompare(String(y.time)));
   function estadoMesa(table) {
     const order = orderFor(table.id);
-    if (!order) {
+    // Una mesa abierta pero sin productos cuenta como libre (o reservada).
+    const conConsumo = order && Array.isArray(order.items) && order.items.length > 0;
+    if (!conConsumo) {
       const res = reservasDeMesaHoy(table.id)[0];
       if (res) return { key: 'reservada', label: 'Reservada ' + res.time, order: null, reserva: res };
       return { key: 'libre', label: 'Libre', order: null };
