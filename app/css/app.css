@@ -2202,3 +2202,13 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .fd-split-item small{color:var(--muted)}
 .fd-split-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .fd-split-foot b{font-size:18px;font-weight:900}
+/* Reservas de mesa */
+.fd-mesa.reservada .fd-mesa-top{background:linear-gradient(180deg,#8B5CF6,#6D28D9)}
+.fd-leyenda .k.reservada{background:#7C3AED}
+.fd-res-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.fd-res-form label{display:grid;gap:4px;font-size:11.5px;font-weight:800;color:var(--muted)}
+.fd-res-form input,.fd-res-form select{padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px;width:100%}
+.fd-res-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.fd-res-row b{font-size:13.5px}
+.fd-res-row small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.fd-res-row .fd-res-note{font-style:italic}
