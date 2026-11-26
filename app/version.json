@@ -1,9 +1,9 @@
 {
-  "version": "2.78.3",
+  "version": "2.79.0",
   "date": "2026-11-26",
   "notes": [
-    "En Ajustes → Apariencia puedes elegir entre cinco estilos de mascota",
-    "La mascota elegida también aparece en los avisos",
-    "La personalización es individual por dispositivo"
+    "Cinco mascotas animadas: jaguar, manatí, águila, ajolote y quetzal",
+    "Elige tu mascota en Ajustes → Apariencia",
+    "Cada mascota saluda y después queda en reposo"
   ]
 }
