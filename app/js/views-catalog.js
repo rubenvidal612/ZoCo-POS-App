@@ -1737,7 +1737,7 @@ export function settingsView(ctx) {
         ctx.refreshShell?.();
         toast("Sucursales renombradas");
       };
-      m.root.querySelector("[data-close]")?.addEventListener("click", renombrarSucursales);
+      m.root.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", renombrarSucursales));
       ["#demo-load", "#demo-blank", "#demo-replace"].forEach((sel) => {
         m.root.querySelector(sel)?.addEventListener("click", renombrarSucursales);
       });
