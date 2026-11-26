@@ -2167,3 +2167,9 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .fd-salon.is3d .fd-silla{transform:translate(-50%,-50%) translateZ(2px)}
 .fd-mesa-top{z-index:3}
 .fd-salon.is3d .fd-mesa-shadow{opacity:.55;filter:blur(3px)}
+/* Panel de mesa: datos y badge */
+.fd-badge{background:#E2E8F0;color:#334155;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px}
+.fd-badge.on{background:#0F172A;color:#fff}
+.fd-back{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.fd-back h3{margin:0;font-size:20px}
+.fd-two label select,.fd-box label select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff}

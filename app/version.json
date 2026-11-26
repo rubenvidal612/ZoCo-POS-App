@@ -1,7 +1,8 @@
 {
-    "version":  "2.85.4",
+    "version":  "2.86.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Salon mas grande: piso mas alto, mesas y sillas de mayor tamano"
+                  "Panel de mesa: asignar mesero, personas, cliente y comentario",
+                  "Las mesas se pueden renombrar (opcion 6 en el menu de la mesa)"
               ]
 }

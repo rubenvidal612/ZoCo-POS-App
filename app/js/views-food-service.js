@@ -383,6 +383,11 @@ export function foodServiceView() {
       if (z && z.trim()) { t.zone = z.trim(); save(); render(); }
       return;
     }
+    if (accion === '6') {
+      const nombre = prompt('Nuevo nombre para la mesa', t.name);
+      if (nombre && nombre.trim()) { t.name = nombre.trim().slice(0, 24); save(); render(); }
+      return;
+    }
     if (accion === '5') {
       if (estadoMesa(t).order) { toast('No puedes eliminar una mesa con pedido abierto'); return; }
       if (!confirm('¿Eliminar ' + t.name + '?')) return;
@@ -399,7 +404,15 @@ export function foodServiceView() {
     const pending = order.items.filter(i => !i.sent);
     const readyCount = order.batches.filter(b => b.status === 'ready').length;
     root.querySelector('#fd-body').innerHTML =
-      '<div class="fd-back"><button class="btn ghost sm" id="fd-back">← Mesas</button><h3>' + e(table.name) + '</h3><span>Mesero: ' + e(order.waiterName) + '</span></div>' +
+      '<div class="fd-back"><button class="btn ghost sm" id="fd-back">← Mesas</button><h3>' + e(table.name) + '</h3><span class="fd-badge ' + (order.items.length ? 'on' : '') + '">' + (order.items.length ? money(sum(order.items)) : 'Mesa abierta') + '</span></div>' +
+      '<div class="fd-box" style="margin-bottom:12px"><h3>Datos de la mesa</h3>' +
+      '<div class="fd-inline" style="flex-wrap:wrap">' +
+      '<label>Mesero<select id="fd-waiter">' + (state.users || []).filter(u => u.role !== 'KITCHEN').map(u => '<option value="' + e(u.id) + '"' + (u.id === order.waiterId ? ' selected' : '') + '>' + e(u.name) + ' · ' + e(u.role || '') + '</option>').join('') + '</select></label>' +
+      '<label>Personas<input id="fd-table-people" type="number" min="1" max="30" value="' + e(order.people || 1) + '"></label>' +
+      '<label>Cliente (opcional)<input id="fd-table-client" maxlength="60" placeholder="Nombre del cliente" value="' + e(order.customerName || '') + '"></label>' +
+      '</div>' +
+      '<label style="display:block;margin-top:10px">Comentario de la mesa<input id="fd-table-note" maxlength="160" placeholder="Cumpleaños, reserva a nombre de…" value="' + e(order.tableNote || '') + '"></label>' +
+      '</div>' +
       '<div class="fd-two"><div class="fd-box"><h3>Agregar pedido</h3><label>Platillo o bebida<select id="fd-menu"><option value="">Selecciona un producto</option>' +
       products.map(p => '<option value="' + e(p.id) + '"' + (p.id === selectedMenu ? ' selected' : '') + '>' + e(p.name) + ' · ' + money(salePriceOf(p)) + '</option>').join('') +
       '</select></label><div class="fd-inline"><label>Cantidad<input id="fd-qty" type="number" min="1" max="99" value="1"></label><label>Personas en mesa<input id="fd-people" type="number" min="1" max="30" value="' + e(order.people) + '"></label></div>' +
@@ -418,6 +431,29 @@ export function foodServiceView() {
       (cashierAccess() ? '<select aria-label="Método de pago" id="fd-pay-method"><option value="cash">Efectivo</option><option value="debit">Tarjeta débito</option><option value="credit">Tarjeta crédito</option></select><button class="btn ghost" id="fd-checkout">Cobrar mesa</button>' : '') +
       '<button class="btn ghost" id="fd-bill">Imprimir precuenta</button>' + (!order.items.length ? '<button class="btn ghost" id="fd-release">Liberar mesa vacía</button>' : '') + '</div></div></div>';
     root.querySelector('#fd-back').onclick = () => {tab='mesas';currentTable=null;render();};
+    // Datos de la mesa: mesero, personas, cliente y comentario
+    root.querySelector('#fd-waiter')?.addEventListener('change', (ev) => {
+      const u = (state.users || []).find(x => x.id === ev.target.value);
+      if (!u) return;
+      order.waiterId = u.id;
+      order.waiterName = u.name;
+      save();
+      toast('Mesero asignado: ' + u.name);
+    });
+    root.querySelector('#fd-table-people')?.addEventListener('change', (ev) => {
+      const n = Number(ev.target.value);
+      if (!Number.isFinite(n) || n < 1) return;
+      order.people = Math.min(30, Math.round(n));
+      save();
+    });
+    root.querySelector('#fd-table-client')?.addEventListener('change', (ev) => {
+      order.customerName = String(ev.target.value || '').slice(0, 60);
+      save();
+    });
+    root.querySelector('#fd-table-note')?.addEventListener('change', (ev) => {
+      order.tableNote = String(ev.target.value || '').slice(0, 160);
+      save();
+    });
     root.querySelector('#fd-menu').onchange = ev => {selectedMenu = ev.target.value;};
     root.querySelector('#fd-note').oninput = ev => {draftNote = ev.target.value;};
     root.querySelector('#fd-people').onchange = ev => {
