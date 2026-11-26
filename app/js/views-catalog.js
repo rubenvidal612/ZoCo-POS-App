@@ -1,4 +1,5 @@
 import { landingGalleryView } from './views-landing-gallery.js';
+import { MASCOT_CHOICES, getMascotChoice, setMascotChoice } from './mascot.js';
 // Vistas: Productos, Ventas, Reportes, Configuración
 import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompressed, captureVideoFrame, pad } from './ui.js';
 import { requestNotifyPermission, subscribePush } from './notify.js';
@@ -1119,6 +1120,17 @@ export function settingsView(ctx) {
         <div style="padding:16px">
           <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tema de la empresa. Se aplica al instante en todas las cajas.</div>
           <div class="theme-grid" id="themes"></div>
+          <div class="mascot-preferences">
+            <h3>Elige tu mascota</h3>
+            <p>Escoge el personaje que te acompañará en el menú y los avisos. Puedes cambiarlo cuando quieras.</p>
+            <div class="mascot-choices" id="mascot-choices" role="radiogroup" aria-label="Mascota de ZoCo">
+              ${MASCOT_CHOICES.map(item => `<button type="button" class="mascot-choice" data-choice="${item.id}" role="radio" aria-checked="${getMascotChoice() === item.id ? 'true' : 'false'}">
+                <span class="mascot-choice-icon" data-preview-mascot="${item.id}"><img src="/assets/landing-2/mascota-perla.webp" alt=""></span>
+                <strong>${item.label}</strong><small>${item.detail}</small>
+              </button>`).join('')}
+            </div>
+            <div class="hint">La elección se guarda en este dispositivo. No cambia la mascota de otros empleados.</div>
+          </div>
           <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
             <label style="font-size:13px;font-weight:600">Modo oscuro</label>
             <input type="checkbox" id="dark" ${document.documentElement.dataset.mode === 'dark' ? 'checked' : ''}>
@@ -1601,6 +1613,19 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
     });
   })();
 
+  // Selector de mascota, aplicado al instante sin tocar datos de ventas.
+  root.querySelectorAll('[data-choice]').forEach(button => {
+    button.onclick = () => {
+      if (!setMascotChoice(button.dataset.choice)) return;
+      root.querySelectorAll('[data-choice]').forEach(other => {
+        const chosen = other === button;
+        other.classList.toggle('selected', chosen);
+        other.setAttribute('aria-checked',String(chosen));
+      });
+      toast('Mascota seleccionada: ' + (MASCOT_CHOICES.find(item => item.id === button.dataset.choice)?.label || 'ZoCo'));
+    };
+    button.classList.toggle('selected',button.dataset.choice === getMascotChoice());
+  });
   const grid = $('#themes', root);
   grid.innerHTML = THEMES.map(([id, name, sw]) => `
     <div class="theme-card ${state.company.theme === id ? 'on' : ''}" data-t="${id}">
