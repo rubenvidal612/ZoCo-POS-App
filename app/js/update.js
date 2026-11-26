@@ -1,5 +1,6 @@
 // Aviso flotante de actualización + botón flotante de notificaciones
 import { subscribePush } from './notify.js';
+import { reactMascot } from './mascot.js';
 
 const SEEN = 'zoco.version.seen';
 
@@ -34,7 +35,7 @@ export function showUpdateCard(v) {
   const el = card(`
     <button class="fc-x" aria-label="Cerrar">✕</button>
     <div class="fc-top">
-      <div class="fc-ico">🚀</div>
+      <div class="fc-ico fc-mascot-update"><img src="/assets/landing-2/mascota-perla.webp" alt="Mascota ZoCo"></div>
       <div class="fc-txt"><b>Hay una actualización</b><span>Versión ${v.version} · ${v.date}</span></div>
     </div>
     <ul class="fc-notes">${(v.notes || []).slice(0, 5).map((n) => `<li>${n}</li>`).join('')}</ul>
@@ -44,6 +45,7 @@ export function showUpdateCard(v) {
     </div>
   `);
   el.id = 'upd-card';
+  reactMascot('excited');
   el.querySelector('.fc-x').onclick = () => { localStorage.setItem(SEEN, v.version); closeCard(el); };
   el.querySelector('#upd-later').onclick = () => { localStorage.setItem(SEEN, v.version); closeCard(el); };
   el.querySelector('#upd-go').onclick = () => applyUpdate(v.version);
@@ -77,7 +79,7 @@ export function initNotifPill() {
   const el = card(`
     <button class="fc-x" aria-label="Cerrar">✕</button>
     <div class="fc-top">
-      <div class="fc-ico">🔔</div>
+      <div class="fc-ico fc-mascot-update"><img src="/assets/landing-2/mascota-perla.webp" alt="Mascota ZoCo"></div>
       <div class="fc-txt"><b>Activa los avisos</b><span>Entérate de cada venta al instante</span></div>
     </div>
     <div class="fc-actions">
