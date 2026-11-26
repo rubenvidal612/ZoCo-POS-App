@@ -1,7 +1,7 @@
 {
-    "version":  "2.88.1",
+    "version":  "2.88.2",
     "date":  "2026-11-24",
     "notes":  [
-                  "La mesa reservada se muestra en morado aunque se haya abierto sin pedido"
+                  "Mesas del salon: ya no se corta la ultima linea y se ven mas grandes"
               ]
 }

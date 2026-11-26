@@ -276,14 +276,12 @@ export function foodServiceView() {
       + '<b class="fd-mesa-n">' + e(String(t.name).replace(/^Mesa\s*/i, '')) + '</b>'
       + (est.order
         ? '<small class="fd-mesa-w">' + e(est.order.waiterName || '') + '</small>'
-          + '<small class="fd-mesa-meta">⏱ ' + mins + "' · 👥 " + gente + '</small>'
-          + '<small class="fd-mesa-total">' + mesa + '</small>'
+          + '<small class="fd-mesa-total">' + mins + "' · " + mesa + '</small>'
         : (est.reserva
-          ? '<small class="fd-mesa-w">' + e(est.reserva.name || '') + '</small>'
-            + '<small class="fd-mesa-meta">📅 ' + e(est.reserva.time) + ' · 👥 ' + (est.reserva.people || t.seats) + '</small>'
-            + '<small class="fd-mesa-libre">Reservada</small>'
-          : '<small class="fd-mesa-meta">👥 ' + (t.seats || 4) + ' lugares</small>'
-            + '<small class="fd-mesa-libre">Libre</small>'))
+          ? '<small class="fd-mesa-w">' + e((est.reserva.name || '').split(' ')[0]) + '</small>'
+            + '<small class="fd-mesa-total">📅 ' + e(est.reserva.time) + ' · ' + (est.reserva.people || t.seats) + '</small>'
+          : '<small class="fd-mesa-meta">' + (t.seats || 4) + ' lugares</small>'
+            + '<small class="fd-mesa-total fd-vacio-c">Libre</small>'))
       + '</span>'
       + sillas
       + '<span class="fd-mesa-shadow" aria-hidden="true"></span>'
