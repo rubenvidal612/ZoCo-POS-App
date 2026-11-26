@@ -214,8 +214,9 @@ export function foodServiceView() {
         const cols = 4;
         const col = i % cols;
         const fila = Math.floor(i / cols);
-        t.x = 14 + col * 19 + (fila % 2 ? 6 : 0);
-        t.y = 20 + fila * 22;
+        // Rejilla centrada y con aire: 4 por fila, sin pegarse a las orillas.
+        t.x = 20 + col * 20 + (fila % 2 ? 8 : 0);
+        t.y = 28 + fila * 30;
         cambiado = true;
       }
       if (!t.shape) { t.shape = 'square'; cambiado = true; }
