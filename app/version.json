@@ -1,11 +1,11 @@
 {
-    "version":  "2.93.1",
+    "version":  "2.94.0",
     "date":  "2026-11-26",
     "notes":  [
-                  "Corte de caja: el efectivo de ventas y gastos ya no se cuenta dos veces, y el corte solo suma el turno abierto",
-                  "Seguridad: las membresÃƒÂ­as ya no permiten entrar a la empresa de otro (migraciÃƒÂ³n 0007)",
-                  "Proxy de IA: solo habla con los proveedores permitidos y con lÃƒÂ­mite de peticiones; el servidor local ya no desactiva TLS por su cuenta",
-                  "ZoCo Food: salÃƒÂ³n con mesas, reservas, QR por mesa, transferir mesa y dividir cuenta",
-                  "Cada giro es un negocio aparte, con sus propias sucursales y su propio nombre en ticket y catÃƒÂ¡logo"
+                  "Devoluciones: reembolsan lo cobrado (descuento prorrateado) y nunca mas que el total de la venta",
+                  "Cancelar venta: repone solo piezas reales, no servicios ni platillos preparados, y se bloquea si hubo devolucion",
+                  "Pago dividido a credito: al cliente solo se le carga su parte y se revierte al cancelar",
+                  "Totales con redondeo a centavos y cupon que ya no se acumula",
+                  "Cobrar mesa: cobra solo el pendiente cuando ya hubo abonos"
               ]
 }

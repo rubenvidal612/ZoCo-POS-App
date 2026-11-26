@@ -435,7 +435,7 @@ export function posView(ctx) {
     $('#back', box).onclick = () => { screen = 'sell'; render(); };
     $('#clear', box).onclick = async () => {
       const ok = await confirmDialog({ title: 'Vaciar carrito', message: 'Se quitarán todos los artículos.', okText: 'Vaciar', danger: true });
-      if (ok) { cart.lines = []; cart.discount = 0; render(); }
+      if (ok) { cart.lines = []; cart.discount = 0; cart.couponCode = null; cart.couponValue = 0; render(); }
     };
     box.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => {
       cart.lines = cart.lines.filter((l) => l.key !== b.dataset.rm); render();
@@ -481,7 +481,7 @@ export function posView(ctx) {
       cart.discount = Math.max(0, Math.min(Number(m.root.querySelector('#d').value) || 0, t.subtotal));
       m.close(); render();
     };
-    m.root.querySelector('#clear').onclick = () => { cart.discount = 0; m.close(); render(); };
+    m.root.querySelector('#clear').onclick = () => { cart.discount = 0; cart.couponCode = null; cart.couponValue = 0; m.close(); render(); };
   }
 
   function openCoupon() {
@@ -492,9 +492,15 @@ export function posView(ctx) {
       foot: '<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Aplicar</button>',
     });
     m.root.querySelector('#ok').onclick = () => {
-      const r = applyCoupon(m.root.querySelector('#cp').value, t.subtotal);
+      const codigo = String(m.root.querySelector('#cp').value || '').trim().toUpperCase();
+      const r = applyCoupon(codigo, t.subtotal);
       if (!r.ok) { toast(r.msg); return; }
-      cart.discount = (cart.discount || 0) + r.value;
+      // Un cupón no se acumula: si se toca dos veces, se reemplaza y no se suma doble.
+      if (cart.couponCode === codigo) { toast('Ese cupón ya está aplicado'); m.close(); return; }
+      if (Number(cart.couponValue) > 0) cart.discount = Math.max(0, (cart.discount || 0) - Number(cart.couponValue));
+      cart.couponCode = codigo;
+      cart.couponValue = r.value;
+      cart.discount = Math.round(((cart.discount || 0) + r.value) * 100) / 100;
       m.close(); render(); toast('Cupón aplicado: ' + money(r.value));
     };
   }
@@ -509,7 +515,7 @@ export function posView(ctx) {
     m.root.querySelector('#ok').onclick = () => {
       const name = m.root.querySelector('#lc').value.trim() || 'Público';
       const lay = createLayaway({ cart, customerName: name });
-      cart.lines = []; cart.discount = 0;
+      cart.lines = []; cart.discount = 0; cart.couponCode = null; cart.couponValue = 0;
       m.close();
       toast('Apartado ' + lay.code + ' creado');
       screen = 'sell'; render();
@@ -629,7 +635,7 @@ export function posView(ctx) {
     let sale;try { sale = commitSale({ cart, method: m, received: recv, customerName: ctx.customer, note: '', fiscalMode }); } catch(err) { if (!foodConfirm(err)) return; try { sale = commitSale({ cart, method: m, received: recv, customerName: ctx.customer, note: '', fiscalMode, allowFoodShortage:true }); } catch(e) { toast(e.message || 'No se pudo registrar la venta'); return; } }
     if (state.settings.saleNotifications && ['owner', 'admin'].includes(state.user.role)) notifySale(sale);
     lastSale = sale;
-    cart.lines = []; cart.discount = 0;
+    cart.lines = []; cart.discount = 0; cart.couponCode = null; cart.couponValue = 0;
     screen = 'success';
     render();
   }
@@ -847,7 +853,7 @@ export function posView(ctx) {
       let sale;try { sale = commitSale({ cart, method: 'split', received: t.total, payments, customerName: ctx.customer, note: '', fiscalMode }); } catch(err) { if (!foodConfirm(err)) return; try { sale = commitSale({ cart, method: 'split', received: t.total, payments, customerName: ctx.customer, note: '', fiscalMode, allowFoodShortage:true }); } catch(e) { toast(e.message || 'No se pudo registrar la venta'); return; } }
       if (state.settings.saleNotifications && ['owner', 'admin'].includes(state.user.role)) notifySale(sale);
       lastSale = sale;
-      cart.lines = []; cart.discount = 0;
+      cart.lines = []; cart.discount = 0; cart.couponCode = null; cart.couponValue = 0;
       screen = 'success'; render();
     };
   }

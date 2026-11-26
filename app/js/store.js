@@ -1438,8 +1438,17 @@ export function returnSale(saleId, lines, reason, refundMethod) {
     if (b) b[rk] = round3(Number(b[rk] || 0) + q);
 
     const price = Number(item.price) || 0;
-    total += price * q;
-    out.push({ productId: l.productId, name: item.name, size: item.size, qty: q, price, subtotal: price * q });
+    // Se devuelve lo que el cliente pagó por esa pieza: si la venta tuvo descuento,
+    // se prorratea; y nunca se reembolsa más de lo cobrado en la venta.
+    const netoUnitario = round2(price * fraccionCobrada(sale));
+    let subtotalLinea = round2(netoUnitario * q);
+    const disponible = round2((Number(sale.total) || 0) - (Number(sale.refunded) || 0) - total);
+    if (subtotalLinea > disponible) subtotalLinea = Math.max(0, disponible);
+    total = round2(total + subtotalLinea);
+    out.push({
+      productId: l.productId, name: item.name, size: item.size, qty: q,
+      price, netUnit: netoUnitario, subtotal: subtotalLinea,
+    });
   }
   if (!out.length) return { ok: false, msg: 'Esas piezas ya fueron devueltas' };
 
@@ -1537,10 +1546,38 @@ export function discountLabel(p) {
   if (!d || !d.on || !(Number(d.value) > 0)) return '';
   return d.type === 'amount' ? '-$' + (Number(d.value) || 0) : '-' + (Number(d.value) || 0) + '%';
 }
-export function cartTotals(cart) {
-  const subtotal = cart.lines.reduce((a, l) => a + l.price * l.qty, 0);
-  const discount = Math.min(cart.discount || 0, subtotal);
-  return { subtotal, discount, total: Math.max(0, subtotal - discount), count: cart.lines.length };
+export /** Fracción del precio de lista que realmente se cobró (1 - descuento/subtotal). */
+function fraccionCobrada(sale) {
+  const subtotal = Number(sale?.subtotal) || 0;
+  const descuento = Number(sale?.discount) || 0;
+  if (subtotal <= 0) return 1;
+  const f = (subtotal - descuento) / subtotal;
+  return f > 0 ? Math.min(1, f) : 0;
+}
+
+/** Parte de la venta que quedó a crédito del cliente. */
+export function creditPartOf(sale) {
+  if (!sale) return 0;
+  if (Array.isArray(sale.payments) && sale.payments.length) {
+    return round2(sale.payments.filter((p) => p.method === "credit_sale").reduce((s, p) => s + (Number(p.amount) || 0), 0));
+  }
+  return sale.method === "credit_sale" ? round2(Number(sale.total) || 0) : 0;
+}
+
+/** Parte de la venta que entró en efectivo. */
+function cashPartOf(sale) {
+  if (!sale) return 0;
+  if (Array.isArray(sale.payments) && sale.payments.length) {
+    return round2(sale.payments.filter((p) => p.method === "cash").reduce((s, p) => s + (Number(p.amount) || 0), 0));
+  }
+  return sale.method === "cash" ? round2(Number(sale.total) || 0) : 0;
+}
+
+function cartTotals(cart) {
+  // round2 en cada paso: con ventas por kg los centavos flotantes rechazaban el importe mostrado.
+  const subtotal = round2(cart.lines.reduce((a, l) => a + (Number(l.price) || 0) * (Number(l.qty) || 0), 0));
+  const discount = round2(Math.min(Number(cart.discount) || 0, subtotal));
+  return { subtotal, discount, total: round2(Math.max(0, subtotal - discount)), count: cart.lines.length };
 }
 export function addLine(cart, product, size, qty = 1, color = '') {
   const vkey = variantKey(size, color);
@@ -1692,9 +1729,14 @@ export function commitSale({ cart, method, received, customerName, note, custome
       try { consumeRecipe(p, l.qty, state.currentBranch, sale.id); } catch {}
     }
   });
-  if (customerId && (method === 'credit_sale' || (payments || []).some((p) => p.method === 'credit_sale'))) {
+  // Solo la parte que quedó a crédito se suma al saldo del cliente:
+  // en pago dividido el resto ya se pagó con efectivo o tarjeta.
+  const aCredito = payments && payments.length
+    ? payments.filter((p) => p.method === 'credit_sale').reduce((s, p) => s + (Number(p.amount) || 0), 0)
+    : (method === 'credit_sale' ? t.total : 0);
+  if (customerId && aCredito > 0) {
     const c = state.customers.find((x) => x.id === customerId);
-    if (c) c.balance = (c.balance || 0) + t.total;
+    if (c) c.balance = round2((c.balance || 0) + aCredito);
   }
   applyFoodSale(foodChanges, -1);
   state.sales.unshift(sale);
@@ -1707,22 +1749,36 @@ export function commitSale({ cart, method, received, customerName, note, custome
 
 export function cancelSale(saleId, reason) {
   const sale = state.sales.find((s) => s.id === saleId);
-  if (!sale || sale.status === 'cancelled') return;
+  if (!sale || sale.status === "cancelled") return { ok: false, msg: "La venta ya está cancelada" };
+  // Si ya hubo devoluciones, cancelar repondría stock y dinero dos veces.
+  if (Number(sale.refunded) > 0) {
+    return { ok: false, msg: "Esta venta tiene devoluciones: no se puede cancelar" };
+  }
   sale.items.forEach((l) => {
     const p = productById(l.productId);
     const b = p?.branchStock?.[sale.branchId];
     const vk3 = l.vkey || l.size;
+    // Servicios y platillos que se preparan al vender nunca descontaron el producto:
+    // reponerlos inventaría piezas que no existen.
+    const sePrepara = !!(p?.recipe && p.prepararAlVender);
+    const esServicio = p?.section === "servicios";
+    if (esServicio || sePrepara) return;
     if (b && b[vk3] != null) b[vk3] = round3(Number(b[vk3]) + l.qty);
   });
-  if (sale.customerId && sale.method === 'credit_sale') {
+  const aCredito = creditPartOf(sale);
+  if (sale.customerId && aCredito > 0) {
     const c = state.customers.find((x) => x.id === sale.customerId);
-    if (c) c.balance = Math.max(0, (c.balance || 0) - sale.total);
+    if (c) c.balance = Math.max(0, round2((c.balance || 0) - aCredito));
   }
+  // El efectivo que había entrado sale de la caja al cancelar.
+  const efectivo = cashPartOf(sale);
+  if (efectivo > 0) addCash("out", efectivo, "Cancelación " + sale.code, "sale");
   if (sale.foodStockChanges?.length) applyFoodSale(sale.foodStockChanges, 1);
-  sale.status = 'cancelled';
-  sale.cancelReason = reason || 'Sin motivo';
+  sale.status = "cancelled";
+  sale.cancelReason = reason || "Sin motivo";
   sale.cancelledAt = new Date().toISOString();
   emit();
+  return { ok: true };
 }
 
 /* ================= Productos ================= */

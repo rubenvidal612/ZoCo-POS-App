@@ -157,6 +157,9 @@ export function foodServiceView() {
     const payMethod = root.querySelector('#fd-pay-method')?.value || 'cash';
     if (!['cash','debit','credit'].includes(payMethod)) return toast('Método no válido');
     const total = sum(order.items);
+    // Lo que ya se cobró por partes (dividir cuenta) no se vuelve a cobrar.
+    const yaCobrado = pagadoDe(order);
+    const porCobrar = pendienteDe(order);
     const cart = { lines: order.items.map(i => ({
       key: i.id, productId: i.productId, name: i.name, size: 'Único', vkey: 'Único',
       qty: i.qty, price: i.price, unit: 'pza', color: '', colorVariant: '',
@@ -164,7 +167,9 @@ export function foodServiceView() {
     const doSave = async () => {
       const confirmed = await confirmDialog({
         title: 'Cobrar y liberar mesa',
-        message: 'Se registrará una venta de ' + money(total) + ' y se liberará la mesa. Verifica que el cliente haya pagado.',
+        message: (yaCobrado > 0
+          ? 'Ya se cobraron ' + money(yaCobrado) + ' de ' + money(total) + '. Se cobrarán ' + money(porCobrar) + ' y se liberará la mesa.'
+          : 'Se registrará una venta de ' + money(total) + ' y se liberará la mesa. Verifica que el cliente haya pagado.'),
         okText: 'Registrar pago',
       });
       if (!confirmed) return;
@@ -173,7 +178,11 @@ export function foodServiceView() {
       const inBranch = order.branchId === state.currentBranch;
       if (!inBranch) return toast('Selecciona la sucursal correcta');
       try {
+        // Se reconstruye el pago completo: partes ya cobradas + lo que falta ahora.
+        const pagosPrevios = (order.payments || []).map((pg) => ({ method: pg.method || "cash", amount: Number(pg.amount) || 0 }));
+        if (porCobrar > 0) pagosPrevios.push({ method: payMethod, amount: porCobrar });
         const sale = commitSale({ cart, method: payMethod, received: total,
+          payments: pagosPrevios.length ? pagosPrevios : undefined,
           customerName: 'Mesa ' + (activeTables().find(t => t.id === order.tableId)?.name || ''),
           note: 'ZoCo Food · mesa · orden ' + order.id, allowFoodShortage: true });
         order.status = 'paid'; order.saleId = sale.id; order.closedAt = new Date().toISOString();
