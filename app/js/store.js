@@ -626,6 +626,13 @@ export function setAffiliateCommission(pct) {
   u.affCommissionPct = Math.max(0, Math.min(100, Number(pct) || 0));
   emit();
 }
+/** Cambia a las sucursales del giro actual (se llama al cambiar de giro). */
+export function syncBranchesForMode() {
+  scopearSucursales(state);
+  emit();
+  return state.branches;
+}
+
 /* ================= Sucursales ================= */
 export function addBranch(name) {
   const lim = canAdd('branch');
@@ -1081,6 +1088,29 @@ function migrate(s) {
   return s;
 }
 
+/* ================= Sucursales por giro =================
+ * Cada giro (zapateria, restaurante, lavanderia...) maneja sus propias
+ * sucursales. Las ventas guardan branchId + branchName, asi que el
+ * historico anterior sigue completo aunque cambies de giro.
+ */
+function scopearSucursales(s) {
+  const mode = String((s.company && s.company.mode) || "generico");
+  if (!s.branchesByMode || typeof s.branchesByMode !== "object") {
+    const actuales = Array.isArray(s.branches) && s.branches.length
+      ? s.branches
+      : [{ id: "b1", name: "Sucursal Principal" }];
+    s.branchesByMode = {};
+    s.branchesByMode[mode] = actuales;
+  }
+  let lista = s.branchesByMode[mode];
+  if (!Array.isArray(lista) || !lista.length) {
+    lista = [{ id: "b-" + mode + "-1", name: "Sucursal Principal" }];
+    s.branchesByMode[mode] = lista;
+  }
+  s.branches = lista;
+  if (!lista.some((b) => b.id === s.currentBranch)) s.currentBranch = lista[0].id;
+  return s;
+}
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -1121,6 +1151,7 @@ function load() {
         migrated[k] = prev;
       }
     });
+    try { scopearSucursales(migrated); } catch {}
     // guarda reparaciones (usuarios, etc.) de inmediato
     try { localStorage.setItem(KEY, JSON.stringify(migrated)); } catch {}
     return migrated;

@@ -2,6 +2,7 @@ import { landingGalleryView } from './views-landing-gallery.js';
 // Vistas: Productos, Ventas, Reportes, Configuración
 import { $, el, money, esc, toast, modal, confirmDialog, num, readImageCompressed, captureVideoFrame, pad } from './ui.js';
 import { requestNotifyPermission, subscribePush } from './notify.js';
+import { syncBranchesForMode } from './store.js';
 import { registerCam, dropCam, stopAllCams } from './camera.js';
 import { enrollBiometric, verifyBiometric, biometricSupported } from './biometric.js';
 import { sbConfig, setSbConfig, testConnection, syncNow, sbReady, isDirty, pushCloud } from './sync.js';
@@ -1712,11 +1713,8 @@ export function settingsView(ctx) {
             Solo reemplazan a otros ejemplos. <b>Tus productos reales no se tocan.</b>
           </div>
           <div class="hint" style="margin-top:6px">Tienes ${state.products.length} producto(s) en total y ${demoCount()} de ejemplo.</div>
-          ${(state.branches || []).some(b => !/^Sucursal/i.test(String(b.name || ""))) ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:12.5px;font-weight:700">
-            <input type="checkbox" id="renombrar-sucursales" checked style="margin-top:2px">
-            <span>Renombrar sucursales a nombres neutros<br><span class="hint" style="font-weight:400">
-              Hoy se llaman: ${(state.branches || []).map(b => esc(b.name)).join(", ")}. Quedarán como Sucursal Principal, Sucursal 2…</span></span>
-          </label>` : ""}
+          <div class="hint" style="margin-top:8px"><b>Cada giro tiene sus propias sucursales.</b>
+            Las de este giro se manejan por separado de las de otros giros.</div>
           ${state.products.length ? `<div class="hint" style="margin-top:10px">
             ¿Quieres que <b>tus ${state.products.length} productos actuales</b> (por ejemplo zapatos) se quiten para empezar limpio con este giro?
             Se guarda una copia por si te arrepientes.</div>` : ''}
@@ -1726,21 +1724,10 @@ export function settingsView(ctx) {
                <button class="btn sm" id="demo-load">Cargar ejemplos</button>
                ${state.products.length ? '<button class="btn sm" id="demo-replace" style="background:var(--danger)">Reemplazar TODO</button>' : ''}`,
       });
-      // Renombrar sucursales si el usuario lo dejó marcado
-      const renombrarSucursales = () => {
-        const chk = m.root.querySelector("#renombrar-sucursales");
-        if (!chk || !chk.checked) return;
-        const lista = state.branches || [];
-        if (!lista.length) return;
-        lista.forEach((b, i) => { b.name = i === 0 ? "Sucursal Principal" : "Sucursal " + (i + 1); });
-        ctx.persist();
-        ctx.refreshShell?.();
-        toast("Sucursales renombradas");
-      };
-      m.root.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", renombrarSucursales));
-      ["#demo-load", "#demo-blank", "#demo-replace"].forEach((sel) => {
-        m.root.querySelector(sel)?.addEventListener("click", renombrarSucursales);
-      });
+      // Cada giro tiene sus propias sucursales: al cambiar, se activa su lista.
+      if (typeof syncBranchesForMode === 'function') syncBranchesForMode();
+      ctx.persist();
+      ctx.refreshShell?.();
       m.root.classList.add('mode-demo-overlay');
       m.root.querySelector('#demo-load').onclick = async () => {
         // Para abarrotes se carga el catálogo base completo (103 con foto)

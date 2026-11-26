@@ -1,7 +1,8 @@
 {
-    "version":  "2.90.3",
+    "version":  "2.91.0",
     "date":  "2026-11-24",
     "notes":  [
-                  "Corregido: el renombrado de sucursales al cambiar de giro ahora si se guarda"
+                  "Sucursales separadas por giro: zapateria, restaurante, lavanderia y cada giro maneja su propia lista de sucursales",
+                  "El historico de ventas conserva el nombre de la sucursal donde se hizo cada venta"
               ]
 }
