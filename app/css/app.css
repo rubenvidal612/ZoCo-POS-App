@@ -2091,7 +2091,7 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 
 .fd-mesa{
   position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);
-  width:112px;height:112px;border:0;background:transparent;padding:0;cursor:pointer;
+  width:var(--mesa,112px);height:var(--mesa,112px);border:0;background:transparent;padding:0;cursor:pointer;
   transition:transform .18s ease, filter .18s ease;
 }
 .fd-salon.is3d .fd-mesa{transform:translate(-50%,-50%) rotateX(-36deg) translateZ(10px);transform-style:preserve-3d}
@@ -2105,10 +2105,10 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
   transition:box-shadow .15s ease, transform .15s ease;
 }
 .fd-mesa.round .fd-mesa-top{border-radius:50%}
-.fd-mesa-n{font-size:22px;letter-spacing:-.4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-.fd-mesa-w{font-size:9.5px;opacity:.92;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fd-mesa-meta{font-size:9px;opacity:.9;white-space:nowrap}
-.fd-mesa-total{font-size:9.5px;font-weight:900;background:rgba(0,0,0,.20);border-radius:6px;padding:1px 6px;margin-top:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.fd-vacio-c{background:rgba(74,46,18,.14);color:inherit}
+.fd-mesa-n{font-size:calc(var(--mesa,112px) * 0.2);letter-spacing:-.4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.fd-mesa-w{font-size:calc(var(--mesa,112px) * 0.085);opacity:.92;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-mesa-meta{font-size:calc(var(--mesa,112px) * 0.08);opacity:.9;white-space:nowrap}
+.fd-mesa-total{font-size:calc(var(--mesa,112px) * 0.085);font-weight:900;background:rgba(0,0,0,.20);border-radius:6px;padding:1px 6px;margin-top:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.fd-vacio-c{background:rgba(74,46,18,.14);color:inherit}
 .fd-mesa-libre{font-size:9px;opacity:.85}
 .fd-mesa-shadow{position:absolute;left:8%;right:8%;bottom:-10px;height:14px;border-radius:50%;
   background:radial-gradient(ellipse at center, rgba(60,40,20,.45), transparent 70%);filter:blur(2px)}
@@ -2157,7 +2157,7 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .food-service .fd-salon-wrap{width:100%;max-width:none;padding-bottom:16px}
 .food-service .fd-salon{width:100%}
 .fd-silla{
-  position:absolute;width:17px;height:17px;border-radius:50%;
+  position:absolute;width:calc(var(--mesa,112px) * 0.15);height:calc(var(--mesa,112px) * 0.15);border-radius:50%;
   transform:translate(-50%,-50%);z-index:2;
   background:radial-gradient(circle at 35% 30%, #C9A177, #8B6134);
   box-shadow:0 3px 5px rgba(60,40,20,.45), inset 0 1px 0 rgba(255,255,255,.4);

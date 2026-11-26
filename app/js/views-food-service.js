@@ -209,18 +209,41 @@ export function foodServiceView() {
     return [...set];
   };
   // Coloca las mesas que aún no tienen posición (reparto en rejilla).
+  /** Rejilla que cabe: elige columnas según el ancho del piso y encoge las mesas. */
+  function rejillaPara(n) {
+    const total = Math.max(1, n);
+    // El piso es ancho (16:7.6), así que conviene más columnas que filas.
+    let cols = Math.max(1, Math.ceil(Math.sqrt(total * 1.9)));
+    let filas = Math.ceil(total / cols);
+    // Si quedan demasiadas filas, abre una columna más.
+    while (filas > 5 && cols < total) {
+      cols += 1;
+      filas = Math.ceil(total / cols);
+    }
+    // Tamaño de mesa: se encoge cuando hay muchas (112 px es el máximo).
+    const anchoUtil = 980;
+    const tam = Math.round(Math.min(112, Math.max(46, (anchoUtil / cols) * 0.66)));
+    return { cols, filas, tam };
+  }
+  function posicionesRejilla(lista) {
+    const { cols, filas } = rejillaPara(lista.length);
+    lista.forEach((t, i) => {
+      const col = i % cols;
+      const fila = Math.floor(i / cols);
+      t.x = Math.round(((col + 0.5) / cols) * 1000) / 10;
+      t.y = Math.round(((fila + 0.5) / filas) * 1000) / 10;
+    });
+    return { cols, filas };
+  }
   function asegurarPosiciones(lista) {
     let cambiado = false;
-    lista.forEach((t, i) => {
-      if (typeof t.x !== 'number' || typeof t.y !== 'number') {
-        const cols = 4;
-        const col = i % cols;
-        const fila = Math.floor(i / cols);
-        // Rejilla centrada y con aire: 4 por fila, sin pegarse a las orillas.
-        t.x = 20 + col * 20 + (fila % 2 ? 8 : 0);
-        t.y = 28 + fila * 30;
-        cambiado = true;
-      }
+    const faltan = lista.filter(t => typeof t.x !== 'number' || typeof t.y !== 'number');
+    if (faltan.length) {
+      // Las que ya tienen posición se respetan; las nuevas van a la rejilla libre.
+      posicionesRejilla(lista);
+      cambiado = true;
+    }
+    lista.forEach((t) => {
       if (!t.shape) { t.shape = 'square'; cambiado = true; }
       if (!t.seats) { t.seats = 4; cambiado = true; }
       if (!t.zone) { t.zone = ZONAS_BASE[0]; cambiado = true; }
@@ -317,7 +340,7 @@ export function foodServiceView() {
       + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Mover mesas') + '</button>' : '')
       + '</div></div>'
       + '<div class="fd-salon-wrap' + (cfg.zoom !== 100 ? ' zoom' : '') + '" style="--zoom:' + (cfg.zoom / 100) + '">'
-      + '<div class="fd-salon' + (cfg.mode3d ? ' is3d' : '') + (cfg.editing ? ' editing' : '') + '" id="fd-salon">'
+      + '<div class="fd-salon' + (cfg.mode3d ? ' is3d' : '') + (cfg.editing ? ' editing' : '') + '" id="fd-salon" style="--mesa:' + rejillaPara(lista.length).tam + 'px">'
       + lista.map((t, i) => mesaHTML(t, ordenes[i], ordenes[i] ? sum(ordenes[i].items) : 0)).join('')
       + (lista.length ? '' : '<div class="fd-salon-empty">Este salón no tiene mesas todavía.</div>')
       + '</div></div>'
@@ -347,10 +370,11 @@ export function foodServiceView() {
     root.querySelector('#fd-reservas-todas')?.addEventListener('click', () => abrirReservas(null));
     root.querySelector('#fd-reacomodar')?.addEventListener('click', () => {
       const zona = salonCfg().zone;
-      activeTables().filter(t => (t.zone || ZONAS_BASE[0]) === zona).forEach((t) => { delete t.x; delete t.y; });
+      const enZona = activeTables().filter(t => (t.zone || ZONAS_BASE[0]) === zona);
+      const { cols, filas } = posicionesRejilla(enZona);
       save();
       render();
-      toast('Mesas acomodadas');
+      toast(enZona.length + ' mesas en ' + cols + ' × ' + filas);
     });
 
     const salon = root.querySelector('#fd-salon');
