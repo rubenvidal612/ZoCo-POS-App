@@ -1546,7 +1546,7 @@ export function discountLabel(p) {
   if (!d || !d.on || !(Number(d.value) > 0)) return '';
   return d.type === 'amount' ? '-$' + (Number(d.value) || 0) : '-' + (Number(d.value) || 0) + '%';
 }
-export /** Fracción del precio de lista que realmente se cobró (1 - descuento/subtotal). */
+/** Fracción del precio de lista que realmente se cobró (1 - descuento/subtotal). */
 function fraccionCobrada(sale) {
   const subtotal = Number(sale?.subtotal) || 0;
   const descuento = Number(sale?.discount) || 0;
@@ -1573,7 +1573,7 @@ function cashPartOf(sale) {
   return sale.method === "cash" ? round2(Number(sale.total) || 0) : 0;
 }
 
-function cartTotals(cart) {
+export function cartTotals(cart) {
   // round2 en cada paso: con ventas por kg los centavos flotantes rechazaban el importe mostrado.
   const subtotal = round2(cart.lines.reduce((a, l) => a + (Number(l.price) || 0) * (Number(l.qty) || 0), 0));
   const discount = round2(Math.min(Number(cart.discount) || 0, subtotal));

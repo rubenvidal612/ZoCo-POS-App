@@ -1,11 +1,7 @@
 {
-    "version":  "2.94.0",
+    "version":  "2.94.1",
     "date":  "2026-11-26",
     "notes":  [
-                  "Devoluciones: reembolsan lo cobrado (descuento prorrateado) y nunca mas que el total de la venta",
-                  "Cancelar venta: repone solo piezas reales, no servicios ni platillos preparados, y se bloquea si hubo devolucion",
-                  "Pago dividido a credito: al cliente solo se le carga su parte y se revierte al cancelar",
-                  "Totales con redondeo a centavos y cupon que ya no se acumula",
-                  "Cobrar mesa: cobra solo el pendiente cuando ya hubo abonos"
+                  "Corregido: el carrito volvia a exportarse mal y la app quedaba en blanco (se restauro el export de cartTotals)"
               ]
 }
