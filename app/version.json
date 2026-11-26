@@ -1,9 +1,9 @@
 {
-  "version": "2.78.0",
+  "version": "2.78.1",
   "date": "2026-11-26",
   "notes": [
-    "ZoCo Food: sillas con diseño de respaldo y asiento",
-    "Reducir mesas libres con confirmación y recuperar mesas eliminadas",
-    "Editor de mesas sin clic derecho y avisos animados con mascota"
+    "Mascota animada en la esquina y al navegar",
+    "Mascota en avisos de actualización",
+    "Gestos suaves de celebración, curiosidad y bienvenida"
   ]
 }
