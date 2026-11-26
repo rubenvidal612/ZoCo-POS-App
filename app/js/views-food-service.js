@@ -74,12 +74,45 @@ export function foodServiceView() {
   const cashierAccess = () => can('sales.sell');
   const save = () => emit();
 
-  function createTables() {
+  const removedTables = () => (model().removedTables ||= []);
+  const protectedTable = t => !!orderFor(t.id) || (model().reservations || []).some(r => r.tableId === t.id && r.status !== 'cancelada' && String(r.date || '') >= new Date().toISOString().slice(0,10));
+  function removeTables(tables) {
+    if (!tables.length) return;
+    const ids = new Set(tables.map(t => t.id));
+    removedTables().push(...tables.map(t => ({ ...t, removedAt: new Date().toISOString() })));
+    model().tables = model().tables.filter(t => !ids.has(t.id));
+    save(); render();
+    toast(tables.length === 1 ? 'Mesa eliminada · puedes recuperarla' : tables.length + ' mesas eliminadas · puedes recuperarlas');
+  }
+  async function restoreLastTable() {
+    if (!manager()) return;
+    const list = removedTables();
+    const available = list.filter(t => t.branchId === state.currentBranch);
+    if (!available.length) return toast('No hay mesas eliminadas para recuperar');
+    const last = available[available.length - 1];
+    if (activeTables().length >= 99) return toast('Máximo 99 mesas por local');
+    const ok = await confirmDialog({title:'Recuperar mesa',message:'¿Quieres recuperar ' + last.name + ' en ' + (last.zone || 'Salón Principal') + '?',okText:'Recuperar mesa'});
+    if (!ok) return;
+    const idx = list.findIndex(t => t.id === last.id);
+    if (idx >= 0) list.splice(idx,1);
+    model().tables.push(Object.fromEntries(Object.entries(last).filter(([k]) => k !== 'removedAt')));
+    save(); render(); toast('Mesa recuperada');
+  }
+  async function createTables() {
     if (!manager()) return toast('No tienes permiso');
     const n = Number(root.querySelector('#fd-table-count')?.value);
     if (!validAmount(n)) return toast('Indica entre 1 y 99 mesas');
     const existing = activeTables().length;
-    if (n < existing) return toast('Para quitar mesas, elimina una mesa libre individualmente');
+    if (n < existing) {
+      const howMany = existing - n;
+      const candidates = activeTables().filter(t => !protectedTable(t)).sort((a,b) =>
+        (Number(b.name.match(/\d+/)?.[0]) || 0) - (Number(a.name.match(/\d+/)?.[0]) || 0));
+      if (candidates.length < howMany) return toast('No se pueden quitar mesas con pedidos abiertos o reservas próximas');
+      const chosen = candidates.slice(0,howMany);
+      const ok = await confirmDialog({title:'Reducir mesas',message:'¿Eliminar ' + howMany + ' mesa(s) libre(s)? Siempre podrás recuperarlas desde “Recuperar mesa”.',okText:'Eliminar mesas',danger:true});
+      if (ok) removeTables(chosen);
+      return;
+    }
     const names = new Set(activeTables().map(t => t.name.toLowerCase()));
     for (let i = 1; i <= n; i++) {
       const name = 'Mesa ' + i;
@@ -295,7 +328,7 @@ export function foodServiceView() {
       const rad = (ang * Math.PI) / 180;
       const x = 50 + Math.cos(rad) * 62;
       const y = 50 + Math.sin(rad) * 62;
-      html += '<span class="fd-silla' + (i < ocupadas ? ' on' : '') + '" style="left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%"></span>';
+      html += '<span class="fd-silla' + (i < ocupadas ? ' on' : '') + '" style="left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%;--chair-angle:' + (ang + 90) + 'deg"><span class="fd-silla-asiento"></span></span>';
     }
     return html;
   }
@@ -332,7 +365,7 @@ export function foodServiceView() {
 
     root.querySelector('#fd-body').innerHTML =
       (manager() ? '<details class="fd-cfg"><summary>⚙ Configurar mesas y salones</summary>'
-        + '<div class="fd-cfg-inline"><label>Mesas del local <input id="fd-table-count" type="number" min="1" max="99" value="' + Math.max(todas.length, 8) + '"></label>'
+        + '<div class="fd-cfg-inline"><label>Mesas del local <input id="fd-table-count" type="number" min="1" max="99" value="' + todas.length + '"></label>'
         + '<button class="btn sm" id="fd-create-tables">Aplicar</button>'
         + '<select id="fd-salon-zone" aria-label="Salón">' + zonas().map(z => '<option value="' + e(z) + '"' + (z === zonaActual ? ' selected' : '') + '>' + e(z) + '</option>').join('') + '</select>'
         + '<button class="btn ghost sm" id="fd-zone-new">+ Salón nuevo</button>'
@@ -346,6 +379,7 @@ export function foodServiceView() {
       + '<button type="button" class="btn ghost sm" id="fd-zoom-in" aria-label="Acercar">+</button>'
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reservas-todas">📅 Reservas</button>' : '')
       + (manager() ? '<button type="button" class="btn ghost sm" id="fd-reacomodar" title="Acomodar las mesas en rejilla">↺ Reacomodar</button>' : '')
+      + (manager() ? '<button type="button" class="btn ghost sm" id="fd-restore-table" ' + (removedTables().some(t => t.branchId === state.currentBranch) ? '' : 'disabled') + '>↶ Recuperar mesa</button>' : '')
       + (manager() ? '<button type="button" class="btn ghost sm' + (cfg.editing ? ' on' : '') + '" id="fd-salon-edit" aria-pressed="' + cfg.editing + '">' + (cfg.editing ? '✓ Listo' : '✥ Mover mesas') + '</button>' : '')
       + '</div></div>'
       + '<div class="fd-salon-wrap' + (cfg.zoom !== 100 ? ' zoom' : '') + '" style="--zoom:' + (cfg.zoom / 100) + '">'
@@ -377,6 +411,7 @@ export function foodServiceView() {
     // Modo mover
     root.querySelector('#fd-salon-edit')?.addEventListener('click', () => { const c = salonCfg(); c.editing = !c.editing; render(); });
     root.querySelector('#fd-reservas-todas')?.addEventListener('click', () => abrirReservas(null));
+    root.querySelector('#fd-restore-table')?.addEventListener('click', restoreLastTable);
     root.querySelector('#fd-reacomodar')?.addEventListener('click', () => {
       const zona = salonCfg().zone;
       const enZona = activeTables().filter(t => (t.zone || ZONAS_BASE[0]) === zona);
@@ -430,34 +465,32 @@ export function foodServiceView() {
   function abrirAjusteMesa(id) {
     const t = activeTables().find(x => x.id === id);
     if (!t || !manager()) return;
-    const accion = prompt(
-      'Mesa ' + t.name + '\n\nEscribe:\n1 = cuadrada\n2 = redonda\n3 = cambiar lugares\n4 = mover a otro salón\n5 = eliminar mesa',
-      '1',
-    );
-    if (accion === null) return;
-    if (accion === '1') { t.shape = 'square'; save(); render(); return; }
-    if (accion === '2') { t.shape = 'round'; save(); render(); return; }
-    if (accion === '3') {
-      const n = Number(prompt('¿Cuántos lugares tiene la mesa? (1 a 20)', String(t.seats || 4)));
-      if (Number.isFinite(n) && n >= 1 && n <= 20) { t.seats = n; save(); render(); }
-      return;
-    }
-    if (accion === '4') {
-      const z = prompt('¿A qué salón la mueves?\n' + zonas().join(' / '), t.zone || ZONAS_BASE[0]);
-      if (z && z.trim()) { t.zone = z.trim(); save(); render(); }
-      return;
-    }
-    if (accion === '6') {
-      const nombre = prompt('Nuevo nombre para la mesa', t.name);
-      if (nombre && nombre.trim()) { t.name = nombre.trim().slice(0, 24); save(); render(); }
-      return;
-    }
-    if (accion === '5') {
-      if (estadoMesa(t).order) { toast('No puedes eliminar una mesa con pedido abierto'); return; }
-      if (!confirm('¿Eliminar ' + t.name + '?')) return;
-      model().tables = model().tables.filter(x => x.id !== t.id);
-      save(); render();
-    }
+    const dlg = modal({
+      title: 'Configurar ' + t.name,
+      body: '<div class="fd-table-editor">'
+        + '<label>Nombre<input id="fd-edit-name" maxlength="24" value="' + e(t.name) + '"></label>'
+        + '<label>Forma<select id="fd-edit-shape"><option value="square"' + (t.shape !== 'round' ? ' selected' : '') + '>Cuadrada</option><option value="round"' + (t.shape === 'round' ? ' selected' : '') + '>Redonda</option></select></label>'
+        + '<label>Lugares<input id="fd-edit-seats" type="number" min="1" max="20" value="' + Number(t.seats || 4) + '"></label>'
+        + '<label>Salón<select id="fd-edit-zone">' + zonas().map(z => '<option value="' + e(z) + '"' + (z === (t.zone || ZONAS_BASE[0]) ? ' selected' : '') + '>' + e(z) + '</option>').join('') + '</select></label>'
+        + '</div>',
+      foot: '<button class="btn ghost sm" id="fd-edit-delete" style="color:#dc2626;margin-right:auto">🗑 Eliminar mesa</button><button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="fd-edit-save">Guardar</button>'
+    });
+    dlg.root.querySelector('#fd-edit-save').onclick = () => {
+      const name = dlg.root.querySelector('#fd-edit-name').value.trim();
+      const seats = Number(dlg.root.querySelector('#fd-edit-seats').value);
+      if (!name || !Number.isInteger(seats) || seats < 1 || seats > 20) return toast('Escribe un nombre y entre 1 y 20 lugares');
+      if (activeTables().some(x => x.id !== t.id && x.name.toLowerCase() === name.toLowerCase())) return toast('Ya existe otra mesa con ese nombre');
+      t.name = name; t.seats = seats;
+      t.shape = dlg.root.querySelector('#fd-edit-shape').value;
+      t.zone = dlg.root.querySelector('#fd-edit-zone').value;
+      dlg.close(); save(); render(); toast('Mesa actualizada');
+    };
+    dlg.root.querySelector('#fd-edit-delete').onclick = async () => {
+      if (protectedTable(t)) return toast('Esta mesa tiene un pedido abierto o una reserva; no se puede eliminar');
+      const ok = await confirmDialog({title:'Eliminar ' + t.name,message:'¿Seguro que quieres eliminar esta mesa? Podrás recuperarla desde “Recuperar mesa”.',okText:'Eliminar mesa',danger:true});
+      if (!ok) return;
+      dlg.close(); removeTables([t]);
+    };
   }
 
   /* ============ Cuenta dividida ============ */
