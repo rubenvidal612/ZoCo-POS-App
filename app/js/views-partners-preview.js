@@ -1,4 +1,4 @@
-import { cloudSession } from './auth.js';
+import { cloudSession, saveCloudSession } from './auth.js';
 import { sbConfig } from './sync.js';
 // Isolated UI preview. No customer data, billing or persistence.
 export function partnersPreviewView() {
@@ -20,10 +20,19 @@ export function partnersPreviewView() {
  live.innerHTML='<h3>Revendedores reales</h3><p>Administración de cuentas · Sin cobros</p><form style="display:grid;gap:10px"><label>Nombre comercial<input name="name" required maxlength="80" style="width:100%"></label><label>Identificador (ej. nova-pos)<input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,62}" style="width:100%"></label><label>Correo de soporte<input name="email" type="email" style="width:100%"></label><button class="btn" type="submit">Crear revendedor de prueba a mi nombre</button></form><p role="status"></p><div data-list></div>';
  q('metrics').after(live);
  const form=live.querySelector('form'), status=live.querySelector('[role=status]'), list=live.querySelector('[data-list]');
+ const slugInput=form.elements.slug;
+ slugInput.addEventListener('input',()=>{slugInput.value=slugInput.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'').slice(0,63);});
  async function api(table,method='GET',body,query=''){
- const session=cloudSession();if(!session?.access_token)throw Error('Inicia sesión en la nube');
- const cfg=sbConfig();const res=await fetch(cfg.url+'/rest/v1/'+table+query,{method,headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
- if(!res.ok)throw Error((await res.text()).slice(0,220));return res.status===204?[]:await res.json();
+ let session=cloudSession();if(!session?.access_token)throw Error('Inicia sesión en la nube');
+ const cfg=sbConfig();const request=()=>fetch(cfg.url+'/rest/v1/'+table+query,{method,headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
+ let res=await request();
+ if(res.status===401 && session.refresh_token){
+ const refresh=await fetch(cfg.url+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:cfg.key,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:session.refresh_token})});
+ if(!refresh.ok)throw Error('Tu sesión caducó. Cierra sesión y vuelve a entrar.');
+ const next=await refresh.json();if(!next.access_token)throw Error('No se pudo renovar la sesión.');
+ session={...session,...next};saveCloudSession(session);res=await request();
+ }
+ if(!res.ok){const err=await res.json().catch(()=>({}));throw Error(res.status===401?'Tu sesión caducó. Vuelve a iniciar sesión.':err.message||'No se pudo guardar o consultar.');}return res.status===204?[]:await res.json();
  }
  async function load(){
  const rows=await api('reseller_accounts','GET',null,'?select=id,display_name,slug,status&order=created_at.desc');
