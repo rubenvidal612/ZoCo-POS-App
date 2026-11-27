@@ -1,3 +1,4 @@
+import { openVisualGiroSelector } from './giro-selector.js';
 import { landingGalleryView } from './views-landing-gallery.js';
 import { MASCOT_CHOICES, getMascotChoice, setMascotChoice, mascotPreviewAsset } from './mascot.js';
 // Vistas: Productos, Ventas, Reportes, Configuración
@@ -1161,6 +1162,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
             <div class="hint" id="cat-link-hint" style="margin-top:8px"></div>
           </div>
           <div class="field"><label>Giro del negocio</label>
+            <button class="btn ghost sm" type="button" id="open-giro-gallery" style="margin-bottom:10px">🖼️ Explorar giros con fotografías</button>
             <select id="c-mode">
               ${Object.entries(BUSINESS_FAMILIES).map(([k, family]) => `<option value="${k}" ${familyForMode(state.company.mode) === k ? 'selected' : ''}>${family.label}</option>`).join('')}
             </select>
@@ -1668,6 +1670,19 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
   // Las categorías adicionales comparten el inventario y mantienen sus escalas originales.
   const categoryBox = $('#c-category-groups', root);
   const categoryMode = $('#c-mode', root);
+  $('#open-giro-gallery', root)?.addEventListener('click', () => {
+    openVisualGiroSelector({
+      selected: state.company.mode,
+      onSelect: mode => {
+        const family = familyForMode(mode);
+        categoryMode.value = family;
+        chosenCategories = [mode];
+        renderCategories();
+        toast('Giro seleccionado: ' + (MODES[mode]?.label || mode) + '. Pulsa Guardar para aplicar.');
+      }
+    });
+  });
+
   let chosenCategories = [
     state.company.mode,
     ...(Array.isArray(state.settings?.extraCategoryModes) ? state.settings.extraCategoryModes : [])
