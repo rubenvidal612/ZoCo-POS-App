@@ -396,7 +396,8 @@ function paintShell() {
           <div class="uc-avatar">${mascotMarkup('zoco-mascot-cycle')}<span class="uc-star">★</span></div>
           <div class="uc-info">
             <div class="uc-name">${u.name} <span class="crown">♛</span></div>
-            <div class="uc-tags"><span class="uc-role">${roleLabel}</span><span class="uc-plan">PRO</span></div>
+            <div class="uc-tags"><span class="uc-role">${state.superadmin ? "SUPERADMIN" : roleLabel}</span><span class="uc-plan">PRO</span></div>
+            <div class="uc-email" style="font-size:11px;overflow-wrap:anywhere;opacity:.85;margin-top:5px">${esc(u.email || "Correo no disponible")}</div>
           </div>
         </div>
 
@@ -416,6 +417,7 @@ function paintShell() {
           </div>`;
         }).join('')}
 
+        ${state.superadmin ? '<button class="nav" type="button" id="intro-preview-side"><span class="ic">✨</span><span class="lbl">Probar intro</span></button>' : ''}
         <button class="nav logout" data-r="salir"><span class="ic">⏻</span><span class="lbl">Cerrar sesión</span></button>
         <div class="side-ver"><span id="app-ver">v…</span></div>
       </aside>
@@ -467,6 +469,7 @@ function paintShell() {
     location.hash = '#/' + b.dataset.r;
   });
   $('#intro-preview')?.addEventListener('click', previewFirstBusinessSetup);
+  $('#intro-preview-side')?.addEventListener('click', previewFirstBusinessSetup);
   $('#brnch')?.addEventListener('click', switchBranch);
   // Versión discreta dentro de la app
   (() => {
