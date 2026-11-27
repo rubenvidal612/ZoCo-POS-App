@@ -25,6 +25,7 @@ export function showZoCoTour(user=null) {
   panel.innerHTML='<div class="zoco-walkthrough-focus" aria-hidden="true"></div><div class="zoco-walkthrough-bubble" role="dialog" aria-label="Guía interactiva ZoCo"><div class="zoco-walkthrough-avatar">'+mascotMarkup('zoco-tour-mascot')+'</div><div class="zoco-walkthrough-copy"><small class="zoco-tour-count"></small><h2></h2><p></p><div class="zoco-tour-buttons"><button class="btn ghost" data-tour="skip">Saltar</button><button class="btn ghost" data-tour="back">Atrás</button><button class="btn orange" data-tour="next">Siguiente</button></div></div></div>';
   const bubble=panel.querySelector('.zoco-walkthrough-bubble');
   const avatar=panel.querySelector('.zoco-walkthrough-avatar');
+  avatar.insertAdjacentHTML('beforeend','<span class="zoco-guide-arm" aria-hidden="true"><span class="zoco-guide-hand">☝</span></span>');
   let celebrateTimer;
   const react=(mood)=>{avatar.dataset.mood=mood;clearTimeout(celebrateTimer);if(mood==='celebrate')celebrateTimer=setTimeout(()=>{if(panel.isConnected)avatar.dataset.mood='point'},900)};
   const focus=panel.querySelector('.zoco-walkthrough-focus');
@@ -40,6 +41,9 @@ export function showZoCoTour(user=null) {
     let y=rect.bottom+18;
     if(y+h>window.innerHeight-12)y=Math.max(12,rect.top-h-18);
     bubble.style.left=x+'px';bubble.style.top=y+'px';bubble.style.transform='none';
+    const pointingRight=rect.left+rect.width/2 > x+w/2;
+    avatar.dataset.pointDirection=pointingRight?'right':'left';
+    avatar.style.setProperty('--guide-point-angle',pointingRight?'-48deg':'48deg');
   };
   const paint=()=>{
     const s=STEPS[step];
