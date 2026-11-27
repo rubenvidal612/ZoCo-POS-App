@@ -44,11 +44,11 @@ export function scheduleZoCoWelcome(user){
 export function showZoCoRobotHelp(user=null){
  currentOverlay?.remove();
  const box=document.createElement('div');box.className='zoco-help-overlay';
- box.innerHTML='<aside class="zoco-help-card" role="dialog" aria-modal="true" aria-label="Ayuda ZoCo"><div class="zoco-help-head">'+mascotMarkup('zoco-help-mascot')+'<div><b>Hola, soy tu robot ZoCo</b><small>¿En qué puedo ayudarte?</small></div><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div><div class="zoco-help-questions"></div><div class="zoco-help-answer" aria-live="polite">Elige una pregunta para comenzar.</div><div class="zoco-help-actions"><button class="btn ghost" data-guide>Ver tutorial</button><button class="btn orange" data-ai>Hablar con IA</button></div></aside>';
+ box.innerHTML='<aside class="zoco-help-card" role="dialog" aria-modal="true" aria-label="Ayuda ZoCo"><div class="zoco-help-head">'+mascotMarkup('zoco-help-mascot')+'<div><b>Hola, soy tu robot ZoCo</b><small>¿En qué puedo ayudarte?</small></div><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div><div class="zoco-help-questions"></div><div class="zoco-help-answer" aria-live="polite">Elige una pregunta para comenzar.</div><div class="zoco-help-actions"><button class="btn ghost" data-guide>Ver preguntas frecuentes</button><button class="btn orange" data-ai>Hablar con IA</button></div></aside>';
  box.querySelector('.zoco-help-questions').innerHTML=FAQ.map((f,i)=>'<button type="button" data-question="'+i+'">'+f[0]+'</button>').join('');
  box.querySelectorAll('[data-question]').forEach(btn=>btn.onclick=()=>{const f=FAQ[Number(btn.dataset.question)];const answer=box.querySelector('.zoco-help-answer');answer.textContent=f[1];const row=document.createElement('div');const go=document.createElement('button');go.type='button';go.className='btn ghost sm';go.textContent='Abrir sección';go.onclick=()=>{if(document.querySelector('[data-r="'+f[2]+'"]')){box.remove();location.hash='#/'+f[2]}else answer.textContent='Tu rol no tiene acceso a esa sección.'};row.appendChild(go);answer.appendChild(row)});
  box.querySelector('[data-close]').onclick=()=>box.remove();
- box.querySelector('[data-guide]').onclick=()=>{box.remove();showZoCoTour(user)};
+ box.querySelector('[data-guide]').onclick=()=>{box.querySelector('.zoco-help-questions')?.scrollIntoView({behavior:'smooth',block:'nearest'});};
  box.querySelector('[data-ai]').onclick=()=>{if(document.querySelector('[data-r="ia"]')){box.remove();location.hash='#/ia'}else box.querySelector('.zoco-help-answer').textContent='Tu rol no tiene acceso a IA.'};
  box.onclick=(e)=>{if(e.target===box)box.remove()};document.body.appendChild(box);currentOverlay=box;
 }
