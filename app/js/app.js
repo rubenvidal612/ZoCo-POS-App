@@ -2,7 +2,7 @@ import { openVisualGiroSelector } from './giro-selector.js';
 import { mascotMarkup, setupMascotMotion, reactMascot } from './mascot.js';
 import { showZoCoTour, scheduleZoCoWelcome, showZoCoRobotHelp } from './tour.js';
 // Shell + router + login de ZoCo POS
-import { state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
+import { MODES, state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
 import { foodView } from './views-food.js';
 import { beautyView } from './views-beauty.js';
@@ -341,6 +341,19 @@ function paintLogin() {
   setTimeout(() => $('#lg-pass')?.focus(), 80);
 }
 
+function previewFirstBusinessSetup() {
+ const name=prompt('Prueba de intro ZoCo: ¿Cómo se llama tu negocio?','Mi negocio');
+ if(name===null)return;
+ openVisualGiroSelector({selected:'general',onSelect:mode=>{
+  const panel=document.createElement('div');
+  panel.style.cssText='position:fixed;inset:0;z-index:99999;background:#071224cc;display:grid;place-items:center;padding:16px';
+  panel.innerHTML='<section style="background:white;color:#152238;border-radius:22px;padding:28px;width:min(440px,100%);text-align:center"><div style="font-size:40px">🎉</div><h2>¡Tu negocio está listo!</h2><p id="intro-result"></p><button class="btn orange" type="button">Entrar a ZoCo</button><small style="display:block;margin-top:12px">Prueba del administrador: no se modifica tu negocio real.</small></section>';
+  panel.querySelector('#intro-result').textContent=(name.trim()||'Mi negocio')+' · '+(MODES[mode]?.label||mode);
+  panel.querySelector('button').onclick=()=>panel.remove();
+  document.body.appendChild(panel);
+ }});
+}
+
 /* Primer negocio: selector visual, solo para cuentas nuevas. */
 function openFirstBusinessSetup() {
   if (!currentUser()) return;
@@ -415,6 +428,7 @@ function paintShell() {
             ${isHome ? `<div class="tb-sub">Hola, ${u.name.split(' ')[0]} 👋</div>` : ''}
           </div>
           <div class="spacer"></div>
+          ${state.superadmin ? '<button type="button" class="chip-branch" id="intro-preview">✨ Probar intro</button>' : ''}
           ${u.role === 'OWNER' ? `<button type="button" class="chip-branch" id="brnch"><span class="dot"></span>${esc(br.name)} ▾</button>` : `<div class="chip-branch"><span class="dot"></span>${esc(br.name)}</div>`}
           <div class="avatar">${initials}<span class="av-dot"></span></div>
         </header>
@@ -452,6 +466,7 @@ function paintShell() {
     reactMascot('curious');
     location.hash = '#/' + b.dataset.r;
   });
+  $('#intro-preview')?.addEventListener('click', previewFirstBusinessSetup);
   $('#brnch')?.addEventListener('click', switchBranch);
   // Versión discreta dentro de la app
   (() => {
