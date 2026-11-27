@@ -1,8 +1,9 @@
 {
-  "version": "2.80.6",
-  "date": "2026-11-26",
+  "version": "2.80.7",
+  "date": "2026-11-27",
   "notes": [
-    "Se elimina el tutorial automático de seis pasos",
-    "Ayuda de ZoCo abre el asistente con preguntas e IA"
+    "ZoCo Partners: registro y activación de revendedores",
+    "Personalización de marca y panel de administración",
+    "Asociación de negocios y precios personalizados"
   ]
 }
