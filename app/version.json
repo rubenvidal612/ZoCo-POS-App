@@ -1,8 +1,8 @@
 {
-  "version": "2.80.9",
+  "version": "2.80.10",
   "date": "2026-11-27",
   "notes": [
-    "Vista visible del color de marca seleccionado",
-    "Se distingue la asociación de empresas existentes de los giros comerciales"
+    "Registro de nuevos clientes por giro comercial",
+    "Se retira el selector de empresas existentes del panel de revendedor"
   ]
 }
