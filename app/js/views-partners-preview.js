@@ -1,3 +1,5 @@
+import { cloudSession } from './auth.js';
+import { sbConfig } from './sync.js';
 // Isolated UI preview. No customer data, billing or persistence.
 export function partnersPreviewView() {
  const root=document.createElement('div');
@@ -13,5 +15,22 @@ export function partnersPreviewView() {
  q('brand-name').textContent=q('name').value.trim()||'Mi POS';q('brand-name').style.color=q('color').value;q('wave').setAttribute('stroke',q('color').value);
  }
  root.addEventListener('click',e=>{const button=e.target.closest('[data-section]');if(!button)return;for(const id of ['brand','prices','clients'])q('section-'+id).hidden=id!==button.dataset.section; q('section-'+button.dataset.section).scrollIntoView({block:'nearest',behavior:'smooth'});});
- root.addEventListener('input',render);render();return {root};
+ root.addEventListener('input',render);render();
+ const live=document.createElement('section');live.style.cssText='padding:16px;border:1px solid #8884;border-radius:14px;margin:12px 0';
+ live.innerHTML='<h3>Revendedores reales</h3><p>Administración de cuentas · Sin cobros</p><form style="display:grid;gap:10px"><label>Nombre comercial<input name="name" required maxlength="80" style="width:100%"></label><label>Identificador (ej. nova-pos)<input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,62}" style="width:100%"></label><label>Correo de soporte<input name="email" type="email" style="width:100%"></label><button class="btn" type="submit">Crear revendedor de prueba a mi nombre</button></form><p role="status"></p><div data-list></div>';
+ q('metrics').after(live);
+ const form=live.querySelector('form'), status=live.querySelector('[role=status]'), list=live.querySelector('[data-list]');
+ async function api(table,method='GET',body,query=''){
+ const session=cloudSession();if(!session?.access_token)throw Error('Inicia sesión en la nube');
+ const cfg=sbConfig();const res=await fetch(cfg.url+'/rest/v1/'+table+query,{method,headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
+ if(!res.ok)throw Error((await res.text()).slice(0,220));return res.status===204?[]:await res.json();
+ }
+ async function load(){
+ const rows=await api('reseller_accounts','GET',null,'?select=id,display_name,slug,status&order=created_at.desc');
+ list.replaceChildren();for(const row of rows){const box=document.createElement('div');box.style.cssText='padding:12px;border-bottom:1px solid #8884';const label=document.createElement('p');label.textContent=row.display_name+' · '+row.slug+' · '+row.status;const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Guardar marca del simulador';b.onclick=async()=>{b.disabled=true;try{const data={display_name:q('name').value.trim()||row.display_name,primary_color:q('color').value};const existing=await api('reseller_branding','GET',null,'?reseller_id=eq.'+row.id);if(existing.length)await api('reseller_branding','PATCH',data,'?reseller_id=eq.'+row.id);else await api('reseller_branding','POST',{...data,reseller_id:row.id});status.textContent='Marca guardada en Supabase';}catch(e){status.textContent=e.message;}finally{b.disabled=false;}};box.append(label,b);list.append(box);}
+ if(!rows.length)list.textContent='Aún no hay revendedores registrados.';
+ }
+ form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;try{const f=new FormData(form);const user=cloudSession()?.user?.id;if(!user)throw Error('Sesión sin usuario');await api('reseller_accounts','POST',{owner_user_id:user,display_name:String(f.get('name')).trim(),slug:f.get('slug'),support_email:f.get('email')||null});form.reset();await load();status.textContent='Revendedor de prueba registrado';}catch(e){status.textContent=e.message;}finally{b.disabled=false;}};
+ load().catch(e=>status.textContent=e.message);
+ return {root};
 }
