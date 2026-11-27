@@ -1162,12 +1162,12 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
             <div class="hint" id="cat-link-hint" style="margin-top:8px"></div>
           </div>
           <div class="field"><label>Giro del negocio</label>
-            <button class="btn ghost sm" type="button" id="open-giro-gallery" style="margin-bottom:10px">🖼️ Explorar giros con fotografías</button>
-            <select id="c-mode">
+            <button class="btn ghost sm" type="button" id="open-giro-gallery" style="width:100%;min-height:52px;margin-bottom:10px;border:2px solid #f97316;font-weight:800">🖼️ Elegir o cambiar giro · Ver fotografías y buscar</button>
+            <select id="c-mode" style="display:none" aria-label="Familia del giro seleccionado">
               ${Object.entries(BUSINESS_FAMILIES).map(([k, family]) => `<option value="${k}" ${familyForMode(state.company.mode) === k ? 'selected' : ''}>${family.label}</option>`).join('')}
             </select>
-            <div class="hint">Cada empresa elige su giro y secciones de catálogo.</div>
-            <div id="c-category-groups" style="margin-top:12px"></div>
+            <div class="hint">Giro actual: <b>${esc(MODES[state.company.mode]?.label || "General")}</b>. Toca el botón de arriba para elegir otro giro mediante fotografías.</div>
+            <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Opciones avanzadas · Vender en varias categorías</summary><div id="c-category-groups" style="margin-top:12px"></div></details>
 
           </div>
           <button class="btn sm" id="save-co">Guardar</button>
