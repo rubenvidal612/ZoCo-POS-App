@@ -1,9 +1,8 @@
 {
-  "version": "2.80.1",
+  "version": "2.80.2",
   "date": "2026-11-26",
   "notes": [
-    "Nuevo selector visual de giros con fotografías y buscador en Ajustes",
-    "Selección del giro al configurar el primer negocio",
-    "Cambio de giro más sencillo desde Configuración"
+    "Prueba de intro exclusiva para superadministrador",
+    "Configuración rápida de nombre y giro sin modificar datos reales"
   ]
 }
