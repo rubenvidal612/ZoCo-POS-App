@@ -2438,3 +2438,13 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @keyframes zoco-bot-celebrate{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-12px) rotate(-9deg)}70%{transform:translateY(-5px) rotate(9deg)}}
 @keyframes zoco-bot-think{0%,100%{transform:rotate(0)}50%{transform:rotate(-11deg)}}
 @media(prefers-reduced-motion:reduce){.zoco-walkthrough-avatar,.zoco-help-head .zoco-mascot{animation:none!important}}
+
+/* Brazo de señalamiento independiente: superposición provisional, no modifica el arte original. */
+.zoco-walkthrough-avatar{position:relative;overflow:visible;isolation:isolate}
+.zoco-guide-arm{position:absolute;left:55%;top:51%;width:11px;height:39px;border:2px solid #56718d;border-radius:9px;background:linear-gradient(90deg,#c4e8f5,#7fb8dc);transform-origin:50% 10%;transform:rotate(-25deg);opacity:0;pointer-events:none;z-index:2}
+.zoco-guide-hand{position:absolute;bottom:-17px;left:-10px;font-size:27px;line-height:1;filter:drop-shadow(0 1px 1px #2345);transform:rotate(180deg)}
+.zoco-walkthrough-avatar[data-mood="point"] .zoco-guide-arm{opacity:1;animation:zoco-arm-point 1.5s ease-in-out infinite}
+.zoco-walkthrough-avatar[data-point-direction="left"] .zoco-guide-arm{left:36%}
+.zoco-walkthrough-avatar[data-point-direction="left"] .zoco-guide-hand{transform:rotate(0deg)}
+@keyframes zoco-arm-point{0%,100%{transform:rotate(calc(var(--guide-point-angle, -48deg) - 7deg))}50%{transform:rotate(var(--guide-point-angle,-48deg))}}
+@media(prefers-reduced-motion:reduce){.zoco-walkthrough-avatar[data-mood="point"] .zoco-guide-arm{animation:none;transform:rotate(var(--guide-point-angle,-48deg))}}
