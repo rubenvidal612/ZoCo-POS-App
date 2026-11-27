@@ -2388,3 +2388,27 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @media(prefers-reduced-motion:reduce){
  .zoco-mascot.zoco-robot,.sidebar .uc-avatar .zoco-mascot.zoco-robot{animation:none!important}
 }
+
+/* Guía del robot de ZoCo y centro de ayuda. */
+.zoco-tour-overlay,.zoco-help-overlay{position:fixed;inset:0;z-index:10000;background:#071122b8;display:flex;align-items:center;justify-content:center;padding:16px}
+.zoco-tour-card{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr);gap:18px;align-items:center;width:min(670px,100%);background:var(--surface,#fff);color:var(--text,#152238);border-radius:22px;padding:27px;box-shadow:0 25px 90px #0005}
+.zoco-tour-character .zoco-mascot{max-width:150px;aspect-ratio:1;filter:none!important;background:transparent!important}
+.zoco-tour-character img,.zoco-help-head img{object-fit:contain;background:transparent}
+.zoco-tour-count{font-size:11px;font-weight:900;letter-spacing:.1em;color:#f97316}
+.zoco-tour-info h2{margin:8px 0;font-size:22px;line-height:1.22}
+.zoco-tour-info p{font-size:14px;line-height:1.6;color:var(--muted,#596475);margin:0 0 18px}
+.zoco-tour-buttons,.zoco-help-actions{display:flex;gap:8px;flex-wrap:wrap}
+.zoco-help-overlay{align-items:flex-end;justify-content:flex-end;padding:18px}
+.zoco-help-card{background:var(--surface,#fff);color:var(--text,#152238);border-radius:20px;width:min(415px,100%);padding:16px;box-shadow:0 20px 65px #0005;max-height:90vh;overflow:auto}
+.zoco-help-head{display:flex;gap:10px;align-items:center}
+.zoco-help-head .zoco-mascot{width:73px;flex:0 0 73px;filter:none!important}
+.zoco-help-head div{flex:1;display:grid;gap:5px}.zoco-help-head b{font-size:14px}.zoco-help-head small{font-size:12px;color:var(--muted,#69788b)}
+.zoco-help-questions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:15px 0}
+.zoco-help-questions button{text-align:left;border:1px solid var(--line,#ddd);background:var(--surface-2,#f7f8fc);color:inherit;border-radius:10px;padding:10px;font-size:12px;cursor:pointer}
+.zoco-help-questions button:hover{border-color:#f97316}
+.zoco-help-answer{min-height:66px;font-size:13px;line-height:1.5;border-radius:12px;background:var(--surface-2,#f7f8fc);padding:12px;margin-bottom:13px}
+.zoco-help-answer .btn{margin-top:9px}
+.pl-business-addons{display:grid;gap:5px;margin:12px 0;padding:14px;border:1px solid var(--line,#ddd);border-radius:12px}
+.pl-business-addons strong{font-size:14px}.pl-business-addons span{font-size:13px}.pl-business-addons small{font-size:11px;color:var(--muted,#687589)}
+@media(max-width:580px){.zoco-tour-card{grid-template-columns:1fr;text-align:center;padding:18px;gap:7px}.zoco-tour-character{display:flex;justify-content:center}.zoco-tour-character .zoco-mascot{width:90px;height:90px}.zoco-tour-info h2{font-size:20px}.zoco-tour-buttons{justify-content:center}.zoco-tour-buttons .btn{font-size:12px;padding:9px}.zoco-help-overlay{padding:8px}.zoco-help-card{width:100%}}
+@media(prefers-reduced-motion:reduce){.zoco-tour-overlay .zoco-mascot,.zoco-help-overlay .zoco-mascot{animation:none!important}}

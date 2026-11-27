@@ -17,7 +17,7 @@ import {
   switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, demoPhotoForProduct, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
-  PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
+  PLANS, PLAN_ORDER, estimateBusinessTotal, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
@@ -1209,7 +1209,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
         <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
         <div style="padding:16px">
           <div id="pl-current" class="pl-current"></div>
-          <div id="pl-usage" class="pl-usage"></div>
+          <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
           <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
           <div id="pl-grid" class="pl-grid"></div>
           <div class="hint" style="margin-top:12px">
@@ -1530,10 +1530,8 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
             <input id="co-new" placeholder="Nombre de OTRO negocio (se crea vacío)" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
             <button class="btn ghost sm" id="co-create">+ Crear empresa</button>
           </div>
-          <div class="hint" style="margin-top:8px">
-            Cada empresa guarda sus datos por separado en el servidor.
-            Para dos tiendas del <b>mismo</b> negocio usa <b>Sucursales</b>, no una empresa nueva.
-          </div>
+          <div class="hint" style="margin-top:8px"><b>ZoCo Esencial: $149/mes incluye un negocio y cada negocio independiente adicional cuesta $100/mes.</b> Cambiar el giro o vender otras categorías no genera cobros. Las sucursales siguen sus límites. El suplemento de Pro y Empresarial está pendiente de definir.</div>
+          <div class="hint" style="margin-top:8px">La creación de negocios adicionales requiere separar los datos y habilitar pagos seguros en la nube. Esta pantalla no genera cobros.</div>
         </div>
       </div>
       <div class="panel">
@@ -2604,9 +2602,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
       </div>`;
     }).join('');
     coList.querySelectorAll('[data-co]').forEach((b) => b.onclick = () => {
-      switchCompany(b.dataset.co);
-      ctx.refreshShell?.();
-      location.reload();
+      modal({title:'Cambio de negocio protegido',body:'Antes de cambiar de empresa debemos activar el aislamiento seguro de inventarios, ventas y usuarios en la nube.',foot:'<button class="btn" data-close>Entendido</button>'});
     });
   };
   renderCos();
@@ -2625,11 +2621,10 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
   $('#co-create', root)?.addEventListener('click', () => {
     const name = $('#co-new', root).value.trim();
     if (!name) { toast('Escribe el nombre'); return; }
-    const id = createCompany(name);
-    switchCompany(id);
-    ctx.refreshShell?.();
-    toast('Empresa creada: ' + name);
-    setTimeout(() => location.reload(), 400);
+    const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
+    const quote=estimateBusinessTotal(count+1,currentPlan().code);
+    const price=quote.total===null?'Precio adicional por definir':'Total estimado: $'+quote.total+' MXN/mes';
+    modal({title:'Nuevo negocio independiente',body:'<p><b>'+esc(name)+'</b></p><p>'+esc(price)+'</p><p>El alta segura y cobro de negocios adicionales todavía no están activos. No se creó otro negocio ni se realizó un cargo.</p>',foot:'<button class="btn" data-close>Entendido</button>'});
   });
 
   return { root, refresh() {} };
@@ -3695,7 +3690,7 @@ export function planPanelMarkup(withSec = true) {
       <div style="padding:16px">
         <div id="pl-free"></div>
         <div id="pl-current"></div>
-        <div id="pl-usage" class="pl-usage"></div>
+        <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
         <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
         <div id="pl-grid" class="pl-grid"></div>
         <div class="hint" style="margin-top:12px">
@@ -3749,6 +3744,10 @@ export function bindPlanPanel(root) {
       </div>`;
 
     const over = u.overLimit;
+    const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
+    const quote=estimateBusinessTotal(count,p.code);
+    const extra=$('#pl-business-addons',root);
+    if(extra)extra.innerHTML='<strong>Negocios independientes</strong><span>'+count+' registrado(s) · '+(p.code==='esencial'?'Primero incluido, adicional +$100/mes':'Tarifa extra pendiente para este plan')+'</span><small>'+(quote.total!==null?'Total estimado: $'+quote.total+' MXN/mes. ':'')+'Cotización informativa, no se generan cobros.</small>';
     $('#pl-usage', root).innerHTML = `
       <div class="pl-bar">
         <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>

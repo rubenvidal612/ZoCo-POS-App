@@ -986,6 +986,17 @@ export const PLANS = {
 };
 
 export const PLAN_ORDER = ['esencial', 'pro', 'empresarial'];
+/** Propuesta comercial: cotización informativa, NO cargo ni alta automática. */
+export const EXTRA_BUSINESS_PRICE = 100;
+export function estimateBusinessTotal(count=1,planCode='esencial') {
+  const n=Math.max(1,Math.floor(Number(count)||1));
+  const aliases={tiendita:'esencial',negocio:'pro',profesional:'pro',premium:'empresarial',cadenas:'empresarial'};
+  const code=aliases[String(planCode||'').toLowerCase()]||String(planCode||'esencial').toLowerCase();
+  const plan=PLANS[code]||PLANS.esencial;
+  if(plan.code!=='esencial')return {base:plan.price,extra:null,total:null,count:n};
+  return {base:plan.price,extra:EXTRA_BUSINESS_PRICE,total:plan.price+(n-1)*EXTRA_BUSINESS_PRICE,count:n};
+}
+
 
 /** Equivalencia segura de planes anteriores (no se pierde nada). */
 export const LEGACY_PLAN_MAP = {
