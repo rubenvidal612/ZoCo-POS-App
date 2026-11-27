@@ -1,9 +1,8 @@
 {
-  "version": "2.80.3",
+  "version": "2.80.4",
   "date": "2026-11-26",
   "notes": [
-    "Correo de la sesión visible en el menú lateral",
-    "Indicador SUPERADMIN cuando el servidor confirma el permiso",
-    "Botón Probar intro en el menú lateral del superadministrador"
+    "Intro de prueba con diseño propio y mascota ZoCo",
+    "Cuestionario rápido de nombre y giro, sin avisos del navegador"
   ]
 }
