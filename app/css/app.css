@@ -2423,3 +2423,5 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @keyframes zoco-guide-pulse{50%{box-shadow:0 0 0 12px #fb923c33,0 0 0 9999px #07112255}}
 @media(max-width:580px){.zoco-walkthrough-bubble{padding:10px}.zoco-walkthrough-avatar{width:48px;min-width:48px}}
 @media(prefers-reduced-motion:reduce){.zoco-walkthrough-focus{animation:none}}
+
+.zoco-help-ask{display:flex;gap:7px;margin:10px 0}.zoco-help-ask input{min-width:0;flex:1;border:1px solid var(--line,#ddd);border-radius:10px;padding:10px;background:var(--surface,#fff);color:inherit}.zoco-help-ask button{flex-shrink:0}
