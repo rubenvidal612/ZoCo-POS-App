@@ -1,8 +1,8 @@
 {
-  "version": "2.80.4",
+  "version": "2.80.5",
   "date": "2026-11-26",
   "notes": [
-    "Intro de prueba con diseño propio y mascota ZoCo",
-    "Cuestionario rápido de nombre y giro, sin avisos del navegador"
+    "Robot del intro ajustado para celulares",
+    "Título y formulario visibles sin superposición"
   ]
 }
