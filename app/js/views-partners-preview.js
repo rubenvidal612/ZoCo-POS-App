@@ -19,6 +19,8 @@ export function partnersPreviewView() {
  const live=document.createElement('section');live.style.cssText='padding:16px;border:1px solid #8884;border-radius:14px;margin:12px 0';
  live.innerHTML='<h3>Revendedores reales</h3><p>Administración de cuentas · Sin cobros</p><form style="display:grid;gap:10px"><label>Nombre comercial<input name="name" required maxlength="80" style="width:100%"></label><label>Identificador (ej. nova-pos)<input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,62}" style="width:100%"></label><label>Correo de soporte<input name="email" type="email" style="width:100%"></label><button class="btn" type="submit">Crear revendedor de prueba a mi nombre</button></form><p role="status"></p><div data-list></div>';
  q('metrics').after(live);
+ live.querySelectorAll('input').forEach(i=>{i.style.cssText='box-sizing:border-box;width:100%;min-height:48px;padding:12px 14px;border:1px solid #8885;border-radius:12px;font-size:16px;background:var(--card,#fff);color:var(--text,#172033);margin-top:6px';});
+ live.querySelector('form').style.gap='16px';
  const form=live.querySelector('form'), status=live.querySelector('[role=status]'), list=live.querySelector('[data-list]');
  const slugInput=form.elements.slug;
  slugInput.addEventListener('input',()=>{slugInput.value=slugInput.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'').slice(0,63);});
