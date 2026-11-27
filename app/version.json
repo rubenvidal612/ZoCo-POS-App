@@ -1,9 +1,8 @@
 {
-  "version": "2.80.8",
+  "version": "2.80.9",
   "date": "2026-11-27",
   "notes": [
-    "Se corrige acceso al panel de revendedores",
-    "Campos de registro más grandes",
-    "Administración de marca, clientes y precios"
+    "Vista visible del color de marca seleccionado",
+    "Se distingue la asociación de empresas existentes de los giros comerciales"
   ]
 }
