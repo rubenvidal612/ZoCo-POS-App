@@ -2362,3 +2362,29 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .sidebar .uc-avatar .zoco-mascot.zoco-animal{aspect-ratio:1 / 1!important;max-width:100%;max-height:100%}
 .sidebar .uc-avatar .zoco-mascot.zoco-animal.zoco-mascot-cycle{animation:none!important}
 @media(prefers-reduced-motion:reduce){.sidebar .uc-avatar .zoco-mascot.zoco-animal{animation:none!important}}
+
+/* Robot oficial ZoCo, con transparencia real y sin máscaras ni filtros de Perla. */
+:root[data-zoco-mascot="robot"]{--zoco-character-filter:none}
+.zoco-mascot.zoco-robot,
+.sidebar .uc-avatar .zoco-mascot.zoco-robot {
+  background:transparent!important;filter:none!important;
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  border:0!important;overflow:visible!important;
+}
+.zoco-mascot.zoco-robot img,
+.sidebar .uc-avatar .zoco-mascot.zoco-robot img,
+.mascot-choice-icon img,
+.fc-mascot-update img,
+.zoco-notice-mascot img{
+  background:transparent!important;filter:none!important;
+  object-fit:contain!important;
+}
+.mascot-choice-icon[data-preview-mascot="robot"]{
+  background:transparent!important;border-radius:0;overflow:visible;
+}
+.mascot-choice-icon[data-preview-mascot="robot"] img{width:100%;height:100%;object-fit:contain}
+.mascot-choice:has([data-preview-mascot="robot"]){min-height:154px}
+#upd-card .fc-mascot-update{background:transparent!important}
+@media(prefers-reduced-motion:reduce){
+ .zoco-mascot.zoco-robot,.sidebar .uc-avatar .zoco-mascot.zoco-robot{animation:none!important}
+}

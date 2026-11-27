@@ -1,9 +1,9 @@
 {
-  "version": "2.79.0",
+  "version": "2.79.1",
   "date": "2026-11-26",
   "notes": [
-    "Cinco mascotas animadas: jaguar, manatí, águila, ajolote y quetzal",
-    "Elige tu mascota en Ajustes → Apariencia",
-    "Cada mascota saluda y después queda en reposo"
+    "Robot oficial ZoCo como única mascota visible",
+    "Ocultamos los animalitos y retiramos los fondos negros",
+    "La mascota aparece en menú y avisos con saludo suave"
   ]
 }

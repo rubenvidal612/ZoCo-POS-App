@@ -1121,15 +1121,15 @@ export function settingsView(ctx) {
           <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tema de la empresa. Se aplica al instante en todas las cajas.</div>
           <div class="theme-grid" id="themes"></div>
           <div class="mascot-preferences">
-            <h3>Elige tu mascota</h3>
-            <p>Escoge el personaje que te acompañará en el menú y los avisos. Puedes cambiarlo cuando quieras.</p>
+            <h3>Tu mascota ZoCo</h3>
+            <p>Nos quedamos con nuestro robot oficial: aparece en el menú y en los avisos.</p>
             <div class="mascot-choices" id="mascot-choices" role="radiogroup" aria-label="Mascota de ZoCo">
               ${MASCOT_CHOICES.map(item => `<button type="button" class="mascot-choice" data-choice="${item.id}" role="radio" aria-checked="${getMascotChoice() === item.id ? 'true' : 'false'}">
                 <span class="mascot-choice-icon" data-preview-mascot="${item.id}"><img src="${mascotPreviewAsset(item.id)}" loading="lazy" alt=""></span>
                 <strong>${item.label}</strong><small>${item.detail}</small>
               </button>`).join('')}
             </div>
-            <div class="hint">La elección se guarda en este dispositivo. No cambia la mascota de otros empleados.</div>
+            <div class="hint">Los animalitos quedaron ocultos. El robot se muestra en todos los dispositivos.</div>
           </div>
           <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
             <label style="font-size:13px;font-weight:600">Modo oscuro</label>
