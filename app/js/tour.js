@@ -24,9 +24,12 @@ export function showZoCoTour(user=null) {
   panel.className='zoco-walkthrough';
   panel.innerHTML='<div class="zoco-walkthrough-focus" aria-hidden="true"></div><div class="zoco-walkthrough-bubble" role="dialog" aria-label="Guía interactiva ZoCo"><div class="zoco-walkthrough-avatar">'+mascotMarkup('zoco-tour-mascot')+'</div><div class="zoco-walkthrough-copy"><small class="zoco-tour-count"></small><h2></h2><p></p><div class="zoco-tour-buttons"><button class="btn ghost" data-tour="skip">Saltar</button><button class="btn ghost" data-tour="back">Atrás</button><button class="btn orange" data-tour="next">Siguiente</button></div></div></div>';
   const bubble=panel.querySelector('.zoco-walkthrough-bubble');
+  const avatar=panel.querySelector('.zoco-walkthrough-avatar');
+  let celebrateTimer;
+  const react=(mood)=>{avatar.dataset.mood=mood;clearTimeout(celebrateTimer);if(mood==='celebrate')celebrateTimer=setTimeout(()=>{if(panel.isConnected)avatar.dataset.mood='point'},900)};
   const focus=panel.querySelector('.zoco-walkthrough-focus');
   const finish=()=>{try{if(user)localStorage.setItem(key(user),'1')}catch{};cleanup();};
-  const cleanup=()=>{panel.remove();window.removeEventListener('resize',position);window.removeEventListener('scroll',position,true);document.removeEventListener('keydown',escape);if(currentOverlay===panel)currentOverlay=null;};
+  const cleanup=()=>{clearTimeout(celebrateTimer);panel.remove();window.removeEventListener('resize',position);window.removeEventListener('scroll',position,true);document.removeEventListener('keydown',escape);if(currentOverlay===panel)currentOverlay=null;};
   const escape=e=>{if(e.key==='Escape')finish()};
   const position=()=>{
     const rect=target?.getBoundingClientRect();
@@ -45,13 +48,14 @@ export function showZoCoTour(user=null) {
     panel.querySelector('[data-tour="back"]').disabled=step===0;
     panel.querySelector('[data-tour="next"]').textContent=step===STEPS.length-1?'Terminar':'Siguiente';
     target=document.querySelector('[data-r="'+s[2]+'"]');
+    react(step===0?'wave':'point');
     if(!target){panel.querySelector('p').textContent+=' Puedes continuar si tu rol no muestra esta sección.';}
     requestAnimationFrame(position);
   };
   panel.querySelector('[data-tour="skip"]').onclick=finish;
   panel.querySelector('[data-tour="back"]').onclick=()=>{step=Math.max(0,step-1);paint()};
-  panel.querySelector('[data-tour="next"]').onclick=()=>{if(step===STEPS.length-1)return finish();step++;paint()};
-  focus.onclick=()=>{if(target){target.click();location.hash='#/'+STEPS[step][2];}if(step<STEPS.length-1){step++;setTimeout(paint,180)}else finish()};
+  panel.querySelector('[data-tour="next"]').onclick=()=>{if(step===STEPS.length-1)return finish();react('celebrate');step++;setTimeout(paint,650)};
+  focus.onclick=()=>{if(target){target.click();location.hash='#/'+STEPS[step][2];}if(step<STEPS.length-1){react('celebrate');step++;setTimeout(paint,650)}else finish()};
   document.addEventListener('keydown',escape);
   window.addEventListener('resize',position);window.addEventListener('scroll',position,true);
   document.body.appendChild(panel);currentOverlay=panel;paint();
@@ -71,9 +75,12 @@ export function showZoCoRobotHelp(user=null){
  const box=document.createElement('div');box.className='zoco-help-overlay';
  box.innerHTML='<aside class="zoco-help-card" role="dialog" aria-modal="true" aria-label="Ayuda ZoCo"><div class="zoco-help-head">'+mascotMarkup('zoco-help-mascot')+'<div><b>Hola, soy tu robot ZoCo</b><small>¿En qué puedo ayudarte?</small></div><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div><div class="zoco-help-questions"></div><form class="zoco-help-ask"><input aria-label="Pregunta al robot" placeholder="Pregúntame cómo hacer algo..." required><button class="btn orange" type="submit">Preguntar</button></form><div class="zoco-help-answer" aria-live="polite">Elige una pregunta para comenzar.</div><div class="zoco-help-actions"><button class="btn ghost" data-guide>Ver tutorial</button><button class="btn orange" data-ai>Hablar con IA</button></div></aside>';
  box.querySelector('.zoco-help-questions').innerHTML=FAQ.map((f,i)=>'<button type="button" data-question="'+i+'">'+f[0]+'</button>').join('');
- box.querySelectorAll('[data-question]').forEach(btn=>btn.onclick=()=>{const f=FAQ[Number(btn.dataset.question)];const answer=box.querySelector('.zoco-help-answer');answer.textContent=f[1];const row=document.createElement('div');const go=document.createElement('button');go.type='button';go.className='btn ghost sm';go.textContent='Abrir sección';go.onclick=()=>{if(document.querySelector('[data-r="'+f[2]+'"]')){box.remove();location.hash='#/'+f[2]}else answer.textContent='Tu rol no tiene acceso a esa sección.'};row.appendChild(go);answer.appendChild(row)});
+ box.querySelectorAll('[data-question]').forEach(btn=>btn.onclick=()=>{setHelpMood('happy');const f=FAQ[Number(btn.dataset.question)];const answer=box.querySelector('.zoco-help-answer');answer.textContent=f[1];const row=document.createElement('div');const go=document.createElement('button');go.type='button';go.className='btn ghost sm';go.textContent='Abrir sección';go.onclick=()=>{if(document.querySelector('[data-r="'+f[2]+'"]')){box.remove();location.hash='#/'+f[2]}else answer.textContent='Tu rol no tiene acceso a esa sección.'};row.appendChild(go);answer.appendChild(row)});
+ const helpAvatar=box.querySelector('.zoco-help-head .zoco-mascot');
+ const setHelpMood=(mood)=>{if(helpAvatar)helpAvatar.dataset.mood=mood};
+ setHelpMood('wave');
  const ask=box.querySelector('.zoco-help-ask');
- ask.onsubmit=e=>{e.preventDefault();const q=ask.querySelector('input').value.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const words=q.split(/\\W+/).filter(w=>w.length>3);const match=FAQ.map((f,i)=>({i,score:words.filter(w=>(f[0]+' '+f[1]).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').includes(w)).length})).sort((a,b)=>b.score-a.score)[0];if(match?.score){box.querySelector('[data-question="'+match.i+'"]').click()}else{box.querySelector('.zoco-help-answer').textContent='Todavía no tengo una guía exacta para esa pregunta. Puedes abrir el Asistente IA para una consulta más avanzada.'}};
+ ask.onsubmit=e=>{e.preventDefault();setHelpMood('thinking');const q=ask.querySelector('input').value.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const words=q.split(/\\W+/).filter(w=>w.length>3);const match=FAQ.map((f,i)=>({i,score:words.filter(w=>(f[0]+' '+f[1]).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').includes(w)).length})).sort((a,b)=>b.score-a.score)[0];if(match?.score){box.querySelector('[data-question="'+match.i+'"]').click()}else{box.querySelector('.zoco-help-answer').textContent='Todavía no tengo una guía exacta para esa pregunta. Puedes abrir el Asistente IA para una consulta más avanzada.'}};
  box.querySelector('[data-close]').onclick=()=>box.remove();
  box.querySelector('[data-guide]').onclick=()=>{box.remove();showZoCoTour(user)};
  box.querySelector('[data-ai]').onclick=()=>{if(document.querySelector('[data-r="ia"]')){box.remove();location.hash='#/ia'}else box.querySelector('.zoco-help-answer').textContent='Tu rol no tiene acceso a IA.'};
