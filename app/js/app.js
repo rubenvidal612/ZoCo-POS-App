@@ -41,6 +41,7 @@ import { captureRef, pendingRef, registerReferral } from './store.js';
 import { loadDemoForMode } from './store.js';
 import { cloudSignIn, cloudSignUp, amISuperadmin, signInWithGoogle, handleOAuthReturn, alignCompany, cloudSession, googleSignIn, ensureCompany, sendMagicLink, sendRecovery, logOauth, claimInvites } from './auth.js';
 import { adminView } from './views-admin.js';
+import { partnersPreviewView } from './views-partners-preview.js';
 import { checkUpdate, initNotifPill, watchServiceWorker, startUpdateWatcher } from './update.js';
 import { toast, $, el, money, esc, modal } from './ui.js';
 
@@ -89,6 +90,7 @@ const NAV_GROUPS = [
       { id: 'config', label: 'Configuración', icon: '⚙', mobile: true, perm: 'settings.edit' },
       { id: 'integraciones', label: 'Integraciones', icon: '🔌', perm: 'settings.edit' },
       { id: 'admin', label: 'Panel maestro', icon: '🛡', super: true },
+      { id: 'partners', label: 'Marca Blanca', icon: '◈', super: true },
     ],
   },
 ];
@@ -109,6 +111,7 @@ let pendingCreate = false;
 let current = null;
 
 const titles = {
+  partners: 'ZoCo Partners',
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
   reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', laundry: 'ZoCo Lavandería', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
   usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
@@ -608,6 +611,7 @@ function mount() {
     config: guard('settings.edit', () => settingsView(ctx)),
     ia: guard('ai.use', () => aiView(ctx)),
     admin: () => adminView(ctx),
+    partners: () => state.superadmin ? partnersPreviewView() : soonView('Sin permiso'),
     finanzas: guard('finance.view', () => financeView(ctx)),
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
