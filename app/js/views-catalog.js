@@ -17,7 +17,7 @@ import {
   switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, demoPhotoForProduct, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
-  PLANS, PLAN_ORDER, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
+  PLANS, PLAN_ORDER, EXTRA_BUSINESS_PRICE, estimateBusinessTotal, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
@@ -1209,7 +1209,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
         <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
         <div style="padding:16px">
           <div id="pl-current" class="pl-current"></div>
-          <div id="pl-usage" class="pl-usage"></div>
+          <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
           <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
           <div id="pl-grid" class="pl-grid"></div>
           <div class="hint" style="margin-top:12px">
@@ -1531,8 +1531,12 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
             <button class="btn ghost sm" id="co-create">+ Crear empresa</button>
           </div>
           <div class="hint" style="margin-top:8px">
-            Cada empresa guarda sus datos por separado en el servidor.
-            Para dos tiendas del <b>mismo</b> negocio usa <b>Sucursales</b>, no una empresa nueva.
+            <b>Plan Esencial: $149/mes incluye 1 negocio y cada negocio independiente adicional suma $100/mes.</b>
+            Cambiar el giro o vender otras categorías dentro del mismo negocio no tiene costo extra.
+            Las sucursales siguen los límites del plan. En los planes Pro y Empresarial, el suplemento está pendiente de definir.
+          </div>
+          <div class="hint" style="margin-top:8px">
+            Para proteger inventarios y ventas, el alta de un segundo negocio se habilitará al completar la separación segura de datos y la validación de pago en la nube. <b>No se generan cargos aquí.</b>
           </div>
         </div>
       </div>
@@ -2604,9 +2608,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
       </div>`;
     }).join('');
     coList.querySelectorAll('[data-co]').forEach((b) => b.onclick = () => {
-      switchCompany(b.dataset.co);
-      ctx.refreshShell?.();
-      location.reload();
+      modal({title:'Cambio de negocio protegido',body:'Antes de cambiar de negocio hay que activar la separación de sus ventas, productos y usuarios en la nube. Para evitar mezclas de datos, el cambio permanece temporalmente deshabilitado.',foot:'<button class="btn" data-close>Entendido</button>'});
     });
   };
   renderCos();
@@ -2625,11 +2627,2450 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
   $('#co-create', root)?.addEventListener('click', () => {
     const name = $('#co-new', root).value.trim();
     if (!name) { toast('Escribe el nombre'); return; }
-    const id = createCompany(name);
-    switchCompany(id);
-    ctx.refreshShell?.();
-    toast('Empresa creada: ' + name);
-    setTimeout(() => location.reload(), 400);
+    const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
+    const quote=estimateBusinessTotal(count+1,currentPlan().code);
+    const pricing=quote.total===null?'El suplemento para este plan está por definir':'Total estimado: 
+
+  return { root, refresh() {} };
+}
+
+/* ================= CLIENTES ================= */
+export function customersView(ctx) {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Clientes</h2>
+        <span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div>
+        <button class="btn sm" id="new">+ Cliente</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Cliente</th><th>Teléfono</th><th>Crédito</th><th>Saldo</th><th style="width:190px"></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.customers.length + ' clientes';
+    if (!state.customers.length) {
+      rows.innerHTML = `<tr><td colspan="5"><div class="cart-empty"><div class="big">👤</div>Aún no hay clientes.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.customers.map((c) => `
+      <tr>
+        <td><div class="t-strong">${esc(c.name)}</div><div style="font-size:11.5px;color:var(--muted)">${esc(c.email || '')}</div></td>
+        <td>${esc(c.phone || '-')}</td>
+        <td class="mono">${money(c.creditLimit || 0)}</td>
+        <td class="mono t-strong" style="color:${(c.balance || 0) > 0 ? 'var(--danger)' : 'var(--text)'}">${money(c.balance || 0)}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn ghost sm" data-pay="${c.id}" style="height:30px">Abonar</button>
+          <button class="btn ghost sm" data-edit="${c.id}" style="height:30px">Editar</button>
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => edit(b.dataset.edit));
+    rows.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => pay(b.dataset.pay));
+  }
+
+  function edit(id) {
+    const c = id ? state.customers.find((x) => x.id === id) : null;
+    const m = modal({
+      title: c ? 'Editar cliente' : 'Nuevo cliente',
+      body: `
+        <div class="field"><label>Nombre</label><input id="c-n" value="${esc(c?.name || '')}"></div>
+        <div class="row2">
+          <div class="field"><label>Teléfono</label><input id="c-p" value="${esc(c?.phone || '')}"></div>
+          <div class="field"><label>Email</label><input id="c-e" value="${esc(c?.email || '')}"></div>
+        </div>
+        <div class="field"><label>Límite de crédito</label><input id="c-l" type="number" min="0" step="0.01" value="${c?.creditLimit || 0}"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const name = m.root.querySelector('#c-n').value.trim();
+      if (!name) { toast('Falta el nombre'); return; }
+      upsertCustomer({
+        id: c?.id, name,
+        phone: m.root.querySelector('#c-p').value.trim(),
+        email: m.root.querySelector('#c-e').value.trim(),
+        creditLimit: Number(m.root.querySelector('#c-l').value) || 0,
+      });
+      m.close(); render();
+    };
+  }
+
+  function pay(id) {
+    const c = state.customers.find((x) => x.id === id);
+    const m = modal({
+      title: 'Abonar a ' + c.name,
+      body: `<div class="field"><label>Monto</label><input id="a" type="number" min="0" step="0.01" placeholder="0.00"></div>
+             <div style="font-size:12px;color:var(--muted)">Saldo actual: ${money(c.balance || 0)}</div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Abonar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const v = Number(m.root.querySelector('#a').value) || 0;
+      if (v <= 0) { toast('Monto inválido'); return; }
+      c.balance = Math.max(0, (c.balance || 0) - v);
+      emit(); m.close(); render(); toast('Abono registrado');
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= USUARIOS ================= */
+export function usersView() {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Usuarios y permisos</h2>
+        <span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div>
+        <button class="btn sm" id="new">+ Usuario</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Puesto</th><th>Pago</th><th>Comisión</th><th>PIN</th><th>Estado</th><th style="width:170px"></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.users.length + ' usuarios';
+    rows.innerHTML = state.users.map((u) => {
+      const perms = ROLES[u.role]?.perms || [];
+      const count = perms.includes('*') ? 'Todos' : perms.length + ' permisos';
+      return `<tr>
+        <td class="t-strong">${esc(u.name)}</td>
+        <td>${esc(u.email)}</td>
+        <td><span class="badge info">${esc(ROLES[u.role]?.label || u.role)}</span></td>
+        <td>${esc(u.jobTitle || '—')}</td>
+        <td class="mono">${u.payType === 'DAILY' ? money(u.payRate) + '/día' : money(u.payRate) + '/h'}</td>
+        <td class="mono">${u.commissionPct ? u.commissionPct + '%' : '—'}</td>
+        <td class="mono">${esc(u.pin || '—')}</td>
+        <td>${u.active ? '<span class="badge ok">Activo</span>' : '<span class="badge grey">Inactivo</span>'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn ghost sm" data-edit="${u.id}" style="height:30px">Editar</button>
+          <button class="btn ghost sm" data-tog="${u.id}" style="height:30px">${u.active ? 'Desactivar' : 'Activar'}</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => edit(b.dataset.edit));
+    rows.querySelectorAll('[data-tog]').forEach((b) => b.onclick = () => {
+      const u = state.users.find((x) => x.id === b.dataset.tog);
+      if (u.role === 'OWNER') { toast('El propietario no se puede desactivar'); return; }
+      u.active = !u.active; emit(); render();
+    });
+  }
+
+  function edit(id) {
+    const u = id ? state.users.find((x) => x.id === id) : null;
+    const m = modal({
+      title: u ? 'Editar usuario' : 'Nuevo usuario',
+      body: `
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+          <div id="f-img-prev" style="width:118px;height:118px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2,#F1F5F9);display:grid;place-items:center;overflow:hidden;flex-shrink:0">
+            ${p?.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:30px;color:var(--muted)">📷</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:8px">FOTO DEL PRODUCTO</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <label class="btn ghost sm" style="cursor:pointer;margin:0">Subir foto
+                <input id="f-img" type="file" accept="image/*" style="display:none">
+              </label>
+              ${p?.image ? '<button type="button" class="btn ghost sm" id="f-img-del">Quitar</button>' : ''}
+            </div>
+            <div class="hint" style="margin-top:8px">Se comprime automáticamente (máx 1200px).</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Nombre</label><input id="u-n" value="${esc(u?.name || '')}"></div>
+          <div class="field"><label>Correo</label><input id="u-e" type="email" value="${esc(u?.email || '')}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Contraseña</label>
+            <div style="display:flex;gap:6px">
+              <input id="u-p" type="password" value="${esc(u?.pass || '')}" autocomplete="new-password">
+              <button class="btn ghost sm" type="button" id="u-p-eye" aria-label="Mostrar contraseña">👁</button>
+            </div>
+          </div>
+          <div class="field"><label>PIN checador</label><input id="u-pin" value="${esc(u?.pin || '')}" placeholder="4 dígitos"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Puesto</label><input id="u-job" value="${esc(u?.jobTitle || '')}" placeholder="Vendedor"></div>
+          <div class="field"><label>Foto del empleado</label>
+            <input id="u-photo" type="file" accept="image/*">
+            <div id="u-photo-prev" style="margin-top:6px">${u?.photoUrl ? `<img src="${u.photoUrl}" style="width:54px;height:54px;border-radius:12px;object-fit:cover">` : ''}</div>
+          </div>
+        </div>
+          <div class="field"><label>Rol</label>
+            <select id="u-r">${Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${u?.role === k ? 'selected' : ''}>${r.label}</option>`).join('')}</select>
+          </div>
+        <div class="row2">
+          <div class="field"><label>Tipo de pago</label>
+            <select id="u-pt"><option value="HOURLY" ${u?.payType !== 'DAILY' ? 'selected' : ''}>Por hora</option><option value="DAILY" ${u?.payType === 'DAILY' ? 'selected' : ''}>Por día</option></select>
+          </div>
+          <div class="field"><label>Tarifa (MXN)</label><input id="u-pr" type="number" min="0" step="0.01" value="${u?.payRate ?? 60}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Comisión por venta (%)</label><input id="u-comm" type="number" min="0" max="100" step="0.5" value="${u?.commissionPct ?? 0}"></div>
+          <div class="field"><label>Teléfono</label><input id="u-phone" value="${esc(u?.personalData?.phone || '')}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>CURP / RFC</label><input id="u-curp" value="${esc(u?.personalData?.curp || '')}" placeholder="Opcional"></div>
+          <div class="field"><label>Dirección</label><input id="u-addr" value="${esc(u?.personalData?.address || '')}" placeholder="Opcional"></div>
+        </div>
+        <div class="field"><label>Documentos (INE, contrato, comprobante…)</label>
+          <input id="u-doc" type="file" accept="image/*,.pdf">
+          <div id="u-docs" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+            ${(u?.docs || []).map((d) => `<span class="doc-chip" data-doc="${d.id}">${esc(d.name)} <b>✕</b></span>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Huella / Face ID del dispositivo</label>
+          <button class="btn ghost sm" id="u-bio" type="button" style="width:100%">
+            ${u?.webauthn ? '✅ Registrada · registrar de nuevo' : '🖐 Registrar huella en este dispositivo'}
+          </button>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px">Se guarda solo en este dispositivo. Sirve para que entre al checador con su huella.</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px" id="u-perms"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    let pendingPhoto = u?.photoUrl || null;
+    m.root.querySelector('#u-photo').onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const r = await readImageCompressed(f, 260, 0.7);
+        pendingPhoto = r.dataUrl;
+        m.root.querySelector('#u-photo-prev').innerHTML = '<img src="' + r.dataUrl + '" style="width:54px;height:54px;border-radius:12px;object-fit:cover">';
+        toast('Foto lista · ' + Math.round(r.bytes / 1024) + ' KB');
+      } catch (err) { toast(err.message); }
+    };
+
+    // Documentos del empleado
+    const docInput = m.root.querySelector('#u-doc');
+    if (docInput) docInput.onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (f.size > 3 * 1024 * 1024) { toast('El archivo debe pesar menos de 3 MB'); return; }
+      const dataUrl = await new Promise((res) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result));
+        r.readAsDataURL(f);
+      });
+      if (!u) { toast('Primero guarda el empleado'); return; }
+      addUserDoc(u.id, { name: f.name, type: f.type, dataUrl });
+      m.close();
+      toast('Documento agregado');
+    };
+    m.root.querySelectorAll('[data-doc]').forEach((b) => b.onclick = () => {
+      if (!u) return;
+      removeUserDoc(u.id, b.dataset.doc);
+      m.close();
+      toast('Documento eliminado');
+    });
+
+    // Huella
+    const bioBtn = m.root.querySelector('#u-bio');
+    if (bioBtn) bioBtn.onclick = async () => {
+      if (!u) { toast('Primero guarda el empleado, luego registra su huella'); return; }
+      try {
+        const cred = await enrollBiometric(u);
+        setUserCredential(u.id, cred);
+        bioBtn.textContent = '✅ Registrada · registrar de nuevo';
+        toast('Huella registrada en este dispositivo');
+      } catch (err) {
+        toast(err.message || 'No se pudo registrar la huella');
+      }
+    };
+    const sel = m.root.querySelector('#u-r');
+    const showPerms = () => {
+      const p = ROLES[sel.value].perms;
+      m.root.querySelector('#u-perms').textContent = p.includes('*')
+        ? 'Acceso total (propietario)'
+        : 'Permisos: ' + p.map((k) => PERMS[k] || k).join(' · ');
+    };
+    sel.onchange = showPerms; showPerms();
+
+    const eye = m.root.querySelector('#u-p-eye');
+    if (eye) eye.onclick = () => {
+      const inp = m.root.querySelector('#u-p');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    };
+
+    m.root.querySelector('#ok').onclick = () => {
+      const name = m.root.querySelector('#u-n').value.trim();
+      const email = m.root.querySelector('#u-e').value.trim();
+      const pass = m.root.querySelector('#u-p').value.trim();
+      if (!name || !email || !pass) { toast('Completa nombre, correo y contraseña'); return; }
+      if (u) {
+        Object.assign(u, {
+          name, email, pass, role: sel.value,
+          pin: m.root.querySelector('#u-pin').value.trim(),
+          jobTitle: m.root.querySelector('#u-job').value.trim(),
+          payType: m.root.querySelector('#u-pt').value,
+          payRate: Number(m.root.querySelector('#u-pr').value) || 0,
+          commissionPct: Number(m.root.querySelector('#u-comm').value) || 0,
+          personalData: {
+            phone: m.root.querySelector('#u-phone').value.trim(),
+            curp: m.root.querySelector('#u-curp').value.trim(),
+            address: m.root.querySelector('#u-addr').value.trim(),
+          },
+          photoUrl: pendingPhoto,
+        });
+      } else {
+        state.users.push({
+          id: 'u' + Date.now(), name, email, pass, role: sel.value, active: true,
+          pin: m.root.querySelector('#u-pin').value.trim(),
+          jobTitle: m.root.querySelector('#u-job').value.trim(),
+          payType: m.root.querySelector('#u-pt').value,
+          payRate: Number(m.root.querySelector('#u-pr').value) || 0,
+          commissionPct: Number(m.root.querySelector('#u-comm').value) || 0,
+          personalData: {
+            phone: m.root.querySelector('#u-phone').value.trim(),
+            curp: m.root.querySelector('#u-curp').value.trim(),
+            address: m.root.querySelector('#u-addr').value.trim(),
+          },
+          photoUrl: pendingPhoto,
+        });
+      }
+      emit(); m.close(); render();
+    };
+  }
+
+  $('#new', root).onclick = () => edit(null);
+
+  render();
+  return { root, refresh: render };
+}
+/* ================= APARTADOS ================= */
+export function layawaysView(ctx) {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Apartados</h2><span style="font-size:12.5px;color:var(--muted)" id="cnt"></span></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Código</th><th>Cliente</th><th>Items</th><th>Total</th><th>Abonado</th><th>Restante</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.layaways.length + ' apartados';
+    if (!state.layaways.length) {
+      rows.innerHTML = `<tr><td colspan="8"><div class="cart-empty"><div class="big">⏱</div>Aún no hay apartados.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.layaways.map((l) => `
+      <tr>
+        <td class="t-strong mono">${esc(l.code)}</td>
+        <td>${esc(l.customerName)}</td>
+        <td>${l.items.reduce((a, i) => a + i.qty, 0)}</td>
+        <td class="mono">${money(l.total)}</td>
+        <td class="mono">${money(l.paid)}</td>
+        <td class="mono t-strong" style="color:var(--danger)">${money(Math.max(0, l.total - l.paid))}</td>
+        <td>${l.status === 'done' ? '<span class="badge ok">Liquidado</span>' : l.status === 'cancelled' ? '<span class="badge danger">Cancelado</span>' : '<span class="badge warn">Activo</span>'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          ${l.status === 'active' ? `<button class="btn ghost sm" data-pay="${l.id}" style="height:30px">Abonar</button>
+          <button class="btn ghost sm" data-can="${l.id}" style="height:30px;color:var(--danger)">Cancelar</button>` : ''}
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => {
+      const l = state.layaways.find((x) => x.id === b.dataset.pay);
+      const restante = Math.max(0, l.total - l.paid);
+      const m = modal({
+        title: 'Abonar ' + l.code,
+        body: `<div class="field"><label>Monto</label><input id="a" type="number" min="0" step="0.01" value="${restante}"></div>
+               <div style="font-size:12px;color:var(--muted)">Restante: ${money(restante)}</div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Abonar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const v = Number(m.root.querySelector('#a').value) || 0;
+        if (v <= 0) { toast('Monto inválido'); return; }
+        layawayPayment(l.id, Math.min(v, restante));
+        m.close(); render();
+      };
+    });
+    rows.querySelectorAll('[data-can]').forEach((b) => b.onclick = async () => {
+      const ok = await confirmDialog({ title: 'Cancelar apartado', message: 'Se repondrá el stock.', okText: 'Cancelar', danger: true });
+      if (ok) { cancelLayaway(b.dataset.can); render(); }
+    });
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= CUPONES ================= */
+export function couponsView() {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Cupones</h2><span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div><button class="btn sm" id="new">+ Cupón</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.coupons.length + ' cupones';
+    if (!state.coupons.length) {
+      rows.innerHTML = `<tr><td colspan="6"><div class="cart-empty"><div class="big">🎟</div>Aún no hay cupones.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.coupons.map((c) => `
+      <tr>
+        <td class="t-strong mono">${esc(c.code)}</td>
+        <td>${c.type === 'PERCENT' ? 'Porcentaje' : 'Monto fijo'}</td>
+        <td class="mono">${c.type === 'PERCENT' ? c.value + '%' : money(c.value)}</td>
+        <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('es-MX') : '—'}</td>
+        <td>${c.active ? '<span class="badge ok">Activo</span>' : '<span class="badge grey">Inactivo</span>'}</td>
+        <td style="text-align:right">
+          <button class="btn ghost sm" data-tog="${c.id}" style="height:30px">${c.active ? 'Desactivar' : 'Activar'}</button>
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-tog]').forEach((b) => b.onclick = () => {
+      const c = state.coupons.find((x) => x.id === b.dataset.tog);
+      c.active = !c.active; emit(); render();
+    });
+  }
+
+  $('#new', root).onclick = () => {
+    const m = modal({
+      title: 'Nuevo cupón',
+      body: `
+        <div class="row2">
+          <div class="field"><label>Código</label><input id="c-code" placeholder="VERANO10"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="c-type"><option value="PERCENT">% descuento</option><option value="FIXED">Monto fijo</option></select></div>
+        </div>
+        <div class="field"><label>Valor</label><input id="c-val" type="number" min="0" step="0.01"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const code = m.root.querySelector('#c-code').value.trim();
+      const val = Number(m.root.querySelector('#c-val').value) || 0;
+      if (!code || val <= 0) { toast('Falta código o valor'); return; }
+      upsertCoupon({ code, type: m.root.querySelector('#c-type').value, value: val });
+      m.close(); render();
+    };
+  };
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= FINANZAS ================= */
+export function financeView(ctx) {
+  const root = el(`<div id="fin"></div>`);
+  let range = 'month';
+
+  function bounds() {
+    const now = new Date();
+    if (range === 'day') { const d = new Date(now); d.setHours(0, 0, 0, 0); return [d, now]; }
+    if (range === 'week') { const d = new Date(now); d.setDate(d.getDate() - 6); d.setHours(0, 0, 0, 0); return [d, now]; }
+    if (range === 'year') { const d = new Date(now.getFullYear(), 0, 1); return [d, now]; }
+    const d = new Date(now.getFullYear(), now.getMonth(), 1); return [d, now];
+  }
+
+  function saleProfit(s) {
+    const unit = (s.items || []).reduce((a, i) => {
+      const prod = i.productId ? state.products.find((p) => p.id === i.productId) : null;
+      return a + (i.price - (prod?.cost || 0)) * i.qty;
+    }, 0);
+    return unit - (s.discount || 0);
+  }
+
+  function render() {
+    const [from, to] = bounds();
+    const inR = (d) => { const x = new Date(d); return x >= from && x <= to; };
+    const sales = state.sales.filter((s) => s.status === 'done' && inR(s.date));
+    const ventas = sales.reduce((a, s) => a + s.total, 0);
+    const utilidad = sales.reduce((a, s) => a + saleProfit(s), 0);
+    const dias = Math.max(1, Math.round((to - from) / 86400000) + (range === 'day' ? 1 : 0));
+    const gastosFijosMes = fixedMonthlyTotal();
+    const gastosDelPeriodo = gastosFijosMes * (dias / 30)
+      + state.expenses.filter((e) => !e.recurring && e.paid && inR(e.date)).reduce((a, e) => a + e.amount, 0);
+    const margen = ventas > 0 ? (utilidad / ventas) * 100 : 0;
+    const resultado = utilidad - gastosDelPeriodo;
+
+    // serie para tendencia
+    const buckets = [];
+    const n = range === 'day' ? 8 : range === 'week' ? 7 : range === 'year' ? 12 : 6;
+    for (let i = n - 1; i >= 0; i--) {
+      let a, b, label;
+      if (range === 'day') {
+        const h = new Date(to); h.setMinutes(0, 0, 0); h.setHours(h.getHours() - i);
+        a = new Date(h); b = new Date(h.getTime() + 3599999);
+        label = pad(h.getHours());
+      } else if (range === 'week') {
+        const d = new Date(to); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
+        a = d; b = new Date(d.getTime() + 86399999);
+        label = ['D', 'L', 'M', 'M', 'J', 'V', 'S'][d.getDay()];
+      } else if (range === 'year') {
+        a = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1);
+        b = new Date(a.getFullYear(), a.getMonth() + 1, 0, 23, 59, 59);
+        label = a.toLocaleDateString('es-MX', { month: 'short' }).slice(0, 3);
+      } else {
+        const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+        a = d; b = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        label = d.toLocaleDateString('es-MX', { month: 'short' }).slice(0, 3);
+      }
+      const total = state.sales.filter((s) => s.status === 'done' && new Date(s.date) >= a && new Date(s.date) <= b).reduce((x, s) => x + s.total, 0);
+      buckets.push({ label, total });
+    }
+    const max = Math.max(1, ...buckets.map((x) => x.total));
+
+    const fixed = state.expenses.filter((e) => e.recurring);
+    const personalOn = !state.settings || state.settings.personalEnabled !== false;
+    const personal = personalSummary(from.toISOString(), to.toISOString());
+
+    root.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><div class="l">Ventas</div><div class="v">${money(ventas)}</div><div class="s">${sales.length} tickets</div></div>
+        <div class="kpi"><div class="l">Utilidad</div><div class="v" style="color:var(--ok)">${money(utilidad)}</div><div class="s">precio − costo</div></div>
+        <div class="kpi"><div class="l">Gastos</div><div class="v">${money(gastosDelPeriodo)}</div><div class="s">fijos prorrateados + pagados</div></div>
+        <div class="kpi"><div class="l">Margen</div><div class="v">${margen.toFixed(1)}%</div><div class="s" style="color:${resultado >= 0 ? 'var(--ok)' : 'var(--danger)'}">Resultado: ${money(resultado)}</div></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><h2>Estadísticas</h2>
+          <div class="seg" id="fin-range" style="margin:0 0 0 12px">
+            <button class="${range === 'day' ? 'on' : ''}" data-r="day">Día</button>
+            <button class="${range === 'week' ? 'on' : ''}" data-r="week">Semana</button>
+            <button class="${range === 'month' ? 'on' : ''}" data-r="month">Mes</button>
+            <button class="${range === 'year' ? 'on' : ''}" data-r="year">Año</button>
+          </div>
+          <div class="sp"></div>
+          <button class="btn sm" id="ex-new">+ Gasto</button>
+        </div>
+        <div style="padding:16px 18px">
+          <div class="fin-bars">
+            ${buckets.map((b) => `<div class="fin-bar"><i style="height:${Math.max(3, (b.total / max) * 100)}%"></i><span>${b.label}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:14px">
+        <div class="panel">
+          <div class="panel-head"><h2>Gastos fijos</h2>
+            <button class="btn ghost sm" id="fx-new" style="margin-left:auto">+ Fijo</button></div>
+          <div style="padding:8px 18px 14px">
+            ${fixed.length ? fixed.map((e) => `
+              <div class="row-kv" style="padding:8px 0;border-bottom:1px solid var(--line-2)">
+                <span>${esc(e.name)} <small style="color:var(--muted)">· ${e.freq || 'mensual'}</small></span>
+                <b class="mono">${money(expenseMonthly(e))}/mes</b>
+              </div>`).join('') : '<div style="color:var(--muted);font-size:13px">Sin gastos fijos.</div>'}
+            <div class="row-kv" style="padding-top:10px"><span><b>Total mensual</b></span><b class="mono">${money(gastosFijosMes)}</b></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Finanzas personales</h2>
+            <label style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
+              <input type="checkbox" id="pers-on" ${personalOn ? 'checked' : ''}> activas
+            </label></div>
+          <div style="padding:10px 18px 16px">
+            ${personalOn ? `
+              <div class="row-kv"><span>Ingresos</span><b class="mono" style="color:var(--ok)">${money(personal.ingresos)}</b></div>
+              <div class="row-kv"><span>Gastos</span><b class="mono" style="color:var(--danger)">${money(personal.gastos)}</b></div>
+              <div class="row-kv"><span><b>Balance</b></span><b class="mono">${money(personal.balance)}</b></div>
+              <div class="row-kv"><span style="font-size:11.5px;color:var(--muted)">Efectivo ${money(personal.efectivo)} · Tarjeta ${money(personal.tarjeta)}</span><span></span></div>
+              <div style="margin-top:10px">
+                <div style="font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:800;margin-bottom:4px">META DE AHORRO AL MES <span style="font-weight:600;text-transform:none;letter-spacing:0">(opcional)</span></div>
+                <div style="display:flex;gap:6px">
+                  <input id="sg" type="number" min="0" step="50" value="${state.settings?.savingGoal || 0}"
+                    style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+                  <button class="btn sm" id="sg-save">Guardar</button>
+                </div>
+                <div style="font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.4">
+                  Si la dejas en 0 no se descuenta nada: solo se reparte tu ingreso entre los días.
+                </div>
+              </div>
+              <button class="btn sm" id="pers-open" style="width:100%;margin-top:10px">📱 Abrir app de finanzas</button>
+            ` : '<div style="color:var(--muted);font-size:13px">Desactivadas. Actívalas para verlas junto al negocio.</div>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><h2>Gastos del negocio</h2>
+          <button class="btn ghost sm" id="ex-exp" style="margin-left:auto">⬇ Excel</button></div>
+        <div style="overflow:auto"><table>
+          <thead><tr><th>Concepto</th><th>Monto</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>${state.expenses.length ? state.expenses.map((e) => `
+            <tr><td class="t-strong">${esc(e.name)}</td><td class="mono">${money(e.amount)}</td>
+            <td>${new Date(e.date).toLocaleDateString('es-MX')}</td>
+            <td>${e.recurring ? '<span class="badge info">Fijo</span>' : 'Variable'}</td>
+            <td>${e.paid ? '<span class="badge ok">Pagado</span>' : '<span class="badge warn">Pendiente</span>'}</td>
+            <td>${e.paid ? '' : `<button class="btn ghost sm" data-pay="${e.id}" style="height:28px">Pagar</button>`}</td></tr>`).join('')
+            : `<tr><td colspan="6"><div class="cart-empty">Sin gastos.</div></td></tr>`}</tbody></table></div>
+      </div>`;
+
+    root.querySelectorAll('#fin-range button').forEach((b) => b.onclick = () => { range = b.dataset.r; render(); });
+    root.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => { payExpense(b.dataset.pay); render(); });
+    root.querySelector('#ex-exp').onclick = () => { const n = exportExpenses(); toast(n + ' gastos exportados'); };
+    root.querySelector('#pers-on').onchange = (e) => { state.settings.personalEnabled = e.target.checked; emit(); render(); };
+    root.querySelector('#pers-open')?.addEventListener('click', () => window.open('/finanzas.html', '_blank'));
+    root.querySelector('#sg-save')?.addEventListener('click', () => {
+      const v = setSavingGoal(root.querySelector('#sg').value);
+      toast('Meta de ahorro: ' + money(v) + ' al mes');
+      render();
+    });
+
+    root.querySelector('#ex-new').onclick = () => {
+      const m = modal({
+        title: 'Nuevo gasto',
+        body: `<div class="field"><label>Concepto</label><input id="x-n" placeholder="Renta, luz, proveedor…"></div>
+               <div class="field"><label>Monto</label><input id="x-a" type="number" min="0" step="0.01"></div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const name = m.root.querySelector('#x-n').value.trim();
+        const amount = Number(m.root.querySelector('#x-a').value) || 0;
+        if (!name || amount <= 0) { toast('Falta concepto o monto'); return; }
+        upsertExpense({ name, amount });
+        m.close(); render();
+      };
+    };
+
+    root.querySelector('#fx-new').onclick = () => {
+      const m = modal({
+        title: 'Gasto fijo',
+        body: `<div class="field"><label>Concepto</label><input id="fx-n" placeholder="Renta, internet, nómina…"></div>
+               <div class="row2">
+                 <div class="field"><label>Monto</label><input id="fx-a" type="number" min="0" step="0.01"></div>
+                 <div class="field"><label>Frecuencia</label>
+                   <select id="fx-f"><option value="mensual">Mensual</option><option value="semanal">Semanal</option><option value="anual">Anual</option></select></div>
+               </div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const name = m.root.querySelector('#fx-n').value.trim();
+        const amount = Number(m.root.querySelector('#fx-a').value) || 0;
+        if (!name || amount <= 0) { toast('Falta concepto o monto'); return; }
+        upsertExpense({ name, amount, recurring: true, freq: m.root.querySelector('#fx-f').value });
+        m.close(); render();
+      };
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+export function timeClockView(ctx) {
+  const root = el(`<div id="tc" class="tc-refresh"></div>`);
+  let pin = '';
+  let who = null;
+  let stream = null;
+  let camPending = null;
+
+  const clock = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  async function startCam() {
+    if (camPending) return camPending;
+    const v = root.querySelector('#tc-video');
+    if (!v) return false;
+    if (stream) {
+      // Re-engancha la cámara al video nuevo (tras un re-render)
+      if (v.srcObject !== stream) { v.srcObject = stream; v.play().catch(() => {}); }
+      root.querySelector('#tc-cam-empty')?.remove();
+      root.querySelector('#tc-cam-btn')?.classList.add('on');
+      return true;
+    }
+    camPending = (async () => {
+    try {
+      stream = registerCam(await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } }));
+      v.srcObject = stream;
+      v.play();
+      root.querySelector('#tc-cam-empty')?.remove();
+      root.querySelector('#tc-cam-btn')?.classList.add('on');
+      const st = root.querySelector('#tc-cam-state');
+      if (st) st.textContent = 'Foto al checar';
+      return true;
+    } catch {
+      stream = null;
+      const badge = root.querySelector('#tc-cam-state');
+      if (badge) badge.textContent = 'Cámara no disponible';
+      return false;
+    } finally { camPending = null; }
+    })();
+    return camPending;
+  }
+  function stopCam() {
+    if (stream) { dropCam(stream); stream = null; }
+    stopAllCams();
+    const v = root.querySelector('#tc-video');
+    if (v) v.srcObject = null;
+    const box = root.querySelector('.tc-cam');
+    if (box && !box.querySelector('#tc-cam-empty')) {
+      const ph = document.createElement('div');
+      ph.id = 'tc-cam-empty';
+      ph.className = 'tc-cam-empty';
+      ph.classList.add("tc-demo-person");
+      ph.innerHTML = '<span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span>';
+      box.insertBefore(ph, box.querySelector('#tc-cam-state'));
+    }
+    root.querySelector('#tc-cam-btn')?.classList.remove('on');
+  }
+  function toggleCam() { if (stream) stopCam(); else startCam(); }
+
+  // Botón de cámara (delegado: sobrevive a los re-render)
+  root.addEventListener('click', (e) => {
+    if (e.target.closest?.('#tc-cam-btn')) toggleCam();
+  });
+  function render() {
+    const rows = state.users.filter((u) => u.active).map((u) => ({ u, s: dayStats(u.id) }));
+
+    root.innerHTML = `
+      <div class="tc-wrap">
+        <div class="tc-left">
+          <div class="tc-clock">
+            <div class="tc-time">${clock()}</div>
+            <div class="tc-date">${new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          </div>
+
+          <div class="tc-cam tc-cam-modern">
+            <video id="tc-video" playsinline muted></video>
+            <div id="tc-cam-empty" class="tc-cam-empty tc-demo-person"><span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span></div>
+            <div id="tc-cam-state" class="tc-cam-state">Cámara apagada</div>
+            <button id="tc-cam-btn" class="tc-cam-btn" title="Encender o apagar la cámara" aria-label="Encender o apagar la cámara">⏻</button>
+          </div>
+
+          ${!who ? `
+            <div class="tc-pin">
+              <div class="tc-pin-lbl">INGRESA TU PIN</div>
+              <div class="tc-pin-dots">${[0, 1, 2, 3].map((i) => `<span class="${pin.length > i ? 'on' : ''}"></span>`).join('')}</div>
+              <div class="keypad" id="tckp">
+                ${['1','2','3','4','5','6','7','8','9','C','0','✓'].map((k) => `<button class="key" data-k="${k}">${k}</button>`).join('')}
+              </div>
+            </div>` : `
+            <div class="tc-emp">
+              <div style="display:flex;align-items:center;gap:10px">
+                ${who.photoUrl ? `<img src="${who.photoUrl}" class="tc-emp-photo">` : `<div class="tc-emp-photo ph">${esc(who.name.slice(0,1))}</div>`}
+                <div>
+                  <div class="tc-emp-name">${esc(who.name)}</div>
+                  <div class="tc-emp-job">${esc(who.jobTitle || '')} · ${who.payType === 'DAILY' ? money(who.payRate) + '/día' : money(who.payRate) + '/hora'}</div>
+                </div>
+              </div>
+              <div class="tc-actions">
+                <button class="tc-act green" data-t="ENTRY">⏵ Entrada</button>
+                <button class="tc-act orange" data-t="BREAK_START">☕ Descanso</button>
+                <button class="tc-act blue" data-t="BREAK_END">⏵ Fin descanso</button>
+                <button class="tc-act red" data-t="EXIT">⏹ Salida</button>
+              </div>
+              ${who.webauthn ? `<button class="btn sm" id="tc-bio" style="width:100%;margin-top:10px">🖐 Registrar entrada con huella</button>` : ''}
+              ${state.settings.checkPhotoRequired !== false ? '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">📷 La foto es obligatoria</div>' : ''}
+              ${state.settings.externalClock ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Reloj externo: ${esc(state.settings.externalClock)}</div>` : ''}
+              <button class="btn ghost sm" id="tc-cancel" style="margin-top:12px">Cambiar empleado</button>
+            </div>`}
+        </div>
+
+        <div class="tc-right">
+          <div class="panel">
+            <div class="panel-head"><h2>Hoy</h2></div>
+            <div style="overflow:auto"><table>
+              <thead><tr><th>Empleado</th><th>Entrada</th><th>Descanso</th><th>Salida</th><th>Horas</th><th>Pago</th></tr></thead>
+              <tbody>${rows.map(({ u, s }) => `
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:8px">
+                    ${u.photoUrl ? `<img src="${u.photoUrl}" class="tc-mini">` : `<div class="tc-mini ph">${esc(u.name.slice(0,1))}</div>`}
+                    <div><b>${esc(u.name)}</b><div style="font-size:11px;color:var(--muted)">${esc(u.jobTitle || '')}</div></div>
+                  </div></td>
+                  <td>${s.entry ? new Date(s.entry.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                  <td>${s.breakMin ? hhmm(s.breakMin) : '—'}</td>
+                  <td>${s.exit ? new Date(s.exit.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : (s.working ? '<span class="badge ok">En turno</span>' : '—')}</td>
+                  <td class="mono">${hhmm(s.minutes)}</td>
+                  <td class="mono">${money(payFor(u, s.minutes))}</td>
+                </tr>`).join('')}</tbody></table></div>
+          </div>
+
+          <div class="panel" style="margin-top:14px">
+            <div class="panel-head"><h2>Últimos registros</h2></div>
+            <div style="padding:8px 18px 14px;display:flex;gap:10px;flex-wrap:wrap">
+              ${state.timeRecords.slice(-6).reverse().map((r) => `
+                <div class="tc-rec">
+                  ${r.photo ? `<img src="${r.photo}">` : '<div class="nofoto">—</div>'}
+                  <div class="tc-rec-t"><b>${esc(r.userName)}</b><span>${TIME_TYPES[r.type]} · ${new Date(r.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span></div>
+                </div>`).join('') || '<div style="color:var(--muted);font-size:13px">Sin registros aún.</div>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // La cámara se activa solo a petición del empleado; no muestra al dueño al abrir la pantalla.
+    if (stream) startCam();
+
+    root.querySelectorAll('#tckp .key').forEach((b) => b.onclick = () => {
+      const k = b.dataset.k;
+      if (k === 'C') { pin = ''; render(); return; }
+      if (k === '✓') { submit(); return; }
+      if (pin.length < 4) pin += k;
+      if (pin.length === 4) submit(); else render();
+    });
+
+    if (who) {
+      root.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => {
+        const v = root.querySelector('#tc-video');
+        const photo = v && v.videoWidth ? captureVideoFrame(v, 320, 0.55) : null;
+        if (state.settings.checkPhotoRequired !== false && !photo) {
+          toast('Activa la cámara: la foto es obligatoria para checar');
+          return;
+        }
+        timeAction(who.id, b.dataset.t, photo);
+        toast(TIME_TYPES[b.dataset.t] + ' · ' + who.name + (photo ? ' (con foto)' : ''));
+        render();
+      });
+      root.querySelector('#tc-cancel').onclick = () => { who = null; pin = ''; render(); };
+
+      const bio = root.querySelector('#tc-bio');
+      if (bio) bio.onclick = async () => {
+        try {
+          const ok = await verifyBiometric(who);
+          if (!ok) return;
+          const v = root.querySelector('#tc-video');
+          const photo = v && v.videoWidth ? captureVideoFrame(v, 320, 0.55) : null;
+          timeAction(who.id, 'ENTRY', photo);
+          toast('Entrada registrada con huella · ' + who.name);
+          render();
+        } catch (e) {
+          toast(e.message || 'No se pudo verificar la huella');
+        }
+      };
+    }
+
+    // Si la cámara sigue encendida, se re-engancha al video nuevo del re-render
+    if (stream) startCam();
+  }
+
+  function submit() {
+    const u = state.users.find((x) => String(x.pin) === pin && x.active);
+    if (!u) { toast('PIN incorrecto'); pin = ''; render(); return; }
+    who = u; pin = '';
+    render();
+  }
+
+  render();
+  const timer = setInterval(() => {
+    const t = root.querySelector('.tc-time');
+    if (t) t.textContent = clock();
+  }, 1000);
+  return { root, refresh: render, destroy: () => { clearInterval(timer); stopCam(); } };
+}
+
+/* ================= NÓMINA ================= */
+export function payrollView() {
+  const root = el(`<div id="payroll"></div>`);
+  let range = 'week';
+
+  function bounds() {
+    const now = new Date();
+    if (range === 'week') {
+      const d = new Date(now); d.setDate(d.getDate() - 6);
+      return [d, now];
+    }
+    if (range === 'fortnight') {
+      const d = new Date(now); d.setDate(d.getDate() - 14);
+      return [d, now];
+    }
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    return [d, now];
+  }
+
+  function render() {
+    const [from, to] = bounds();
+    const data = payroll(from.toISOString(), to.toISOString());
+    const totalPay = data.reduce((a, r) => a + r.pay, 0);
+    const totalMin = data.reduce((a, r) => a + r.minutes, 0);
+
+    root.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>Nómina</h2>
+          <div class="seg" id="pr-range" style="margin:0 0 0 14px">
+            <button class="${range === 'week' ? 'on' : ''}" data-r="week">7 días</button>
+            <button class="${range === 'fortnight' ? 'on' : ''}" data-r="fortnight">Quincena</button>
+            <button class="${range === 'month' ? 'on' : ''}" data-r="month">Mes</button>
+          </div>
+          <div class="sp"></div>
+          <button class="btn ghost sm" id="pr-excel">⬇ Excel</button>
+          <button class="btn ghost sm" id="pr-print">Imprimir</button>
+        </div>
+        <div style="padding:10px 18px 0;color:var(--muted);font-size:12.5px" id="pr-range-lbl"></div>
+        <div style="overflow:auto"><table>
+          <thead><tr><th>Empleado</th><th>Días</th><th>Horas</th><th>Tarifa</th><th>Sueldo</th><th>Comisión</th><th>Total</th></tr></thead>
+          <tbody>${data.map((r) => {
+            const st = sellerStats(r.user.id, from.toISOString(), to.toISOString());
+            return `
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:8px">
+                ${r.user.photoUrl ? `<img src="${r.user.photoUrl}" class="tc-mini">` : `<div class="tc-mini ph">${esc(r.user.name.slice(0,1))}</div>`}
+                <div><b>${esc(r.user.name)}</b><div style="font-size:11px;color:var(--muted)">${esc(r.user.jobTitle || '')}${r.user.commissionPct ? ' · ' + r.user.commissionPct + '% comisión' : ''}</div></div>
+              </div></td>
+              <td>${r.days}</td>
+              <td class="mono">${hhmm(r.minutes)}</td>
+              <td class="mono">${r.user.payType === 'DAILY' ? money(r.user.payRate) + '/d' : money(r.user.payRate) + '/h'}</td>
+              <td class="mono">${money(r.pay)}</td>
+              <td class="mono" style="color:var(--brand-700)">${money(st.comision)}</td>
+              <td class="mono t-strong">${money(r.pay + st.comision)}</td>
+            </tr>`;
+          }).join('')}
+            <tr style="background:var(--surface-2)">
+              <td colspan="2"><b>Total</b></td><td class="mono"><b>${hhmm(totalMin)}</b></td><td></td>
+              <td class="mono"><b>${money(totalPay)}</b></td>
+              <td class="mono"><b>${money(data.reduce((a, r) => a + sellerStats(r.user.id, from.toISOString(), to.toISOString()).comision, 0))}</b></td>
+              <td class="mono"><b>${money(totalPay + data.reduce((a, r) => a + sellerStats(r.user.id, from.toISOString(), to.toISOString()).comision, 0))}</b></td>
+            </tr>
+          </tbody></table></div>
+      </div>`;
+
+    const fmt = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+    root.querySelector('#pr-range-lbl').textContent = fmt(from) + ' al ' + fmt(to);
+    root.querySelectorAll('#pr-range button').forEach((b) => b.onclick = () => { range = b.dataset.r; render(); });
+    root.querySelector('#pr-print').onclick = () => window.print();
+    root.querySelector('#pr-excel').onclick = () => {
+      const n = exportPayroll(data, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
+      toast(n + ' empleados exportados a Excel');
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= AFILIADOS ================= */
+export function affiliatesView(ctx) {
+  const root = el(`<div id="aff-root">
+    <div class="aff-hero">
+      <div>
+        <div class="aff-title">Programa de afiliados</div>
+        <div class="aff-sub">Comparte tu link: cada persona que se registre con él queda ligada a ti.</div>
+      </div>
+      <div class="aff-badge">Tu código: <b id="aff-code">—</b></div>
+    </div>
+
+    <section aria-labelledby="aff-pages-title" style="margin:18px 0">
+      <h2 id="aff-pages-title" style="margin:0 0 12px">Landings</h2>
+      <div id="aff-pages-panel"></div>
+    </section>
+
+    <div class="aff-grid">
+      <div class="panel aff-link-card">
+        <div class="panel-head"><h2>Tu link</h2></div>
+        <div style="padding:16px">
+          <div class="aff-linkbox">
+            <input id="aff-link" readonly>
+            <button class="btn sm" id="aff-copy">Copiar</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm" id="aff-wa" style="background:#25D366">WhatsApp</button>
+            <button class="btn ghost sm" id="aff-share">Compartir…</button>
+          </div>
+          <div class="hint" style="margin-top:10px">
+            También puedes mandarlo por Facebook, Instagram o donde quieras: el link ya trae tu código.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Resumen</h2></div>
+        <div style="padding:16px">
+          <div class="aff-stats">
+            <div><span>Invitados</span><b id="aff-total">0</b></div>
+            <div><span>Activos</span><b id="aff-active">0</b></div>
+            <div><span>Por pagar</span><b id="aff-pending">$0</b></div>
+          </div>
+          <div class="aff-stats" style="margin-top:10px">
+            <div><span>Aprobadas</span><b id="aff-approved">$0</b></div>
+            <div><span>Pagadas</span><b id="aff-paid">$0</b></div>
+            <div><span>Devueltas</span><b id="aff-refunded">$0</b></div>
+          </div>
+          <div class="pl-unlimited" style="margin-top:14px">
+            ${PLAN_ORDER.map((c) => `<div><b>${esc(PLANS[c].name)}</b><span>$${PLANS[c].affiliate} MXN / mes</span></div>`).join('')}
+          </div>
+          <div class="hint" style="margin-top:10px">
+            La comisión se genera cuando el referido paga su mensualidad, y se repite cada mes mientras siga activo.
+            Si hay reembolso o contracargo, se registra la devolución del mes.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Personas que invitaste</h2><span id="aff-count" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody id="aff-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Comisiones por mensualidad</h2></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Periodo</th><th>Cliente</th><th>Plan</th><th>Monto</th><th>Estado</th></tr></thead>
+          <tbody id="aff-coms"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Cómo funciona</h2></div>
+      <div style="padding:16px;font-size:13px;line-height:1.6;color:var(--text-2)">
+        <div>1. Compartes tu link con quien quieras.</div>
+        <div>2. La persona se registra en ZoCo con ese link.</div>
+        <div>3. Queda guardado que tú la invitaste (nombre, correo y fecha).</div>
+        <div>4. Cuando actives comisiones, aquí verás cuánto generó cada afiliado.</div>
+        <div class="hint" style="margin-top:8px">Cada usuario de la app tiene su propio link y su propio código.</div>
+      </div>
+    </div>
+  </div>`);
+
+  const code = myAffCode();
+  const link = affiliateLink();
+  $('#aff-code', root).textContent = code;
+  $('#aff-link', root).value = link;
+
+  const gallery = landingGalleryView({ referralCode: code });
+  $('#aff-pages-panel', root).append(gallery.root);
+
+  const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
+  const paint = () => {
+    const list = referralsOf(code);
+    const resumen = commissionSummary(code);
+    $('#aff-total', root).textContent = list.length;
+    $('#aff-active', root).textContent = list.filter((r) => r.status === 'registrado' || r.status === 'activo').length;
+    if ($('#aff-pending', root)) $('#aff-pending', root).textContent = money2(resumen.pending);
+    if ($('#aff-approved', root)) $('#aff-approved', root).textContent = money2(resumen.approved);
+    if ($('#aff-paid', root)) $('#aff-paid', root).textContent = money2(resumen.paid);
+    if ($('#aff-refunded', root)) $('#aff-refunded', root).textContent = money2(resumen.refunded);
+    $('#aff-count', root).textContent = list.length + ' persona(s)';
+    const coms = commissionsOf(code);
+    $('#aff-rows', root).innerHTML = list.length
+      ? list.map((r) => {
+          const mine = coms.filter((c) => c.companyId === r.companyId || (r.email && c.companyId === r.email));
+          const total = mine.filter((c) => c.status !== 'refunded').reduce((a, c) => a + (Number(c.amount) || 0), 0);
+          return `<tr>
+          <td class="t-strong">${esc(r.name || '—')}</td>
+          <td>${esc(r.email || '—')}</td>
+          <td>${new Date(r.date).toLocaleDateString('es-MX')}</td>
+          <td><span class="badge ${r.status === 'activo' ? 'ok' : 'grey'}">${esc(r.status || 'registrado')}</span></td>
+          <td class="mono">${total ? money2(total) : '—'}</td>
+        </tr>`;
+        }).join('')
+      : `<tr><td colspan="5"><div class="cart-empty">Todavía nadie se ha registrado con tu link.<br>Compártelo y aparecerán aquí.</div></td></tr>`;
+
+    const box = $('#aff-coms', root);
+    if (box) {
+      box.innerHTML = coms.length
+        ? coms.slice(0, 15).map((c) => `<tr>
+            <td>${esc(c.period || '')}</td>
+            <td>${esc(c.companyId || '—')}</td>
+            <td>${esc(c.planName || '')}</td>
+            <td class="mono">${money2(c.amount)}</td>
+            <td><span class="badge ${c.status === 'paid' ? 'ok' : c.status === 'refunded' ? 'warn' : c.status === 'approved' ? 'info' : 'grey'}">${esc(c.status)}</span></td>
+          </tr>`).join('')
+        : `<tr><td colspan="5"><div class="cart-empty">Sin comisiones registradas todavía.<br>Se generan cuando un referido paga su mensualidad.</div></td></tr>`;
+    }
+  };
+  paint();
+
+  $('#aff-copy', root).onclick = async () => {
+    const inp = $('#aff-link', root);
+    try { await navigator.clipboard.writeText(inp.value); toast('Link copiado ✓'); }
+    catch { inp.select(); document.execCommand('copy'); toast('Link copiado'); }
+  };
+  $('#aff-wa', root).onclick = () => {
+    const txt = 'Te invito a probar ZoCo POS, el punto de venta para tu negocio: ' + link;
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  };
+  $('#aff-share', root).onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'ZoCo POS', text: 'Te invito a probar ZoCo POS', url: link }); } catch {}
+    } else { toast('Copia el link y compártelo'); }
+  };
+
+  return { root, refresh: paint, destroy: gallery.destroy };
+}
+/* ================= Panel de plan reutilizable ================= */
+export function planPanelMarkup(withSec = true) {
+  return `
+    <div class="panel" ${withSec ? 'data-sec="Plan y límites"' : ''}>
+      <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
+      <div style="padding:16px">
+        <div id="pl-free"></div>
+        <div id="pl-current"></div>
+        <div id="pl-usage" class="pl-usage"></div>
+        <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
+        <div id="pl-grid" class="pl-grid"></div>
+        <div class="hint" style="margin-top:12px">
+          Todos los planes incluyen inventario, caja, reportes, catálogo, afiliados y agente IA
+          (con tu propia llave). Solo cambia la cantidad de sucursales.
+          Usuarios y productos son ilimitados en los tres planes.
+        </div>
+      </div>
+    </div>`;
+}
+
+export function bindPlanPanel(root) {
+  const plCur = $('#pl-current', root);
+  if (!plCur) return;
+
+  const paintPlan = () => {
+    const u = planUsage();
+    const p = u.plan;
+    const badge = $('#pl-badge', root);
+    if (badge) badge.textContent = p.name.replace('ZoCo ', '');
+
+    const free = isBetaFree();
+    const freeBox = $('#pl-free', root);
+    if (freeBox) {
+      freeBox.innerHTML = free
+        ? `<div class="pl-free">
+             <b>Modo gratuito de prueba</b>
+             <span>Sin cobros y sin límites por ahora. Puedes usar la app completa con todas tus sucursales.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw"> Activar cobro y límites</label>
+           </div>`
+        : `<div class="pl-free off">
+             <b>Modo de cobro activo</b>
+             <span>Se aplican los límites de sucursales del plan.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw" checked> Volver a modo gratuito</label>
+           </div>`;
+      const sw = $('#pl-free-sw', root);
+      if (sw) sw.onchange = () => {
+        setBetaFree(!!sw.checked === false);
+        paintPlan();
+        toast(sw.checked ? 'Modo gratuito activado' : 'Cobro y límites activados');
+      };
+    }
+
+    plCur.innerHTML = `
+      <div class="pl-hero">
+        <div>
+          <div class="pl-name">${esc(p.name)}</div>
+          <div class="pl-hint">${free ? 'Gratis durante la prueba · sin límites' : esc(p.hint)}</div>
+        </div>
+        <div class="pl-price">${free ? 'Gratis' : '$' + p.price}<span>${free ? '' : '/mes'}</span></div>
+      </div>`;
+
+    const over = u.overLimit;
+    const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
+    const quote=estimateBusinessTotal(count,p.code);
+    const extra=$('#pl-business-addons',root);
+    if(extra)extra.innerHTML='<strong>Negocios independientes</strong><span>'+count+' registrado(s) · '+(p.code==='esencial'?'Primer negocio incluido; cada adicional +$100/mes':'Tarifa por negocio adicional pendiente para este plan')+'</span><small>'+(quote.total!==null?'Total estimado:  `
+      <div class="pl-bar">
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
+        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>
+      <div class="pl-unlimited">
+        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
+        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
+      </div>
+      ${over ? `<div class="pl-warn">
+        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
+        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
+      </div>` : ''}`;
+
+    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
+      const pl = PLANS[code];
+      const cur = code === p.code;
+      return `<div class="pl-card ${cur ? 'on' : ''}">
+        <div class="pl-card-name">${esc(pl.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 6px">${esc(pl.ideal || '')}</div>
+        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
+        <div class="pl-card-list">
+          <div><b>${pl.limits.branches} sucursal(es)</b> · usuarios ilimitados</div>
+          ${(pl.incluye || []).map((t) => `<div style="display:flex;gap:6px;align-items:flex-start;line-height:1.35">
+            <span style="color:var(--ok,#059669);font-weight:900;flex:none">✓</span>
+            <span>${/^Todo lo de/.test(t) ? '<b>' + esc(t) + '</b>' : esc(t)}</span></div>`).join('')}
+          <div style="color:var(--muted);font-size:11px;margin-top:6px">Comisión afiliado $${pl.affiliate}/mes</div>
+        </div>
+        ${cur ? '<div class="pl-card-on">Plan actual</div>'
+              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
+      </div>`;
+    }).join('');
+
+    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
+      const code = b.dataset.pl;
+      const pl = PLANS[code];
+      const baja = pl.limits.branches < u.branches.used;
+      const ok = await confirmDialog({
+        title: 'Cambiar de plan',
+        message: baja
+          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
+          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        okText: 'Sí, cambiar',
+      });
+      if (!ok) return;
+      const r = setPlan(code);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
+      paintPlan();
+    });
+  };
+
+  paintPlan();
+  if (!root.dataset.planSub) {
+    root.dataset.planSub = '1';
+    subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
+  }
+}
+
+/** Vista independiente: "Mi plan" del menú */
+export function plansView() {
+  const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
+  bindPlanPanel(root);
+  return { root, refresh: () => bindPlanPanel(root) };
+}+quote.total+' MXN al mes';
+    modal({title:'Nuevo negocio independiente',body:
+      '<p><b>'+esc(name)+'</b></p><p>'+esc(pricing)+'</p><p>La creación segura de negocios adicionales y su cobro están pendientes de activarse. No se creará un negocio vacío que pudiera mezclar datos de ventas, ni se realizará ningún cargo.</p>',
+      foot:'<button class="btn" data-close>Entendido</button>'});
+  });
+
+  return { root, refresh() {} };
+}
+
+/* ================= CLIENTES ================= */
+export function customersView(ctx) {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Clientes</h2>
+        <span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div>
+        <button class="btn sm" id="new">+ Cliente</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Cliente</th><th>Teléfono</th><th>Crédito</th><th>Saldo</th><th style="width:190px"></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.customers.length + ' clientes';
+    if (!state.customers.length) {
+      rows.innerHTML = `<tr><td colspan="5"><div class="cart-empty"><div class="big">👤</div>Aún no hay clientes.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.customers.map((c) => `
+      <tr>
+        <td><div class="t-strong">${esc(c.name)}</div><div style="font-size:11.5px;color:var(--muted)">${esc(c.email || '')}</div></td>
+        <td>${esc(c.phone || '-')}</td>
+        <td class="mono">${money(c.creditLimit || 0)}</td>
+        <td class="mono t-strong" style="color:${(c.balance || 0) > 0 ? 'var(--danger)' : 'var(--text)'}">${money(c.balance || 0)}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn ghost sm" data-pay="${c.id}" style="height:30px">Abonar</button>
+          <button class="btn ghost sm" data-edit="${c.id}" style="height:30px">Editar</button>
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => edit(b.dataset.edit));
+    rows.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => pay(b.dataset.pay));
+  }
+
+  function edit(id) {
+    const c = id ? state.customers.find((x) => x.id === id) : null;
+    const m = modal({
+      title: c ? 'Editar cliente' : 'Nuevo cliente',
+      body: `
+        <div class="field"><label>Nombre</label><input id="c-n" value="${esc(c?.name || '')}"></div>
+        <div class="row2">
+          <div class="field"><label>Teléfono</label><input id="c-p" value="${esc(c?.phone || '')}"></div>
+          <div class="field"><label>Email</label><input id="c-e" value="${esc(c?.email || '')}"></div>
+        </div>
+        <div class="field"><label>Límite de crédito</label><input id="c-l" type="number" min="0" step="0.01" value="${c?.creditLimit || 0}"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const name = m.root.querySelector('#c-n').value.trim();
+      if (!name) { toast('Falta el nombre'); return; }
+      upsertCustomer({
+        id: c?.id, name,
+        phone: m.root.querySelector('#c-p').value.trim(),
+        email: m.root.querySelector('#c-e').value.trim(),
+        creditLimit: Number(m.root.querySelector('#c-l').value) || 0,
+      });
+      m.close(); render();
+    };
+  }
+
+  function pay(id) {
+    const c = state.customers.find((x) => x.id === id);
+    const m = modal({
+      title: 'Abonar a ' + c.name,
+      body: `<div class="field"><label>Monto</label><input id="a" type="number" min="0" step="0.01" placeholder="0.00"></div>
+             <div style="font-size:12px;color:var(--muted)">Saldo actual: ${money(c.balance || 0)}</div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Abonar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const v = Number(m.root.querySelector('#a').value) || 0;
+      if (v <= 0) { toast('Monto inválido'); return; }
+      c.balance = Math.max(0, (c.balance || 0) - v);
+      emit(); m.close(); render(); toast('Abono registrado');
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= USUARIOS ================= */
+export function usersView() {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Usuarios y permisos</h2>
+        <span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div>
+        <button class="btn sm" id="new">+ Usuario</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Puesto</th><th>Pago</th><th>Comisión</th><th>PIN</th><th>Estado</th><th style="width:170px"></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.users.length + ' usuarios';
+    rows.innerHTML = state.users.map((u) => {
+      const perms = ROLES[u.role]?.perms || [];
+      const count = perms.includes('*') ? 'Todos' : perms.length + ' permisos';
+      return `<tr>
+        <td class="t-strong">${esc(u.name)}</td>
+        <td>${esc(u.email)}</td>
+        <td><span class="badge info">${esc(ROLES[u.role]?.label || u.role)}</span></td>
+        <td>${esc(u.jobTitle || '—')}</td>
+        <td class="mono">${u.payType === 'DAILY' ? money(u.payRate) + '/día' : money(u.payRate) + '/h'}</td>
+        <td class="mono">${u.commissionPct ? u.commissionPct + '%' : '—'}</td>
+        <td class="mono">${esc(u.pin || '—')}</td>
+        <td>${u.active ? '<span class="badge ok">Activo</span>' : '<span class="badge grey">Inactivo</span>'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn ghost sm" data-edit="${u.id}" style="height:30px">Editar</button>
+          <button class="btn ghost sm" data-tog="${u.id}" style="height:30px">${u.active ? 'Desactivar' : 'Activar'}</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    rows.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => edit(b.dataset.edit));
+    rows.querySelectorAll('[data-tog]').forEach((b) => b.onclick = () => {
+      const u = state.users.find((x) => x.id === b.dataset.tog);
+      if (u.role === 'OWNER') { toast('El propietario no se puede desactivar'); return; }
+      u.active = !u.active; emit(); render();
+    });
+  }
+
+  function edit(id) {
+    const u = id ? state.users.find((x) => x.id === id) : null;
+    const m = modal({
+      title: u ? 'Editar usuario' : 'Nuevo usuario',
+      body: `
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+          <div id="f-img-prev" style="width:118px;height:118px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2,#F1F5F9);display:grid;place-items:center;overflow:hidden;flex-shrink:0">
+            ${p?.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:30px;color:var(--muted)">📷</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:8px">FOTO DEL PRODUCTO</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <label class="btn ghost sm" style="cursor:pointer;margin:0">Subir foto
+                <input id="f-img" type="file" accept="image/*" style="display:none">
+              </label>
+              ${p?.image ? '<button type="button" class="btn ghost sm" id="f-img-del">Quitar</button>' : ''}
+            </div>
+            <div class="hint" style="margin-top:8px">Se comprime automáticamente (máx 1200px).</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Nombre</label><input id="u-n" value="${esc(u?.name || '')}"></div>
+          <div class="field"><label>Correo</label><input id="u-e" type="email" value="${esc(u?.email || '')}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Contraseña</label>
+            <div style="display:flex;gap:6px">
+              <input id="u-p" type="password" value="${esc(u?.pass || '')}" autocomplete="new-password">
+              <button class="btn ghost sm" type="button" id="u-p-eye" aria-label="Mostrar contraseña">👁</button>
+            </div>
+          </div>
+          <div class="field"><label>PIN checador</label><input id="u-pin" value="${esc(u?.pin || '')}" placeholder="4 dígitos"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Puesto</label><input id="u-job" value="${esc(u?.jobTitle || '')}" placeholder="Vendedor"></div>
+          <div class="field"><label>Foto del empleado</label>
+            <input id="u-photo" type="file" accept="image/*">
+            <div id="u-photo-prev" style="margin-top:6px">${u?.photoUrl ? `<img src="${u.photoUrl}" style="width:54px;height:54px;border-radius:12px;object-fit:cover">` : ''}</div>
+          </div>
+        </div>
+          <div class="field"><label>Rol</label>
+            <select id="u-r">${Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${u?.role === k ? 'selected' : ''}>${r.label}</option>`).join('')}</select>
+          </div>
+        <div class="row2">
+          <div class="field"><label>Tipo de pago</label>
+            <select id="u-pt"><option value="HOURLY" ${u?.payType !== 'DAILY' ? 'selected' : ''}>Por hora</option><option value="DAILY" ${u?.payType === 'DAILY' ? 'selected' : ''}>Por día</option></select>
+          </div>
+          <div class="field"><label>Tarifa (MXN)</label><input id="u-pr" type="number" min="0" step="0.01" value="${u?.payRate ?? 60}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Comisión por venta (%)</label><input id="u-comm" type="number" min="0" max="100" step="0.5" value="${u?.commissionPct ?? 0}"></div>
+          <div class="field"><label>Teléfono</label><input id="u-phone" value="${esc(u?.personalData?.phone || '')}"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>CURP / RFC</label><input id="u-curp" value="${esc(u?.personalData?.curp || '')}" placeholder="Opcional"></div>
+          <div class="field"><label>Dirección</label><input id="u-addr" value="${esc(u?.personalData?.address || '')}" placeholder="Opcional"></div>
+        </div>
+        <div class="field"><label>Documentos (INE, contrato, comprobante…)</label>
+          <input id="u-doc" type="file" accept="image/*,.pdf">
+          <div id="u-docs" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+            ${(u?.docs || []).map((d) => `<span class="doc-chip" data-doc="${d.id}">${esc(d.name)} <b>✕</b></span>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Huella / Face ID del dispositivo</label>
+          <button class="btn ghost sm" id="u-bio" type="button" style="width:100%">
+            ${u?.webauthn ? '✅ Registrada · registrar de nuevo' : '🖐 Registrar huella en este dispositivo'}
+          </button>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px">Se guarda solo en este dispositivo. Sirve para que entre al checador con su huella.</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px" id="u-perms"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    let pendingPhoto = u?.photoUrl || null;
+    m.root.querySelector('#u-photo').onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const r = await readImageCompressed(f, 260, 0.7);
+        pendingPhoto = r.dataUrl;
+        m.root.querySelector('#u-photo-prev').innerHTML = '<img src="' + r.dataUrl + '" style="width:54px;height:54px;border-radius:12px;object-fit:cover">';
+        toast('Foto lista · ' + Math.round(r.bytes / 1024) + ' KB');
+      } catch (err) { toast(err.message); }
+    };
+
+    // Documentos del empleado
+    const docInput = m.root.querySelector('#u-doc');
+    if (docInput) docInput.onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (f.size > 3 * 1024 * 1024) { toast('El archivo debe pesar menos de 3 MB'); return; }
+      const dataUrl = await new Promise((res) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result));
+        r.readAsDataURL(f);
+      });
+      if (!u) { toast('Primero guarda el empleado'); return; }
+      addUserDoc(u.id, { name: f.name, type: f.type, dataUrl });
+      m.close();
+      toast('Documento agregado');
+    };
+    m.root.querySelectorAll('[data-doc]').forEach((b) => b.onclick = () => {
+      if (!u) return;
+      removeUserDoc(u.id, b.dataset.doc);
+      m.close();
+      toast('Documento eliminado');
+    });
+
+    // Huella
+    const bioBtn = m.root.querySelector('#u-bio');
+    if (bioBtn) bioBtn.onclick = async () => {
+      if (!u) { toast('Primero guarda el empleado, luego registra su huella'); return; }
+      try {
+        const cred = await enrollBiometric(u);
+        setUserCredential(u.id, cred);
+        bioBtn.textContent = '✅ Registrada · registrar de nuevo';
+        toast('Huella registrada en este dispositivo');
+      } catch (err) {
+        toast(err.message || 'No se pudo registrar la huella');
+      }
+    };
+    const sel = m.root.querySelector('#u-r');
+    const showPerms = () => {
+      const p = ROLES[sel.value].perms;
+      m.root.querySelector('#u-perms').textContent = p.includes('*')
+        ? 'Acceso total (propietario)'
+        : 'Permisos: ' + p.map((k) => PERMS[k] || k).join(' · ');
+    };
+    sel.onchange = showPerms; showPerms();
+
+    const eye = m.root.querySelector('#u-p-eye');
+    if (eye) eye.onclick = () => {
+      const inp = m.root.querySelector('#u-p');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    };
+
+    m.root.querySelector('#ok').onclick = () => {
+      const name = m.root.querySelector('#u-n').value.trim();
+      const email = m.root.querySelector('#u-e').value.trim();
+      const pass = m.root.querySelector('#u-p').value.trim();
+      if (!name || !email || !pass) { toast('Completa nombre, correo y contraseña'); return; }
+      if (u) {
+        Object.assign(u, {
+          name, email, pass, role: sel.value,
+          pin: m.root.querySelector('#u-pin').value.trim(),
+          jobTitle: m.root.querySelector('#u-job').value.trim(),
+          payType: m.root.querySelector('#u-pt').value,
+          payRate: Number(m.root.querySelector('#u-pr').value) || 0,
+          commissionPct: Number(m.root.querySelector('#u-comm').value) || 0,
+          personalData: {
+            phone: m.root.querySelector('#u-phone').value.trim(),
+            curp: m.root.querySelector('#u-curp').value.trim(),
+            address: m.root.querySelector('#u-addr').value.trim(),
+          },
+          photoUrl: pendingPhoto,
+        });
+      } else {
+        state.users.push({
+          id: 'u' + Date.now(), name, email, pass, role: sel.value, active: true,
+          pin: m.root.querySelector('#u-pin').value.trim(),
+          jobTitle: m.root.querySelector('#u-job').value.trim(),
+          payType: m.root.querySelector('#u-pt').value,
+          payRate: Number(m.root.querySelector('#u-pr').value) || 0,
+          commissionPct: Number(m.root.querySelector('#u-comm').value) || 0,
+          personalData: {
+            phone: m.root.querySelector('#u-phone').value.trim(),
+            curp: m.root.querySelector('#u-curp').value.trim(),
+            address: m.root.querySelector('#u-addr').value.trim(),
+          },
+          photoUrl: pendingPhoto,
+        });
+      }
+      emit(); m.close(); render();
+    };
+  }
+
+  $('#new', root).onclick = () => edit(null);
+
+  render();
+  return { root, refresh: render };
+}
+/* ================= APARTADOS ================= */
+export function layawaysView(ctx) {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Apartados</h2><span style="font-size:12.5px;color:var(--muted)" id="cnt"></span></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Código</th><th>Cliente</th><th>Items</th><th>Total</th><th>Abonado</th><th>Restante</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.layaways.length + ' apartados';
+    if (!state.layaways.length) {
+      rows.innerHTML = `<tr><td colspan="8"><div class="cart-empty"><div class="big">⏱</div>Aún no hay apartados.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.layaways.map((l) => `
+      <tr>
+        <td class="t-strong mono">${esc(l.code)}</td>
+        <td>${esc(l.customerName)}</td>
+        <td>${l.items.reduce((a, i) => a + i.qty, 0)}</td>
+        <td class="mono">${money(l.total)}</td>
+        <td class="mono">${money(l.paid)}</td>
+        <td class="mono t-strong" style="color:var(--danger)">${money(Math.max(0, l.total - l.paid))}</td>
+        <td>${l.status === 'done' ? '<span class="badge ok">Liquidado</span>' : l.status === 'cancelled' ? '<span class="badge danger">Cancelado</span>' : '<span class="badge warn">Activo</span>'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          ${l.status === 'active' ? `<button class="btn ghost sm" data-pay="${l.id}" style="height:30px">Abonar</button>
+          <button class="btn ghost sm" data-can="${l.id}" style="height:30px;color:var(--danger)">Cancelar</button>` : ''}
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => {
+      const l = state.layaways.find((x) => x.id === b.dataset.pay);
+      const restante = Math.max(0, l.total - l.paid);
+      const m = modal({
+        title: 'Abonar ' + l.code,
+        body: `<div class="field"><label>Monto</label><input id="a" type="number" min="0" step="0.01" value="${restante}"></div>
+               <div style="font-size:12px;color:var(--muted)">Restante: ${money(restante)}</div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Abonar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const v = Number(m.root.querySelector('#a').value) || 0;
+        if (v <= 0) { toast('Monto inválido'); return; }
+        layawayPayment(l.id, Math.min(v, restante));
+        m.close(); render();
+      };
+    });
+    rows.querySelectorAll('[data-can]').forEach((b) => b.onclick = async () => {
+      const ok = await confirmDialog({ title: 'Cancelar apartado', message: 'Se repondrá el stock.', okText: 'Cancelar', danger: true });
+      if (ok) { cancelLayaway(b.dataset.can); render(); }
+    });
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= CUPONES ================= */
+export function couponsView() {
+  const root = el(`<div class="panel">
+      <div class="panel-head"><h2>Cupones</h2><span style="font-size:12.5px;color:var(--muted)" id="cnt"></span>
+        <div class="sp"></div><button class="btn sm" id="new">+ Cupón</button></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="rows"></tbody></table></div>
+    </div>`);
+
+  function render() {
+    const rows = $('#rows', root);
+    $('#cnt', root).textContent = state.coupons.length + ' cupones';
+    if (!state.coupons.length) {
+      rows.innerHTML = `<tr><td colspan="6"><div class="cart-empty"><div class="big">🎟</div>Aún no hay cupones.</div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = state.coupons.map((c) => `
+      <tr>
+        <td class="t-strong mono">${esc(c.code)}</td>
+        <td>${c.type === 'PERCENT' ? 'Porcentaje' : 'Monto fijo'}</td>
+        <td class="mono">${c.type === 'PERCENT' ? c.value + '%' : money(c.value)}</td>
+        <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('es-MX') : '—'}</td>
+        <td>${c.active ? '<span class="badge ok">Activo</span>' : '<span class="badge grey">Inactivo</span>'}</td>
+        <td style="text-align:right">
+          <button class="btn ghost sm" data-tog="${c.id}" style="height:30px">${c.active ? 'Desactivar' : 'Activar'}</button>
+        </td>
+      </tr>`).join('');
+
+    rows.querySelectorAll('[data-tog]').forEach((b) => b.onclick = () => {
+      const c = state.coupons.find((x) => x.id === b.dataset.tog);
+      c.active = !c.active; emit(); render();
+    });
+  }
+
+  $('#new', root).onclick = () => {
+    const m = modal({
+      title: 'Nuevo cupón',
+      body: `
+        <div class="row2">
+          <div class="field"><label>Código</label><input id="c-code" placeholder="VERANO10"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="c-type"><option value="PERCENT">% descuento</option><option value="FIXED">Monto fijo</option></select></div>
+        </div>
+        <div class="field"><label>Valor</label><input id="c-val" type="number" min="0" step="0.01"></div>`,
+      foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+    });
+    m.root.querySelector('#ok').onclick = () => {
+      const code = m.root.querySelector('#c-code').value.trim();
+      const val = Number(m.root.querySelector('#c-val').value) || 0;
+      if (!code || val <= 0) { toast('Falta código o valor'); return; }
+      upsertCoupon({ code, type: m.root.querySelector('#c-type').value, value: val });
+      m.close(); render();
+    };
+  };
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= FINANZAS ================= */
+export function financeView(ctx) {
+  const root = el(`<div id="fin"></div>`);
+  let range = 'month';
+
+  function bounds() {
+    const now = new Date();
+    if (range === 'day') { const d = new Date(now); d.setHours(0, 0, 0, 0); return [d, now]; }
+    if (range === 'week') { const d = new Date(now); d.setDate(d.getDate() - 6); d.setHours(0, 0, 0, 0); return [d, now]; }
+    if (range === 'year') { const d = new Date(now.getFullYear(), 0, 1); return [d, now]; }
+    const d = new Date(now.getFullYear(), now.getMonth(), 1); return [d, now];
+  }
+
+  function saleProfit(s) {
+    const unit = (s.items || []).reduce((a, i) => {
+      const prod = i.productId ? state.products.find((p) => p.id === i.productId) : null;
+      return a + (i.price - (prod?.cost || 0)) * i.qty;
+    }, 0);
+    return unit - (s.discount || 0);
+  }
+
+  function render() {
+    const [from, to] = bounds();
+    const inR = (d) => { const x = new Date(d); return x >= from && x <= to; };
+    const sales = state.sales.filter((s) => s.status === 'done' && inR(s.date));
+    const ventas = sales.reduce((a, s) => a + s.total, 0);
+    const utilidad = sales.reduce((a, s) => a + saleProfit(s), 0);
+    const dias = Math.max(1, Math.round((to - from) / 86400000) + (range === 'day' ? 1 : 0));
+    const gastosFijosMes = fixedMonthlyTotal();
+    const gastosDelPeriodo = gastosFijosMes * (dias / 30)
+      + state.expenses.filter((e) => !e.recurring && e.paid && inR(e.date)).reduce((a, e) => a + e.amount, 0);
+    const margen = ventas > 0 ? (utilidad / ventas) * 100 : 0;
+    const resultado = utilidad - gastosDelPeriodo;
+
+    // serie para tendencia
+    const buckets = [];
+    const n = range === 'day' ? 8 : range === 'week' ? 7 : range === 'year' ? 12 : 6;
+    for (let i = n - 1; i >= 0; i--) {
+      let a, b, label;
+      if (range === 'day') {
+        const h = new Date(to); h.setMinutes(0, 0, 0); h.setHours(h.getHours() - i);
+        a = new Date(h); b = new Date(h.getTime() + 3599999);
+        label = pad(h.getHours());
+      } else if (range === 'week') {
+        const d = new Date(to); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
+        a = d; b = new Date(d.getTime() + 86399999);
+        label = ['D', 'L', 'M', 'M', 'J', 'V', 'S'][d.getDay()];
+      } else if (range === 'year') {
+        a = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1);
+        b = new Date(a.getFullYear(), a.getMonth() + 1, 0, 23, 59, 59);
+        label = a.toLocaleDateString('es-MX', { month: 'short' }).slice(0, 3);
+      } else {
+        const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+        a = d; b = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        label = d.toLocaleDateString('es-MX', { month: 'short' }).slice(0, 3);
+      }
+      const total = state.sales.filter((s) => s.status === 'done' && new Date(s.date) >= a && new Date(s.date) <= b).reduce((x, s) => x + s.total, 0);
+      buckets.push({ label, total });
+    }
+    const max = Math.max(1, ...buckets.map((x) => x.total));
+
+    const fixed = state.expenses.filter((e) => e.recurring);
+    const personalOn = !state.settings || state.settings.personalEnabled !== false;
+    const personal = personalSummary(from.toISOString(), to.toISOString());
+
+    root.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><div class="l">Ventas</div><div class="v">${money(ventas)}</div><div class="s">${sales.length} tickets</div></div>
+        <div class="kpi"><div class="l">Utilidad</div><div class="v" style="color:var(--ok)">${money(utilidad)}</div><div class="s">precio − costo</div></div>
+        <div class="kpi"><div class="l">Gastos</div><div class="v">${money(gastosDelPeriodo)}</div><div class="s">fijos prorrateados + pagados</div></div>
+        <div class="kpi"><div class="l">Margen</div><div class="v">${margen.toFixed(1)}%</div><div class="s" style="color:${resultado >= 0 ? 'var(--ok)' : 'var(--danger)'}">Resultado: ${money(resultado)}</div></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><h2>Estadísticas</h2>
+          <div class="seg" id="fin-range" style="margin:0 0 0 12px">
+            <button class="${range === 'day' ? 'on' : ''}" data-r="day">Día</button>
+            <button class="${range === 'week' ? 'on' : ''}" data-r="week">Semana</button>
+            <button class="${range === 'month' ? 'on' : ''}" data-r="month">Mes</button>
+            <button class="${range === 'year' ? 'on' : ''}" data-r="year">Año</button>
+          </div>
+          <div class="sp"></div>
+          <button class="btn sm" id="ex-new">+ Gasto</button>
+        </div>
+        <div style="padding:16px 18px">
+          <div class="fin-bars">
+            ${buckets.map((b) => `<div class="fin-bar"><i style="height:${Math.max(3, (b.total / max) * 100)}%"></i><span>${b.label}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:14px">
+        <div class="panel">
+          <div class="panel-head"><h2>Gastos fijos</h2>
+            <button class="btn ghost sm" id="fx-new" style="margin-left:auto">+ Fijo</button></div>
+          <div style="padding:8px 18px 14px">
+            ${fixed.length ? fixed.map((e) => `
+              <div class="row-kv" style="padding:8px 0;border-bottom:1px solid var(--line-2)">
+                <span>${esc(e.name)} <small style="color:var(--muted)">· ${e.freq || 'mensual'}</small></span>
+                <b class="mono">${money(expenseMonthly(e))}/mes</b>
+              </div>`).join('') : '<div style="color:var(--muted);font-size:13px">Sin gastos fijos.</div>'}
+            <div class="row-kv" style="padding-top:10px"><span><b>Total mensual</b></span><b class="mono">${money(gastosFijosMes)}</b></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Finanzas personales</h2>
+            <label style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
+              <input type="checkbox" id="pers-on" ${personalOn ? 'checked' : ''}> activas
+            </label></div>
+          <div style="padding:10px 18px 16px">
+            ${personalOn ? `
+              <div class="row-kv"><span>Ingresos</span><b class="mono" style="color:var(--ok)">${money(personal.ingresos)}</b></div>
+              <div class="row-kv"><span>Gastos</span><b class="mono" style="color:var(--danger)">${money(personal.gastos)}</b></div>
+              <div class="row-kv"><span><b>Balance</b></span><b class="mono">${money(personal.balance)}</b></div>
+              <div class="row-kv"><span style="font-size:11.5px;color:var(--muted)">Efectivo ${money(personal.efectivo)} · Tarjeta ${money(personal.tarjeta)}</span><span></span></div>
+              <div style="margin-top:10px">
+                <div style="font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:800;margin-bottom:4px">META DE AHORRO AL MES <span style="font-weight:600;text-transform:none;letter-spacing:0">(opcional)</span></div>
+                <div style="display:flex;gap:6px">
+                  <input id="sg" type="number" min="0" step="50" value="${state.settings?.savingGoal || 0}"
+                    style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:13px">
+                  <button class="btn sm" id="sg-save">Guardar</button>
+                </div>
+                <div style="font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.4">
+                  Si la dejas en 0 no se descuenta nada: solo se reparte tu ingreso entre los días.
+                </div>
+              </div>
+              <button class="btn sm" id="pers-open" style="width:100%;margin-top:10px">📱 Abrir app de finanzas</button>
+            ` : '<div style="color:var(--muted);font-size:13px">Desactivadas. Actívalas para verlas junto al negocio.</div>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><h2>Gastos del negocio</h2>
+          <button class="btn ghost sm" id="ex-exp" style="margin-left:auto">⬇ Excel</button></div>
+        <div style="overflow:auto"><table>
+          <thead><tr><th>Concepto</th><th>Monto</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>${state.expenses.length ? state.expenses.map((e) => `
+            <tr><td class="t-strong">${esc(e.name)}</td><td class="mono">${money(e.amount)}</td>
+            <td>${new Date(e.date).toLocaleDateString('es-MX')}</td>
+            <td>${e.recurring ? '<span class="badge info">Fijo</span>' : 'Variable'}</td>
+            <td>${e.paid ? '<span class="badge ok">Pagado</span>' : '<span class="badge warn">Pendiente</span>'}</td>
+            <td>${e.paid ? '' : `<button class="btn ghost sm" data-pay="${e.id}" style="height:28px">Pagar</button>`}</td></tr>`).join('')
+            : `<tr><td colspan="6"><div class="cart-empty">Sin gastos.</div></td></tr>`}</tbody></table></div>
+      </div>`;
+
+    root.querySelectorAll('#fin-range button').forEach((b) => b.onclick = () => { range = b.dataset.r; render(); });
+    root.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => { payExpense(b.dataset.pay); render(); });
+    root.querySelector('#ex-exp').onclick = () => { const n = exportExpenses(); toast(n + ' gastos exportados'); };
+    root.querySelector('#pers-on').onchange = (e) => { state.settings.personalEnabled = e.target.checked; emit(); render(); };
+    root.querySelector('#pers-open')?.addEventListener('click', () => window.open('/finanzas.html', '_blank'));
+    root.querySelector('#sg-save')?.addEventListener('click', () => {
+      const v = setSavingGoal(root.querySelector('#sg').value);
+      toast('Meta de ahorro: ' + money(v) + ' al mes');
+      render();
+    });
+
+    root.querySelector('#ex-new').onclick = () => {
+      const m = modal({
+        title: 'Nuevo gasto',
+        body: `<div class="field"><label>Concepto</label><input id="x-n" placeholder="Renta, luz, proveedor…"></div>
+               <div class="field"><label>Monto</label><input id="x-a" type="number" min="0" step="0.01"></div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const name = m.root.querySelector('#x-n').value.trim();
+        const amount = Number(m.root.querySelector('#x-a').value) || 0;
+        if (!name || amount <= 0) { toast('Falta concepto o monto'); return; }
+        upsertExpense({ name, amount });
+        m.close(); render();
+      };
+    };
+
+    root.querySelector('#fx-new').onclick = () => {
+      const m = modal({
+        title: 'Gasto fijo',
+        body: `<div class="field"><label>Concepto</label><input id="fx-n" placeholder="Renta, internet, nómina…"></div>
+               <div class="row2">
+                 <div class="field"><label>Monto</label><input id="fx-a" type="number" min="0" step="0.01"></div>
+                 <div class="field"><label>Frecuencia</label>
+                   <select id="fx-f"><option value="mensual">Mensual</option><option value="semanal">Semanal</option><option value="anual">Anual</option></select></div>
+               </div>`,
+        foot: `<button class="btn ghost sm" data-close>Cancelar</button><button class="btn sm" id="ok">Guardar</button>`,
+      });
+      m.root.querySelector('#ok').onclick = () => {
+        const name = m.root.querySelector('#fx-n').value.trim();
+        const amount = Number(m.root.querySelector('#fx-a').value) || 0;
+        if (!name || amount <= 0) { toast('Falta concepto o monto'); return; }
+        upsertExpense({ name, amount, recurring: true, freq: m.root.querySelector('#fx-f').value });
+        m.close(); render();
+      };
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+export function timeClockView(ctx) {
+  const root = el(`<div id="tc" class="tc-refresh"></div>`);
+  let pin = '';
+  let who = null;
+  let stream = null;
+  let camPending = null;
+
+  const clock = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  async function startCam() {
+    if (camPending) return camPending;
+    const v = root.querySelector('#tc-video');
+    if (!v) return false;
+    if (stream) {
+      // Re-engancha la cámara al video nuevo (tras un re-render)
+      if (v.srcObject !== stream) { v.srcObject = stream; v.play().catch(() => {}); }
+      root.querySelector('#tc-cam-empty')?.remove();
+      root.querySelector('#tc-cam-btn')?.classList.add('on');
+      return true;
+    }
+    camPending = (async () => {
+    try {
+      stream = registerCam(await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } }));
+      v.srcObject = stream;
+      v.play();
+      root.querySelector('#tc-cam-empty')?.remove();
+      root.querySelector('#tc-cam-btn')?.classList.add('on');
+      const st = root.querySelector('#tc-cam-state');
+      if (st) st.textContent = 'Foto al checar';
+      return true;
+    } catch {
+      stream = null;
+      const badge = root.querySelector('#tc-cam-state');
+      if (badge) badge.textContent = 'Cámara no disponible';
+      return false;
+    } finally { camPending = null; }
+    })();
+    return camPending;
+  }
+  function stopCam() {
+    if (stream) { dropCam(stream); stream = null; }
+    stopAllCams();
+    const v = root.querySelector('#tc-video');
+    if (v) v.srcObject = null;
+    const box = root.querySelector('.tc-cam');
+    if (box && !box.querySelector('#tc-cam-empty')) {
+      const ph = document.createElement('div');
+      ph.id = 'tc-cam-empty';
+      ph.className = 'tc-cam-empty';
+      ph.classList.add("tc-demo-person");
+      ph.innerHTML = '<span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span>';
+      box.insertBefore(ph, box.querySelector('#tc-cam-state'));
+    }
+    root.querySelector('#tc-cam-btn')?.classList.remove('on');
+  }
+  function toggleCam() { if (stream) stopCam(); else startCam(); }
+
+  // Botón de cámara (delegado: sobrevive a los re-render)
+  root.addEventListener('click', (e) => {
+    if (e.target.closest?.('#tc-cam-btn')) toggleCam();
+  });
+  function render() {
+    const rows = state.users.filter((u) => u.active).map((u) => ({ u, s: dayStats(u.id) }));
+
+    root.innerHTML = `
+      <div class="tc-wrap">
+        <div class="tc-left">
+          <div class="tc-clock">
+            <div class="tc-time">${clock()}</div>
+            <div class="tc-date">${new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          </div>
+
+          <div class="tc-cam tc-cam-modern">
+            <video id="tc-video" playsinline muted></video>
+            <div id="tc-cam-empty" class="tc-cam-empty tc-demo-person"><span class="tc-demo-tag">Imagen ilustrativa · Activa la cámara para checar</span></div>
+            <div id="tc-cam-state" class="tc-cam-state">Cámara apagada</div>
+            <button id="tc-cam-btn" class="tc-cam-btn" title="Encender o apagar la cámara" aria-label="Encender o apagar la cámara">⏻</button>
+          </div>
+
+          ${!who ? `
+            <div class="tc-pin">
+              <div class="tc-pin-lbl">INGRESA TU PIN</div>
+              <div class="tc-pin-dots">${[0, 1, 2, 3].map((i) => `<span class="${pin.length > i ? 'on' : ''}"></span>`).join('')}</div>
+              <div class="keypad" id="tckp">
+                ${['1','2','3','4','5','6','7','8','9','C','0','✓'].map((k) => `<button class="key" data-k="${k}">${k}</button>`).join('')}
+              </div>
+            </div>` : `
+            <div class="tc-emp">
+              <div style="display:flex;align-items:center;gap:10px">
+                ${who.photoUrl ? `<img src="${who.photoUrl}" class="tc-emp-photo">` : `<div class="tc-emp-photo ph">${esc(who.name.slice(0,1))}</div>`}
+                <div>
+                  <div class="tc-emp-name">${esc(who.name)}</div>
+                  <div class="tc-emp-job">${esc(who.jobTitle || '')} · ${who.payType === 'DAILY' ? money(who.payRate) + '/día' : money(who.payRate) + '/hora'}</div>
+                </div>
+              </div>
+              <div class="tc-actions">
+                <button class="tc-act green" data-t="ENTRY">⏵ Entrada</button>
+                <button class="tc-act orange" data-t="BREAK_START">☕ Descanso</button>
+                <button class="tc-act blue" data-t="BREAK_END">⏵ Fin descanso</button>
+                <button class="tc-act red" data-t="EXIT">⏹ Salida</button>
+              </div>
+              ${who.webauthn ? `<button class="btn sm" id="tc-bio" style="width:100%;margin-top:10px">🖐 Registrar entrada con huella</button>` : ''}
+              ${state.settings.checkPhotoRequired !== false ? '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">📷 La foto es obligatoria</div>' : ''}
+              ${state.settings.externalClock ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Reloj externo: ${esc(state.settings.externalClock)}</div>` : ''}
+              <button class="btn ghost sm" id="tc-cancel" style="margin-top:12px">Cambiar empleado</button>
+            </div>`}
+        </div>
+
+        <div class="tc-right">
+          <div class="panel">
+            <div class="panel-head"><h2>Hoy</h2></div>
+            <div style="overflow:auto"><table>
+              <thead><tr><th>Empleado</th><th>Entrada</th><th>Descanso</th><th>Salida</th><th>Horas</th><th>Pago</th></tr></thead>
+              <tbody>${rows.map(({ u, s }) => `
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:8px">
+                    ${u.photoUrl ? `<img src="${u.photoUrl}" class="tc-mini">` : `<div class="tc-mini ph">${esc(u.name.slice(0,1))}</div>`}
+                    <div><b>${esc(u.name)}</b><div style="font-size:11px;color:var(--muted)">${esc(u.jobTitle || '')}</div></div>
+                  </div></td>
+                  <td>${s.entry ? new Date(s.entry.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                  <td>${s.breakMin ? hhmm(s.breakMin) : '—'}</td>
+                  <td>${s.exit ? new Date(s.exit.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : (s.working ? '<span class="badge ok">En turno</span>' : '—')}</td>
+                  <td class="mono">${hhmm(s.minutes)}</td>
+                  <td class="mono">${money(payFor(u, s.minutes))}</td>
+                </tr>`).join('')}</tbody></table></div>
+          </div>
+
+          <div class="panel" style="margin-top:14px">
+            <div class="panel-head"><h2>Últimos registros</h2></div>
+            <div style="padding:8px 18px 14px;display:flex;gap:10px;flex-wrap:wrap">
+              ${state.timeRecords.slice(-6).reverse().map((r) => `
+                <div class="tc-rec">
+                  ${r.photo ? `<img src="${r.photo}">` : '<div class="nofoto">—</div>'}
+                  <div class="tc-rec-t"><b>${esc(r.userName)}</b><span>${TIME_TYPES[r.type]} · ${new Date(r.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span></div>
+                </div>`).join('') || '<div style="color:var(--muted);font-size:13px">Sin registros aún.</div>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // La cámara se activa solo a petición del empleado; no muestra al dueño al abrir la pantalla.
+    if (stream) startCam();
+
+    root.querySelectorAll('#tckp .key').forEach((b) => b.onclick = () => {
+      const k = b.dataset.k;
+      if (k === 'C') { pin = ''; render(); return; }
+      if (k === '✓') { submit(); return; }
+      if (pin.length < 4) pin += k;
+      if (pin.length === 4) submit(); else render();
+    });
+
+    if (who) {
+      root.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => {
+        const v = root.querySelector('#tc-video');
+        const photo = v && v.videoWidth ? captureVideoFrame(v, 320, 0.55) : null;
+        if (state.settings.checkPhotoRequired !== false && !photo) {
+          toast('Activa la cámara: la foto es obligatoria para checar');
+          return;
+        }
+        timeAction(who.id, b.dataset.t, photo);
+        toast(TIME_TYPES[b.dataset.t] + ' · ' + who.name + (photo ? ' (con foto)' : ''));
+        render();
+      });
+      root.querySelector('#tc-cancel').onclick = () => { who = null; pin = ''; render(); };
+
+      const bio = root.querySelector('#tc-bio');
+      if (bio) bio.onclick = async () => {
+        try {
+          const ok = await verifyBiometric(who);
+          if (!ok) return;
+          const v = root.querySelector('#tc-video');
+          const photo = v && v.videoWidth ? captureVideoFrame(v, 320, 0.55) : null;
+          timeAction(who.id, 'ENTRY', photo);
+          toast('Entrada registrada con huella · ' + who.name);
+          render();
+        } catch (e) {
+          toast(e.message || 'No se pudo verificar la huella');
+        }
+      };
+    }
+
+    // Si la cámara sigue encendida, se re-engancha al video nuevo del re-render
+    if (stream) startCam();
+  }
+
+  function submit() {
+    const u = state.users.find((x) => String(x.pin) === pin && x.active);
+    if (!u) { toast('PIN incorrecto'); pin = ''; render(); return; }
+    who = u; pin = '';
+    render();
+  }
+
+  render();
+  const timer = setInterval(() => {
+    const t = root.querySelector('.tc-time');
+    if (t) t.textContent = clock();
+  }, 1000);
+  return { root, refresh: render, destroy: () => { clearInterval(timer); stopCam(); } };
+}
+
+/* ================= NÓMINA ================= */
+export function payrollView() {
+  const root = el(`<div id="payroll"></div>`);
+  let range = 'week';
+
+  function bounds() {
+    const now = new Date();
+    if (range === 'week') {
+      const d = new Date(now); d.setDate(d.getDate() - 6);
+      return [d, now];
+    }
+    if (range === 'fortnight') {
+      const d = new Date(now); d.setDate(d.getDate() - 14);
+      return [d, now];
+    }
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    return [d, now];
+  }
+
+  function render() {
+    const [from, to] = bounds();
+    const data = payroll(from.toISOString(), to.toISOString());
+    const totalPay = data.reduce((a, r) => a + r.pay, 0);
+    const totalMin = data.reduce((a, r) => a + r.minutes, 0);
+
+    root.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>Nómina</h2>
+          <div class="seg" id="pr-range" style="margin:0 0 0 14px">
+            <button class="${range === 'week' ? 'on' : ''}" data-r="week">7 días</button>
+            <button class="${range === 'fortnight' ? 'on' : ''}" data-r="fortnight">Quincena</button>
+            <button class="${range === 'month' ? 'on' : ''}" data-r="month">Mes</button>
+          </div>
+          <div class="sp"></div>
+          <button class="btn ghost sm" id="pr-excel">⬇ Excel</button>
+          <button class="btn ghost sm" id="pr-print">Imprimir</button>
+        </div>
+        <div style="padding:10px 18px 0;color:var(--muted);font-size:12.5px" id="pr-range-lbl"></div>
+        <div style="overflow:auto"><table>
+          <thead><tr><th>Empleado</th><th>Días</th><th>Horas</th><th>Tarifa</th><th>Sueldo</th><th>Comisión</th><th>Total</th></tr></thead>
+          <tbody>${data.map((r) => {
+            const st = sellerStats(r.user.id, from.toISOString(), to.toISOString());
+            return `
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:8px">
+                ${r.user.photoUrl ? `<img src="${r.user.photoUrl}" class="tc-mini">` : `<div class="tc-mini ph">${esc(r.user.name.slice(0,1))}</div>`}
+                <div><b>${esc(r.user.name)}</b><div style="font-size:11px;color:var(--muted)">${esc(r.user.jobTitle || '')}${r.user.commissionPct ? ' · ' + r.user.commissionPct + '% comisión' : ''}</div></div>
+              </div></td>
+              <td>${r.days}</td>
+              <td class="mono">${hhmm(r.minutes)}</td>
+              <td class="mono">${r.user.payType === 'DAILY' ? money(r.user.payRate) + '/d' : money(r.user.payRate) + '/h'}</td>
+              <td class="mono">${money(r.pay)}</td>
+              <td class="mono" style="color:var(--brand-700)">${money(st.comision)}</td>
+              <td class="mono t-strong">${money(r.pay + st.comision)}</td>
+            </tr>`;
+          }).join('')}
+            <tr style="background:var(--surface-2)">
+              <td colspan="2"><b>Total</b></td><td class="mono"><b>${hhmm(totalMin)}</b></td><td></td>
+              <td class="mono"><b>${money(totalPay)}</b></td>
+              <td class="mono"><b>${money(data.reduce((a, r) => a + sellerStats(r.user.id, from.toISOString(), to.toISOString()).comision, 0))}</b></td>
+              <td class="mono"><b>${money(totalPay + data.reduce((a, r) => a + sellerStats(r.user.id, from.toISOString(), to.toISOString()).comision, 0))}</b></td>
+            </tr>
+          </tbody></table></div>
+      </div>`;
+
+    const fmt = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+    root.querySelector('#pr-range-lbl').textContent = fmt(from) + ' al ' + fmt(to);
+    root.querySelectorAll('#pr-range button').forEach((b) => b.onclick = () => { range = b.dataset.r; render(); });
+    root.querySelector('#pr-print').onclick = () => window.print();
+    root.querySelector('#pr-excel').onclick = () => {
+      const n = exportPayroll(data, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
+      toast(n + ' empleados exportados a Excel');
+    };
+  }
+
+  render();
+  return { root, refresh: render };
+}
+
+/* ================= AFILIADOS ================= */
+export function affiliatesView(ctx) {
+  const root = el(`<div id="aff-root">
+    <div class="aff-hero">
+      <div>
+        <div class="aff-title">Programa de afiliados</div>
+        <div class="aff-sub">Comparte tu link: cada persona que se registre con él queda ligada a ti.</div>
+      </div>
+      <div class="aff-badge">Tu código: <b id="aff-code">—</b></div>
+    </div>
+
+    <section aria-labelledby="aff-pages-title" style="margin:18px 0">
+      <h2 id="aff-pages-title" style="margin:0 0 12px">Landings</h2>
+      <div id="aff-pages-panel"></div>
+    </section>
+
+    <div class="aff-grid">
+      <div class="panel aff-link-card">
+        <div class="panel-head"><h2>Tu link</h2></div>
+        <div style="padding:16px">
+          <div class="aff-linkbox">
+            <input id="aff-link" readonly>
+            <button class="btn sm" id="aff-copy">Copiar</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm" id="aff-wa" style="background:#25D366">WhatsApp</button>
+            <button class="btn ghost sm" id="aff-share">Compartir…</button>
+          </div>
+          <div class="hint" style="margin-top:10px">
+            También puedes mandarlo por Facebook, Instagram o donde quieras: el link ya trae tu código.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Resumen</h2></div>
+        <div style="padding:16px">
+          <div class="aff-stats">
+            <div><span>Invitados</span><b id="aff-total">0</b></div>
+            <div><span>Activos</span><b id="aff-active">0</b></div>
+            <div><span>Por pagar</span><b id="aff-pending">$0</b></div>
+          </div>
+          <div class="aff-stats" style="margin-top:10px">
+            <div><span>Aprobadas</span><b id="aff-approved">$0</b></div>
+            <div><span>Pagadas</span><b id="aff-paid">$0</b></div>
+            <div><span>Devueltas</span><b id="aff-refunded">$0</b></div>
+          </div>
+          <div class="pl-unlimited" style="margin-top:14px">
+            ${PLAN_ORDER.map((c) => `<div><b>${esc(PLANS[c].name)}</b><span>$${PLANS[c].affiliate} MXN / mes</span></div>`).join('')}
+          </div>
+          <div class="hint" style="margin-top:10px">
+            La comisión se genera cuando el referido paga su mensualidad, y se repite cada mes mientras siga activo.
+            Si hay reembolso o contracargo, se registra la devolución del mes.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Personas que invitaste</h2><span id="aff-count" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody id="aff-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Comisiones por mensualidad</h2></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Periodo</th><th>Cliente</th><th>Plan</th><th>Monto</th><th>Estado</th></tr></thead>
+          <tbody id="aff-coms"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head"><h2>Cómo funciona</h2></div>
+      <div style="padding:16px;font-size:13px;line-height:1.6;color:var(--text-2)">
+        <div>1. Compartes tu link con quien quieras.</div>
+        <div>2. La persona se registra en ZoCo con ese link.</div>
+        <div>3. Queda guardado que tú la invitaste (nombre, correo y fecha).</div>
+        <div>4. Cuando actives comisiones, aquí verás cuánto generó cada afiliado.</div>
+        <div class="hint" style="margin-top:8px">Cada usuario de la app tiene su propio link y su propio código.</div>
+      </div>
+    </div>
+  </div>`);
+
+  const code = myAffCode();
+  const link = affiliateLink();
+  $('#aff-code', root).textContent = code;
+  $('#aff-link', root).value = link;
+
+  const gallery = landingGalleryView({ referralCode: code });
+  $('#aff-pages-panel', root).append(gallery.root);
+
+  const money2 = (v) => '$' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2);
+  const paint = () => {
+    const list = referralsOf(code);
+    const resumen = commissionSummary(code);
+    $('#aff-total', root).textContent = list.length;
+    $('#aff-active', root).textContent = list.filter((r) => r.status === 'registrado' || r.status === 'activo').length;
+    if ($('#aff-pending', root)) $('#aff-pending', root).textContent = money2(resumen.pending);
+    if ($('#aff-approved', root)) $('#aff-approved', root).textContent = money2(resumen.approved);
+    if ($('#aff-paid', root)) $('#aff-paid', root).textContent = money2(resumen.paid);
+    if ($('#aff-refunded', root)) $('#aff-refunded', root).textContent = money2(resumen.refunded);
+    $('#aff-count', root).textContent = list.length + ' persona(s)';
+    const coms = commissionsOf(code);
+    $('#aff-rows', root).innerHTML = list.length
+      ? list.map((r) => {
+          const mine = coms.filter((c) => c.companyId === r.companyId || (r.email && c.companyId === r.email));
+          const total = mine.filter((c) => c.status !== 'refunded').reduce((a, c) => a + (Number(c.amount) || 0), 0);
+          return `<tr>
+          <td class="t-strong">${esc(r.name || '—')}</td>
+          <td>${esc(r.email || '—')}</td>
+          <td>${new Date(r.date).toLocaleDateString('es-MX')}</td>
+          <td><span class="badge ${r.status === 'activo' ? 'ok' : 'grey'}">${esc(r.status || 'registrado')}</span></td>
+          <td class="mono">${total ? money2(total) : '—'}</td>
+        </tr>`;
+        }).join('')
+      : `<tr><td colspan="5"><div class="cart-empty">Todavía nadie se ha registrado con tu link.<br>Compártelo y aparecerán aquí.</div></td></tr>`;
+
+    const box = $('#aff-coms', root);
+    if (box) {
+      box.innerHTML = coms.length
+        ? coms.slice(0, 15).map((c) => `<tr>
+            <td>${esc(c.period || '')}</td>
+            <td>${esc(c.companyId || '—')}</td>
+            <td>${esc(c.planName || '')}</td>
+            <td class="mono">${money2(c.amount)}</td>
+            <td><span class="badge ${c.status === 'paid' ? 'ok' : c.status === 'refunded' ? 'warn' : c.status === 'approved' ? 'info' : 'grey'}">${esc(c.status)}</span></td>
+          </tr>`).join('')
+        : `<tr><td colspan="5"><div class="cart-empty">Sin comisiones registradas todavía.<br>Se generan cuando un referido paga su mensualidad.</div></td></tr>`;
+    }
+  };
+  paint();
+
+  $('#aff-copy', root).onclick = async () => {
+    const inp = $('#aff-link', root);
+    try { await navigator.clipboard.writeText(inp.value); toast('Link copiado ✓'); }
+    catch { inp.select(); document.execCommand('copy'); toast('Link copiado'); }
+  };
+  $('#aff-wa', root).onclick = () => {
+    const txt = 'Te invito a probar ZoCo POS, el punto de venta para tu negocio: ' + link;
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  };
+  $('#aff-share', root).onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'ZoCo POS', text: 'Te invito a probar ZoCo POS', url: link }); } catch {}
+    } else { toast('Copia el link y compártelo'); }
+  };
+
+  return { root, refresh: paint, destroy: gallery.destroy };
+}
+/* ================= Panel de plan reutilizable ================= */
+export function planPanelMarkup(withSec = true) {
+  return `
+    <div class="panel" ${withSec ? 'data-sec="Plan y límites"' : ''}>
+      <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
+      <div style="padding:16px">
+        <div id="pl-free"></div>
+        <div id="pl-current"></div>
+        <div id="pl-usage" class="pl-usage"></div>
+        <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
+        <div id="pl-grid" class="pl-grid"></div>
+        <div class="hint" style="margin-top:12px">
+          Todos los planes incluyen inventario, caja, reportes, catálogo, afiliados y agente IA
+          (con tu propia llave). Solo cambia la cantidad de sucursales.
+          Usuarios y productos son ilimitados en los tres planes.
+        </div>
+      </div>
+    </div>`;
+}
+
+export function bindPlanPanel(root) {
+  const plCur = $('#pl-current', root);
+  if (!plCur) return;
+
+  const paintPlan = () => {
+    const u = planUsage();
+    const p = u.plan;
+    const badge = $('#pl-badge', root);
+    if (badge) badge.textContent = p.name.replace('ZoCo ', '');
+
+    const free = isBetaFree();
+    const freeBox = $('#pl-free', root);
+    if (freeBox) {
+      freeBox.innerHTML = free
+        ? `<div class="pl-free">
+             <b>Modo gratuito de prueba</b>
+             <span>Sin cobros y sin límites por ahora. Puedes usar la app completa con todas tus sucursales.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw"> Activar cobro y límites</label>
+           </div>`
+        : `<div class="pl-free off">
+             <b>Modo de cobro activo</b>
+             <span>Se aplican los límites de sucursales del plan.</span>
+             <label class="pl-free-sw"><input type="checkbox" id="pl-free-sw" checked> Volver a modo gratuito</label>
+           </div>`;
+      const sw = $('#pl-free-sw', root);
+      if (sw) sw.onchange = () => {
+        setBetaFree(!!sw.checked === false);
+        paintPlan();
+        toast(sw.checked ? 'Modo gratuito activado' : 'Cobro y límites activados');
+      };
+    }
+
+    plCur.innerHTML = `
+      <div class="pl-hero">
+        <div>
+          <div class="pl-name">${esc(p.name)}</div>
+          <div class="pl-hint">${free ? 'Gratis durante la prueba · sin límites' : esc(p.hint)}</div>
+        </div>
+        <div class="pl-price">${free ? 'Gratis' : '$' + p.price}<span>${free ? '' : '/mes'}</span></div>
+      </div>`;
+
+    const over = u.overLimit;
+    $('#pl-usage', root).innerHTML = `
+      <div class="pl-bar">
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
+        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>
+      <div class="pl-unlimited">
+        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
+        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
+      </div>
+      ${over ? `<div class="pl-warn">
+        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
+        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
+      </div>` : ''}`;
+
+    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
+      const pl = PLANS[code];
+      const cur = code === p.code;
+      return `<div class="pl-card ${cur ? 'on' : ''}">
+        <div class="pl-card-name">${esc(pl.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 6px">${esc(pl.ideal || '')}</div>
+        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
+        <div class="pl-card-list">
+          <div><b>${pl.limits.branches} sucursal(es)</b> · usuarios ilimitados</div>
+          ${(pl.incluye || []).map((t) => `<div style="display:flex;gap:6px;align-items:flex-start;line-height:1.35">
+            <span style="color:var(--ok,#059669);font-weight:900;flex:none">✓</span>
+            <span>${/^Todo lo de/.test(t) ? '<b>' + esc(t) + '</b>' : esc(t)}</span></div>`).join('')}
+          <div style="color:var(--muted);font-size:11px;margin-top:6px">Comisión afiliado $${pl.affiliate}/mes</div>
+        </div>
+        ${cur ? '<div class="pl-card-on">Plan actual</div>'
+              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
+      </div>`;
+    }).join('');
+
+    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
+      const code = b.dataset.pl;
+      const pl = PLANS[code];
+      const baja = pl.limits.branches < u.branches.used;
+      const ok = await confirmDialog({
+        title: 'Cambiar de plan',
+        message: baja
+          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
+          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        okText: 'Sí, cambiar',
+      });
+      if (!ok) return;
+      const r = setPlan(code);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
+      paintPlan();
+    });
+  };
+
+  paintPlan();
+  if (!root.dataset.planSub) {
+    root.dataset.planSub = '1';
+    subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
+  }
+}
+
+/** Vista independiente: "Mi plan" del menú */
+export function plansView() {
+  const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
+  bindPlanPanel(root);
+  return { root, refresh: () => bindPlanPanel(root) };
+}+quote.total+' MXN al mes. ':'')+'No se realizará ningún cobro desde esta pantalla. Las sucursales conservan sus límites.</small>';
+    $('#pl-usage', root).innerHTML = `
+      <div class="pl-bar">
+        <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
+        <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
+      </div>
+      <div class="pl-unlimited">
+        <div><b>Usuarios ilimitados</b><span>${u.users.used} activo(s) · cada empleado con su cuenta y permisos</span></div>
+        <div><b>Productos ilimitados</b><span>${u.products.used} registrados</span></div>
+      </div>
+      ${over ? `<div class="pl-warn">
+        Tienes ${u.branches.used} sucursales y tu plan incluye ${u.branches.limit}.
+        No se desactiva ninguna: se conservan todas. Elige un plan mayor o solicita autorización administrativa.
+      </div>` : ''}`;
+
+    $('#pl-grid', root).innerHTML = PLAN_ORDER.map((code) => {
+      const pl = PLANS[code];
+      const cur = code === p.code;
+      return `<div class="pl-card ${cur ? 'on' : ''}">
+        <div class="pl-card-name">${esc(pl.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 6px">${esc(pl.ideal || '')}</div>
+        <div class="pl-card-price">$${pl.price}<span>/mes</span></div>
+        <div class="pl-card-list">
+          <div><b>${pl.limits.branches} sucursal(es)</b> · usuarios ilimitados</div>
+          ${(pl.incluye || []).map((t) => `<div style="display:flex;gap:6px;align-items:flex-start;line-height:1.35">
+            <span style="color:var(--ok,#059669);font-weight:900;flex:none">✓</span>
+            <span>${/^Todo lo de/.test(t) ? '<b>' + esc(t) + '</b>' : esc(t)}</span></div>`).join('')}
+          <div style="color:var(--muted);font-size:11px;margin-top:6px">Comisión afiliado $${pl.affiliate}/mes</div>
+        </div>
+        ${cur ? '<div class="pl-card-on">Plan actual</div>'
+              : `<button class="btn sm ghost" data-pl="${code}">Cambiar a este</button>`}
+      </div>`;
+    }).join('');
+
+    $('#pl-grid', root).querySelectorAll('[data-pl]').forEach((b) => b.onclick = async () => {
+      const code = b.dataset.pl;
+      const pl = PLANS[code];
+      const baja = pl.limits.branches < u.branches.used;
+      const ok = await confirmDialog({
+        title: 'Cambiar de plan',
+        message: baja
+          ? `Tu negocio tiene ${u.branches.used} sucursales y ${pl.name} incluye ${pl.limits.branches}. No se borrará ninguna, pero quedarás por encima del límite y necesitarás autorización administrativa. ¿Continuar?`
+          : `¿Pasar a ${pl.name} ($${pl.price}/mes)? Los límites se aplican al instante.`,
+        okText: 'Sí, cambiar',
+      });
+      if (!ok) return;
+      const r = setPlan(code);
+      if (!r.ok) { toast(r.msg); return; }
+      toast('Plan actualizado a ' + pl.name + (r.overLimit ? ' · por encima del límite' : ''));
+      paintPlan();
+    });
+  };
+
+  paintPlan();
+  if (!root.dataset.planSub) {
+    root.dataset.planSub = '1';
+    subscribe(() => { if (document.body.contains(plCur)) paintPlan(); });
+  }
+}
+
+/** Vista independiente: "Mi plan" del menú */
+export function plansView() {
+  const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
+  bindPlanPanel(root);
+  return { root, refresh: () => bindPlanPanel(root) };
+}+quote.total+' MXN al mes';
+    modal({title:'Nuevo negocio independiente',body:
+      '<p><b>'+esc(name)+'</b></p><p>'+esc(pricing)+'</p><p>La creación segura de negocios adicionales y su cobro están pendientes de activarse. No se creará un negocio vacío que pudiera mezclar datos de ventas, ni se realizará ningún cargo.</p>',
+      foot:'<button class="btn" data-close>Entendido</button>'});
   });
 
   return { root, refresh() {} };
