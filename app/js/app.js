@@ -1,6 +1,6 @@
 import { openVisualGiroSelector } from './giro-selector.js';
 import { mascotMarkup, setupMascotMotion, reactMascot } from './mascot.js';
-import { showZoCoTour, scheduleZoCoWelcome, showZoCoRobotHelp } from './tour.js';
+import { showZoCoRobotHelp } from './tour.js';
 // Shell + router + login de ZoCo POS
 import { MODES, state, emit, makeCart, subscribe, hydrate, currentUser, login, logout, can, readSession, setBranch } from './store.js';
 import { posView } from './views-pos.js';
@@ -72,7 +72,7 @@ const NAV_GROUPS = [
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
-      { id: 'guia', label: 'Guía ZoCo', icon: '🤖' },
+      { id: 'guia', label: 'Ayuda de ZoCo', icon: '🤖' },
       { id: 'gastos', label: 'Gastos', icon: '🧾' },
       { id: 'mifin', label: 'Mis Finanzas', icon: '💵' },
       { id: 'chat', label: 'ZoCo Chat', icon: '💬' },
@@ -469,7 +469,7 @@ function paintShell() {
 
   mountInstallButtons();
   setupMascotMotion();
-  scheduleZoCoWelcome(u);
+  // La ayuda se abre a petición del usuario; no hay tutorial automático.
   app.querySelector('.sidebar .uc-avatar')?.addEventListener('click',()=>showZoCoRobotHelp(u));
   app.querySelectorAll('[data-r]').forEach((b) => b.onclick = () => {
     if (b.dataset.r === 'salir') {
@@ -482,7 +482,7 @@ function paintShell() {
       return;
     }
     if (b.dataset.r === 'instalar') { showInstallCard(true); return; }
-    if (b.dataset.r === 'guia') { shellEl.classList.remove('mob-open'); showZoCoTour(u); return; }
+    if (b.dataset.r === 'guia') { shellEl.classList.remove('mob-open'); showZoCoRobotHelp(u); return; }
     if (b.dataset.r === 'gastos') { window.open('/gastos.html', '_blank'); return; }
     if (b.dataset.r === 'mifin') { window.open('/finanzas.html', '_blank'); return; }
     if (b.dataset.r === 'chat') { window.open('/chat.html', '_blank'); return; }
