@@ -19,17 +19,42 @@ let currentOverlay=null, scheduled=false;
 const key = (user)=>'zoco.tour.done.v1.'+String(user?.id||user?.email||'usuario');
 export function showZoCoTour(user=null) {
   currentOverlay?.remove();
-  let step=0;
-  const panel=document.createElement('div'); panel.className='zoco-tour-overlay';
-  panel.innerHTML='<div class="zoco-tour-card" role="dialog" aria-modal="true" aria-label="Tutorial ZoCo"><div class="zoco-tour-character">'+mascotMarkup('zoco-tour-mascot')+'</div><div class="zoco-tour-info"><span class="zoco-tour-count"></span><h2></h2><p></p><div class="zoco-tour-buttons"><button class="btn ghost" data-tour="skip">Saltar</button><button class="btn ghost" data-tour="back">Atrás</button><button class="btn ghost" data-tour="visit">Ir a sección</button><button class="btn orange" data-tour="next">Siguiente</button></div></div></div>';
-  const finish=()=>{try{if(user)localStorage.setItem(key(user),'1')}catch{}panel.remove();if(currentOverlay===panel)currentOverlay=null;document.removeEventListener('keydown',escape)};
-  const escape=(e)=>{if(e.key==='Escape')finish()};
-  const paint=()=>{const s=STEPS[step];panel.querySelector('.zoco-tour-count').textContent='PASO '+(step+1)+' DE '+STEPS.length;panel.querySelector('h2').textContent=s[0];panel.querySelector('p').textContent=s[1];panel.querySelector('[data-tour="back"]').disabled=step===0;panel.querySelector('[data-tour="next"]').textContent=step===STEPS.length-1?'Terminar':'Siguiente'};
+  let step=0, target=null;
+  const panel=document.createElement('div');
+  panel.className='zoco-walkthrough';
+  panel.innerHTML='<div class="zoco-walkthrough-focus" aria-hidden="true"></div><div class="zoco-walkthrough-bubble" role="dialog" aria-label="Guía interactiva ZoCo"><div class="zoco-walkthrough-avatar">'+mascotMarkup('zoco-tour-mascot')+'</div><div class="zoco-walkthrough-copy"><small class="zoco-tour-count"></small><h2></h2><p></p><div class="zoco-tour-buttons"><button class="btn ghost" data-tour="skip">Saltar</button><button class="btn ghost" data-tour="back">Atrás</button><button class="btn orange" data-tour="next">Siguiente</button></div></div></div>';
+  const bubble=panel.querySelector('.zoco-walkthrough-bubble');
+  const focus=panel.querySelector('.zoco-walkthrough-focus');
+  const finish=()=>{try{if(user)localStorage.setItem(key(user),'1')}catch{};cleanup();};
+  const cleanup=()=>{panel.remove();window.removeEventListener('resize',position);window.removeEventListener('scroll',position,true);document.removeEventListener('keydown',escape);if(currentOverlay===panel)currentOverlay=null;};
+  const escape=e=>{if(e.key==='Escape')finish()};
+  const position=()=>{
+    const rect=target?.getBoundingClientRect();
+    if(!rect||rect.width===0||rect.height===0){focus.style.display='none';bubble.style.left='50%';bubble.style.top='50%';bubble.style.transform='translate(-50%,-50%)';return;}
+    focus.style.display='block';focus.style.left=Math.max(4,rect.left-5)+'px';focus.style.top=Math.max(4,rect.top-5)+'px';focus.style.width=rect.width+10+'px';focus.style.height=rect.height+10+'px';
+    const w=Math.min(340,window.innerWidth-24),h=bubble.offsetHeight||210;
+    let x=Math.min(window.innerWidth-w-12,Math.max(12,rect.left));
+    let y=rect.bottom+18;
+    if(y+h>window.innerHeight-12)y=Math.max(12,rect.top-h-18);
+    bubble.style.left=x+'px';bubble.style.top=y+'px';bubble.style.transform='none';
+  };
+  const paint=()=>{
+    const s=STEPS[step];
+    panel.querySelector('.zoco-tour-count').textContent='PASO '+(step+1)+' DE '+STEPS.length;
+    panel.querySelector('h2').textContent=s[0];panel.querySelector('p').textContent=s[1];
+    panel.querySelector('[data-tour="back"]').disabled=step===0;
+    panel.querySelector('[data-tour="next"]').textContent=step===STEPS.length-1?'Terminar':'Siguiente';
+    target=document.querySelector('[data-r="'+s[2]+'"]');
+    if(!target){panel.querySelector('p').textContent+=' Puedes continuar si tu rol no muestra esta sección.';}
+    requestAnimationFrame(position);
+  };
   panel.querySelector('[data-tour="skip"]').onclick=finish;
   panel.querySelector('[data-tour="back"]').onclick=()=>{step=Math.max(0,step-1);paint()};
   panel.querySelector('[data-tour="next"]').onclick=()=>{if(step===STEPS.length-1)return finish();step++;paint()};
-  panel.querySelector('[data-tour="visit"]').onclick=()=>{const target=STEPS[step][2];if(document.querySelector('[data-r="'+target+'"]'))location.hash='#/'+target;else panel.querySelector('p').textContent='No tienes acceso a esa sección con tu rol. Puedes continuar.'};
-  document.addEventListener('keydown',escape);document.body.appendChild(panel);currentOverlay=panel;paint();
+  focus.onclick=()=>{if(target){target.click();location.hash='#/'+STEPS[step][2];}if(step<STEPS.length-1){step++;setTimeout(paint,180)}else finish()};
+  document.addEventListener('keydown',escape);
+  window.addEventListener('resize',position);window.addEventListener('scroll',position,true);
+  document.body.appendChild(panel);currentOverlay=panel;paint();
 }
 export function scheduleZoCoWelcome(user){
  if(!user||scheduled||window.__ZOCO_DEMO__)return;
