@@ -1209,7 +1209,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
         <div class="panel-head"><h2>Plan y límites</h2><span class="badge info" style="margin-left:auto" id="pl-badge">—</span></div>
         <div style="padding:16px">
           <div id="pl-current" class="pl-current"></div>
-          <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
+          <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div><div id="pl-business-addons" class="pl-business-addons"></div>
           <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
           <div id="pl-grid" class="pl-grid"></div>
           <div class="hint" style="margin-top:12px">
