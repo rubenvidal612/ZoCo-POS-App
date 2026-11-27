@@ -1,8 +1,9 @@
 {
-  "version": "2.80.2",
+  "version": "2.80.3",
   "date": "2026-11-26",
   "notes": [
-    "Prueba de intro exclusiva para superadministrador",
-    "Configuración rápida de nombre y giro sin modificar datos reales"
+    "Correo de la sesión visible en el menú lateral",
+    "Indicador SUPERADMIN cuando el servidor confirma el permiso",
+    "Botón Probar intro en el menú lateral del superadministrador"
   ]
 }
