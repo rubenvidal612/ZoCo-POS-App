@@ -17,7 +17,7 @@ import {
   switchCompany, createCompany, MODES, CATEGORY_GROUPS, BUSINESS_FAMILIES, familyForMode, timeAction, dayStats, weekStats, payFor, hhmm, TIME_TYPES, payroll,
   addUserDoc, removeUserDoc, setUserCredential, setGoal, goalFor, goalProgress, sellerStats, commissionOf, addBaseCatalog,
   returnSale, registerAdjustment, transferStock, productById, SECTIONS, saveSectionDef, sectionsForModeNow, loadDemoForMode, fillMissingDemoCategories, demoPhotoForProduct, removeDemoProducts, demoCount, addBranch, renameBranch, removeBranch, setCurrentBranch, UNITS, unitOf, fmtQty, isFractional, variantKey, variantsOf,
-  PLANS, PLAN_ORDER, EXTRA_BUSINESS_PRICE, estimateBusinessTotal, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
+  PLANS, PLAN_ORDER, estimateBusinessTotal, currentPlan, planLimits, planUsage, canAdd, setPlan, migratePlan,
   commissionsOf, commissionSummary, recordCommission, voidCommission, setCommissionStatus, subscribe,
   isBetaFree, setBetaFree,
   myAffCode, affiliateLink, referralsOf,
@@ -1531,13 +1531,11 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
             <button class="btn ghost sm" id="co-create">+ Crear empresa</button>
           </div>
           <div class="hint" style="margin-top:8px">
-            <b>Plan Esencial: $149/mes incluye 1 negocio y cada negocio independiente adicional suma $100/mes.</b>
-            Cambiar el giro o vender otras categorías dentro del mismo negocio no tiene costo extra.
-            Las sucursales siguen los límites del plan. En los planes Pro y Empresarial, el suplemento está pendiente de definir.
+            <b>ZoCo Esencial: $149/mes incluye un negocio y cada negocio adicional cuesta $100/mes.</b>
+            Cambiar de giro o vender otras categorías no genera cobros. Las sucursales siguen sus límites.
+            El precio extra de Pro y Empresarial aún está por definir.
           </div>
-          <div class="hint" style="margin-top:8px">
-            Para proteger inventarios y ventas, el alta de un segundo negocio se habilitará al completar la separación segura de datos y la validación de pago en la nube. <b>No se generan cargos aquí.</b>
-          </div>
+          <div class="hint" style="margin-top:8px">El alta de negocios adicionales requiere separar los datos y activar la validación de pagos en la nube. No se realizará ningún cobro desde esta pantalla.</div>
         </div>
       </div>
       <div class="panel">
@@ -2608,7 +2606,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
       </div>`;
     }).join('');
     coList.querySelectorAll('[data-co]').forEach((b) => b.onclick = () => {
-      modal({title:'Cambio de negocio protegido',body:'Antes de cambiar de negocio hay que activar la separación de sus ventas, productos y usuarios en la nube. Para evitar mezclas de datos, el cambio permanece temporalmente deshabilitado.',foot:'<button class="btn" data-close>Entendido</button>'});
+      modal({title:'Cambio de negocio protegido',body:'Antes de cambiar de empresa debemos activar el aislamiento seguro de inventarios, ventas y usuarios en la nube.',foot:'<button class="btn" data-close>Entendido</button>'});
     });
   };
   renderCos();
@@ -2629,7 +2627,7 @@ ${(Object.keys(state.branchesByMode || {}).length > 1) ? `
     if (!name) { toast('Escribe el nombre'); return; }
     const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
     const quote=estimateBusinessTotal(count+1,currentPlan().code);
-    const pricing=quote.total===null?'El suplemento para este plan está por definir':'Total estimado: 
+    const price=quote.total===null?'Precio adicional por definir':'Total estimado: 
 
   return { root, refresh() {} };
 }
@@ -3694,7 +3692,7 @@ export function planPanelMarkup(withSec = true) {
       <div style="padding:16px">
         <div id="pl-free"></div>
         <div id="pl-current"></div>
-        <div id="pl-usage" class="pl-usage"></div>
+        <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
         <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
         <div id="pl-grid" class="pl-grid"></div>
         <div class="hint" style="margin-top:12px">
@@ -3751,7 +3749,7 @@ export function bindPlanPanel(root) {
     const count=Math.max(1,(state.companies||[]).filter(c=>c.id!=='default').length);
     const quote=estimateBusinessTotal(count,p.code);
     const extra=$('#pl-business-addons',root);
-    if(extra)extra.innerHTML='<strong>Negocios independientes</strong><span>'+count+' registrado(s) · '+(p.code==='esencial'?'Primer negocio incluido; cada adicional +$100/mes':'Tarifa por negocio adicional pendiente para este plan')+'</span><small>'+(quote.total!==null?'Total estimado:  `
+    if(extra)extra.innerHTML='<strong>Negocios independientes</strong><span>'+count+' registrado(s) · '+(p.code==='esencial'?'Primero incluido, adicional +$100/mes':'Tarifa extra pendiente para este plan')+'</span><small>'+(quote.total!==null?'Total estimado:  `
       <div class="pl-bar">
         <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
         <div class="pl-track"><i style="width:${u.branches.pct}%;${u.branches.pct >= 100 ? 'background:#DC2626' : u.branches.pct >= 80 ? 'background:#F59E0B' : ''}"></i></div>
@@ -3815,10 +3813,8 @@ export function plansView() {
   const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
   bindPlanPanel(root);
   return { root, refresh: () => bindPlanPanel(root) };
-}+quote.total+' MXN al mes';
-    modal({title:'Nuevo negocio independiente',body:
-      '<p><b>'+esc(name)+'</b></p><p>'+esc(pricing)+'</p><p>La creación segura de negocios adicionales y su cobro están pendientes de activarse. No se creará un negocio vacío que pudiera mezclar datos de ventas, ni se realizará ningún cargo.</p>',
-      foot:'<button class="btn" data-close>Entendido</button>'});
+}+quote.total+' MXN/mes';
+    modal({title:'Nuevo negocio independiente',body:'<p><b>'+esc(name)+'</b></p><p>'+esc(price)+'</p><p>El alta segura y cobro de negocios adicionales todavía no están activos. No se creó otro negocio ni se realizó un cargo.</p>',foot:'<button class="btn" data-close>Entendido</button>'});
   });
 
   return { root, refresh() {} };
@@ -4884,7 +4880,7 @@ export function planPanelMarkup(withSec = true) {
       <div style="padding:16px">
         <div id="pl-free"></div>
         <div id="pl-current"></div>
-        <div id="pl-usage" class="pl-usage"></div>
+        <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
         <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
         <div id="pl-grid" class="pl-grid"></div>
         <div class="hint" style="margin-top:12px">
@@ -5002,7 +4998,7 @@ export function plansView() {
   const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
   bindPlanPanel(root);
   return { root, refresh: () => bindPlanPanel(root) };
-}+quote.total+' MXN al mes. ':'')+'No se realizará ningún cobro desde esta pantalla. Las sucursales conservan sus límites.</small>';
+}+quote.total+' MXN/mes. ':'')+'Cotización informativa, no se generan cobros.</small>';
     $('#pl-usage', root).innerHTML = `
       <div class="pl-bar">
         <div class="pl-bar-top"><span>Sucursales</span><b>${u.branches.used}${u.free ? ' · sin límite' : ' / ' + u.branches.limit}</b></div>
@@ -5067,10 +5063,8 @@ export function plansView() {
   const root = el(`<div id="plan-root" class="home-wrap">${planPanelMarkup(false)}</div>`);
   bindPlanPanel(root);
   return { root, refresh: () => bindPlanPanel(root) };
-}+quote.total+' MXN al mes';
-    modal({title:'Nuevo negocio independiente',body:
-      '<p><b>'+esc(name)+'</b></p><p>'+esc(pricing)+'</p><p>La creación segura de negocios adicionales y su cobro están pendientes de activarse. No se creará un negocio vacío que pudiera mezclar datos de ventas, ni se realizará ningún cargo.</p>',
-      foot:'<button class="btn" data-close>Entendido</button>'});
+}+quote.total+' MXN/mes';
+    modal({title:'Nuevo negocio independiente',body:'<p><b>'+esc(name)+'</b></p><p>'+esc(price)+'</p><p>El alta segura y cobro de negocios adicionales todavía no están activos. No se creó otro negocio ni se realizó un cargo.</p>',foot:'<button class="btn" data-close>Entendido</button>'});
   });
 
   return { root, refresh() {} };
@@ -6136,7 +6130,7 @@ export function planPanelMarkup(withSec = true) {
       <div style="padding:16px">
         <div id="pl-free"></div>
         <div id="pl-current"></div>
-        <div id="pl-usage" class="pl-usage"></div>
+        <div id="pl-usage" class="pl-usage"></div><div id="pl-business-addons" class="pl-business-addons"></div>
         <div style="font-size:11.5px;font-weight:800;color:var(--muted);margin:18px 0 8px">CAMBIAR DE PLAN</div>
         <div id="pl-grid" class="pl-grid"></div>
         <div class="hint" style="margin-top:12px">
