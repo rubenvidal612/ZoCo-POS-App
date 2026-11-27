@@ -1,3 +1,4 @@
+import { openVisualGiroSelector } from './giro-selector.js';
 import { mascotMarkup, setupMascotMotion, reactMascot } from './mascot.js';
 import { showZoCoTour, scheduleZoCoWelcome, showZoCoRobotHelp } from './tour.js';
 // Shell + router + login de ZoCo POS
@@ -338,6 +339,25 @@ function paintLogin() {
     $('#lg-err').textContent = local.msg || 'Correo o contraseña incorrectos';
   };
   setTimeout(() => $('#lg-pass')?.focus(), 80);
+}
+
+/* Primer negocio: selector visual, solo para cuentas nuevas. */
+function openFirstBusinessSetup() {
+  if (!currentUser()) return;
+  openVisualGiroSelector({
+    selected: state.company?.mode || 'general',
+    onSelect: mode => {
+      if (!state.company) state.company = {};
+      state.company.mode = mode;
+      state.settings = state.settings || {};
+      state.settings.extraCategoryModes = [];
+      // No reemplazar nunca el inventario existente.
+      if (!state.products?.length) loadDemoForMode(mode, { replace: false });
+      emit();
+      paintShell();
+      toast('ZoCo configurado para ' + mode + '. Puedes personalizarlo en Ajustes.');
+    }
+  });
 }
 
 /* ================= SHELL ================= */
