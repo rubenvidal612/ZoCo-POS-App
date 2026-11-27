@@ -2425,3 +2425,16 @@ html, body { overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 @media(prefers-reduced-motion:reduce){.zoco-walkthrough-focus{animation:none}}
 
 .zoco-help-ask{display:flex;gap:7px;margin:10px 0}.zoco-help-ask input{min-width:0;flex:1;border:1px solid var(--line,#ddd);border-radius:10px;padding:10px;background:var(--surface,#fff);color:inherit}.zoco-help-ask button{flex-shrink:0}
+
+/* Expresiones del robot durante la guía y la ayuda; sin llamadas a IA. */
+.zoco-walkthrough-avatar,.zoco-help-head .zoco-mascot{transform-origin:50% 75%;animation:zoco-bot-idle 3s ease-in-out infinite}
+.zoco-walkthrough-avatar[data-mood="wave"],.zoco-help-head .zoco-mascot[data-mood="wave"]{animation:zoco-bot-wave 1s ease-in-out 1}
+.zoco-walkthrough-avatar[data-mood="point"]{animation:zoco-bot-point 1.4s ease-in-out infinite}
+.zoco-walkthrough-avatar[data-mood="celebrate"],.zoco-help-head .zoco-mascot[data-mood="happy"]{animation:zoco-bot-celebrate .75s ease-in-out 1}
+.zoco-help-head .zoco-mascot[data-mood="thinking"]{animation:zoco-bot-think 1.3s ease-in-out infinite}
+@keyframes zoco-bot-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes zoco-bot-wave{0%,100%{transform:rotate(0)}25%,65%{transform:rotate(-12deg)}45%,85%{transform:rotate(10deg)}}
+@keyframes zoco-bot-point{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(7px) rotate(8deg)}}
+@keyframes zoco-bot-celebrate{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-12px) rotate(-9deg)}70%{transform:translateY(-5px) rotate(9deg)}}
+@keyframes zoco-bot-think{0%,100%{transform:rotate(0)}50%{transform:rotate(-11deg)}}
+@media(prefers-reduced-motion:reduce){.zoco-walkthrough-avatar,.zoco-help-head .zoco-mascot{animation:none!important}}
