@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZoCo Digital | Productos y servicios</title><meta name="description" content="Descubre nuestros productos digitales y servicios.">
+<link rel="icon" href="/zoco-icon.svg" type="image/svg+xml">
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#172033;background:#f7f9fc}
+*{box-sizing:border-box}body{margin:0}a{text-decoration:none}header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px max(18px,calc((100vw - 1100px)/2));background:white;border-bottom:1px solid #e6eaf0}
+.logo{display:flex;align-items:center;gap:9px;font-weight:850;color:#14243a;font-size:20px}.logo img{width:36px;height:36px}
+.header-link{font-size:14px;font-weight:700;color:#f97316}
+main{max-width:1100px;margin:0 auto;padding:34px 18px 60px}.hero{border-radius:27px;background:linear-gradient(125deg,#14243a,#334665);padding:36px;color:white;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.7fr);align-items:center;gap:20px}
+.pill{display:inline-block;background:#fff2e8;color:#bb4f09;border-radius:30px;padding:7px 12px;font-size:12px;font-weight:800}
+h1{font-size:clamp(30px,4vw,54px);line-height:1.1;margin:16px 0}h2{font-size:23px;line-height:1.25}p{line-height:1.65}.hero p{color:#e7eef7;font-size:17px}.visual{background:radial-gradient(circle at top left,#ffffff55,transparent 70%);display:grid;place-items:center;min-height:250px}
+.package{display:grid;place-items:center;width:178px;height:230px;border-radius:8px 18px 18px 8px;background:linear-gradient(135deg,#fff6ed,#fff);box-shadow:24px 25px 35px #0004;transform:perspective(650px) rotateY(-19deg);position:relative;color:#f97316;font-weight:900;font-size:80px;border:2px solid #ffffffa6}
+.package:before{content:'';position:absolute;left:-14px;width:14px;height:100%;background:#dfa76e;transform:skewY(-25deg);border-radius:5px 0 0 5px}
+.package.music{background:linear-gradient(130deg,#242046,#6540ac);color:#f4cf77}
+.package.song{background:linear-gradient(120deg,#163f3f,#139b8d);color:white}
+.package small{position:absolute;bottom:24px;font-size:12px;letter-spacing:.07em;color:inherit}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.btn{display:inline-flex;align-items:center;justify-content:center;border:0;cursor:pointer;min-height:46px;padding:12px 19px;border-radius:13px;background:#f97316;color:white;font-weight:800;font-size:15px}.btn.secondary{background:#fff;color:#203047;border:1px solid #d8e0eb}.btn:focus-visible,a:focus-visible{outline:3px solid #109dd5;outline-offset:3px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}.panel{background:white;border:1px solid #e3e8f0;border-radius:20px;padding:22px}.panel h2{margin-top:0}.panel ul{line-height:1.9;padding-left:22px}
+.footnote{font-size:13px;color:#607084}.partner{border-left:4px solid #f97316;background:#fff;padding:15px;border-radius:12px;margin:20px 0}
+footer{text-align:center;color:#65758a;font-size:13px;padding:26px}
+@media(max-width:750px){.hero{grid-template-columns:1fr;padding:24px}.visual{min-height:230px}.package{width:150px;height:190px;font-size:64px}.details{grid-template-columns:1fr}.hero p{font-size:15px}}
+</style></head>
+<body><header><a class="logo" href="/"><img src="/zoco-icon.svg" alt="">ZoCo Digital</a><a class="header-link" href="/#/mercado-digital">Explorar catálogo</a></header>
+<main><section class="hero"><div><span class="pill">PRODUCTO DIGITAL</span><h1 id="title">ZoCo Digital</h1><p id="intro">Conoce nuestros productos digitales.</p><div class="actions"><a id="main-action" class="btn" href="/">Conocer producto</a><a class="btn secondary" href="/#/mercado-digital">Ver otros productos</a></div></div><div class="visual"><div id="package" class="package"><span id="icon">Z</span><small id="package-text">ZOCO DIGITAL</small></div></div></section>
+<div id="ref-panel" class="partner" hidden></div>
+<section class="details"><article class="panel"><h2>¿Qué incluye?</h2><ul id="benefits"></ul></article><article class="panel"><h2>Venta segura y transparente</h2><p id="details"></p><p class="footnote">El pago y las condiciones de contratación se muestran en el sitio oficial del producto. Esta página no solicita ni procesa pagos.</p></article></section>
+</main><footer>ZoCo Digital · Catálogo de productos y servicios</footer>
+<script>
+(function(){
+'use strict';
+const PRODUCTS={
+ zoco:{title:'ZoCo POS',intro:'Organiza ventas, productos, clientes y sucursales con un punto de venta diseñado para negocios reales.',kind:'zoco',icon:'Z',short:'ZOCO POS',url:'https://zoco-pos.vercel.app',benefits:['Sistema de ventas para distintos giros','Gestión de productos e inventario','Herramientas de administración y reportes'],details:'Conoce los planes, las funciones disponibles y las condiciones directamente en ZoCo.'},
+ luciana:{title:'Luciana Music',intro:'Da forma a tus ideas musicales con herramientas de creación, canciones y servicios digitales.',kind:'music',icon:'♫',short:'LUCIANA MUSIC',url:'https://lucianamusic.app',benefits:['Creación de canciones y proyectos musicales','Herramientas para contenido musical','Servicios y opciones dentro de Luciana Music'],details:'Consulta las opciones y sus precios vigentes directamente en Luciana Music.'},
+ song:{title:'Canciones personalizadas',intro:'Un detalle musical especial para cumpleaños, aniversarios, homenajes y otros momentos importantes.',kind:'song',icon:'♪',short:'CANCIONES',url:'https://lucianamusic.app',benefits:['Canción por encargo para ocasiones especiales','Opciones musicales sujetas al servicio contratado','Consulta de paquetes y entregas con el proveedor'],details:'Las condiciones de personalización, precio y entrega se confirman antes de contratar.'}
+};
+const q=new URLSearchParams(location.search);
+const slug=(q.get('producto')||'zoco').toLowerCase();
+const p=PRODUCTS[slug]||PRODUCTS.zoco;
+const byId=id=>document.getElementById(id);
+document.title=p.title+' | ZoCo Digital';
+byId('title').textContent=p.title;byId('intro').textContent=p.intro;byId('icon').textContent=p.icon;byId('package-text').textContent=p.short;byId('package').className='package '+p.kind;
+byId('main-action').href=p.url;byId('main-action').textContent='Conocer '+p.title;
+byId('details').textContent=p.details;
+for(const benefit of p.benefits){const li=document.createElement('li');li.textContent=benefit;byId('benefits').appendChild(li);}
+const ref=(q.get('promotor')||'').trim();
+if(/^[a-zA-Z0-9_-]{4,32}$/.test(ref)){const panel=byId('ref-panel');panel.hidden=false;panel.textContent='Recomendado mediante el código de difusión: '+ref+'. El programa de comisiones todavía no está activo; compartir este enlace no genera pagos ni saldos.';}
+})();
+</script></body></html>
