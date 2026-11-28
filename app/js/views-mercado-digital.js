@@ -1,25 +1,97 @@
-// Piloto de Mercado Digital. Sin pagos, enlaces de seguimiento ni comisiones reales.
-// La simulación se conserva en el navegador del usuario; no se envía a Supabase.
+// ZoCo Digital: catálogo piloto con vista especial para el giro digital.
+// Sin enlaces de atribución, ventas ni pagos de comisiones reales.
 import { esc } from './ui.js';
-const SAMPLES = [
-  {id:'zoco',emoji:'🛍️',name:'ZoCo POS',kind:'Software para negocios',detail:'Recomienda ZoCo a emprendedores y comercios.',url:'https://zoco-pos.vercel.app',rate:50,unit:'MXN por contratación del plan Esencial'},
-  {id:'luciana',emoji:'🎵',name:'Luciana Music',kind:'Música y creatividad',detail:'Promociona una plataforma para crear música.',url:'https://lucianamusic.app',rate:null,unit:'Por definir'},
-  {id:'canciones',emoji:'🎤',name:'Canciones personalizadas',kind:'Servicio digital por encargo',detail:'Ofrece canciones hechas para momentos especiales.',url:'https://lucianamusic.app',rate:null,unit:'Por definir'}
+
+const PRODUCTS = [
+  {id:'zoco',icon:'▣',name:'ZoCo POS',type:'Software para negocios',summary:'Sistema de ventas y gestión para comercios.',url:'https://zoco-pos.vercel.app',commission:'$50 MXN por contratación del plan Esencial',theme:'zoco'},
+  {id:'luciana',icon:'♫',name:'Luciana Music',type:'Plataforma musical',summary:'Creación de canciones y herramientas musicales con IA.',url:'https://lucianamusic.app',commission:'Por configurar',theme:'music'},
+  {id:'song',icon:'♪',name:'Canciones personalizadas',type:'Producto digital por encargo',summary:'Canciones especiales y paquetes musicales personalizados.',url:'https://lucianamusic.app',commission:'Por configurar',theme:'song'}
 ];
-export function mercadoDigitalView() {
+const CSS = `
+.zd{padding:16px;max-width:1240px;margin:0 auto;color:var(--text,#172033)}
+.zd .zd-hero{background:linear-gradient(120deg,#172033,#31435c);color:#fff;padding:24px;border-radius:22px}
+.zd .zd-hero h2{font-size:clamp(22px,4vw,32px);margin:10px 0}
+.zd .zd-hero p{opacity:.92;line-height:1.5}
+.zd .zd-badge{display:inline-flex;border-radius:99px;padding:6px 11px;background:#fff0df;color:#94430b;font-size:12px;font-weight:800}
+.zd .zd-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.zd .zd-tab{border:1px solid var(--border,#d7dfe8);background:var(--card,#fff);color:var(--text,#172033);padding:11px 15px;border-radius:12px;cursor:pointer;font-weight:700}
+.zd .zd-tab[aria-selected="true"]{background:#f97316;color:#fff;border-color:#f97316}
+.zd .zd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:16px}
+.zd .zd-card{border:1px solid var(--border,#dce3ec);border-radius:20px;overflow:hidden;background:var(--card,#fff);color:var(--text,#172033)}
+.zd .zd-cover{height:172px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.zd .zd-cover.zoco{background:linear-gradient(135deg,#fff1e5,#f97316)}
+.zd .zd-cover.music{background:linear-gradient(135deg,#201438,#8155b2)}
+.zd .zd-cover.song{background:linear-gradient(135deg,#183c3b,#1e9b98)}
+.zd .zd-kit{width:106px;height:128px;border-radius:7px 14px 14px 7px;box-shadow:14px 14px 22px #0003;border:1px solid #ffffff55;transform:perspective(400px) rotateY(-16deg);display:grid;place-items:center;background:#fff;color:#f97316;font-size:57px;font-weight:900}
+.zd .music .zd-kit{background:#231b38;color:#e1c47b}
+.zd .song .zd-kit{background:#173f42;color:#fff}
+.zd .zd-kit:after{content:'';position:absolute;left:-8px;top:0;width:9px;height:100%;background:#0002;transform:skewY(-25deg);border-radius:4px}
+.zd .zd-cover small{position:absolute;bottom:8px;right:10px;color:white;background:#0006;border-radius:8px;padding:3px 7px}
+.zd .zd-info{padding:17px}
+.zd .zd-info h3{margin:6px 0;font-size:19px}
+.zd .zd-type,.zd .zd-muted{font-size:13px;color:var(--muted,#667085)}
+.zd .zd-info p{line-height:1.45}
+.zd .zd-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.zd .zd-btn{padding:10px 13px;border:0;border-radius:10px;background:#f97316;color:white;font-weight:750;text-decoration:none;cursor:pointer;font-size:13px}
+.zd .zd-btn.alt{background:#0f766e}
+.zd .zd-panel{padding:19px;border:1px solid var(--border,#dce3ec);border-radius:18px;background:var(--card,#fff);margin:14px 0}
+.zd .zd-panel h3{margin-top:0}
+.zd .zd-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px}
+.zd .zd-step{padding:14px;background:var(--bg,#f5f7fa);border-radius:12px}
+.zd .zd-step strong{display:block;margin-bottom:6px}
+.zd .zd-warning{font-size:13px;line-height:1.55;color:var(--muted,#667085);margin-top:18px}
+@media(max-width:580px){.zd{padding:10px}.zd .zd-hero{padding:20px}.zd .zd-cover{height:150px}}
+`;
+
+export function mercadoDigitalView(ctx, mode='market') {
+  const owner=mode==='owner';
   const root=document.createElement('div');
-  root.className='zoco-digital-pilot';
-  const style=document.createElement('style');
-  style.textContent=`.zoco-digital-pilot{padding:16px;max-width:1200px;margin:auto;color:var(--text)}.zoco-digital-pilot .hero{background:linear-gradient(120deg,#102642,#155e75);color:white;border-radius:22px;padding:24px}.zoco-digital-pilot .hero h2{font-size:clamp(22px,4vw,34px);margin:0 0 8px}.zoco-digital-pilot .hero p{opacity:.9}.zoco-digital-pilot .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:18px}.zoco-digital-pilot .tile{padding:20px;border:1px solid var(--border,#dce3ec);border-radius:18px;background:var(--card,#fff);color:var(--text,#172033)}.zoco-digital-pilot .tile h3{margin:8px 0}.zoco-digital-pilot .tile small{color:var(--muted,#667085)}.zoco-digital-pilot .chip{display:inline-block;background:#e8f5ff;color:#075985;border-radius:20px;padding:5px 10px;font-size:12px;font-weight:700}.zoco-digital-pilot .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.zoco-digital-pilot a.action,.zoco-digital-pilot button.action{border:0;background:#f97316;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;cursor:pointer}.zoco-digital-pilot .muted{font-size:13px;color:var(--muted,#667085)}`;
-  root.appendChild(style);
-  const hero=document.createElement('section');hero.className='hero';hero.innerHTML='<span class="chip">PILOTO • SIN COBROS</span><h2>¿No sabes qué vender? Empieza aquí</h2><p>Descubre productos digitales para promocionar. Prueba el catálogo con ZoCo, Luciana Music y canciones personalizadas.</p><p style="font-size:13px">Las afiliaciones, enlaces de atribución y pagos automáticos todavía no están activados.</p>';root.appendChild(hero);
-  const cards=document.createElement('div');cards.className='cards';root.appendChild(cards);
-  for (const p of SAMPLES) {
-    const card=document.createElement('article');card.className='tile';
-    card.innerHTML=`<div style="font-size:34px">${p.emoji}</div><small>${esc(p.kind)}</small><h3>${esc(p.name)}</h3><p>${esc(p.detail)}</p><p><strong>Comisión:</strong> ${p.rate!==null? '$'+p.rate+' '+esc(p.unit):'Pendiente de configurar'}</p><div class="actions"><a class="action" href="${p.url}" target="_blank" rel="noopener noreferrer">Ver producto</a><button class="action preview" type="button" style="background:#0f766e">Simular promoción</button></div><p class="muted result" aria-live="polite">Sin enlaces de afiliado reales.</p>`;
-    card.querySelector('.preview').onclick=()=>{card.querySelector('.result').textContent='Vista de prueba: aún no se creó una afiliación ni se registró una venta. El dueño deberá habilitar comisiones y aprobar afiliados antes de lanzar.'};
-    cards.appendChild(card);
-  }
-  const note=document.createElement('p');note.className='muted';note.style.marginTop='16px';note.textContent='Importante: este escaparate es una demostración sin datos personales ni financieros. No confundir con el programa actual de afiliados de ZoCo POS.';root.appendChild(note);
+  root.className='zd';
+  root.innerHTML=`<style>${CSS}</style>
+    <section class="zd-hero">
+      <span class="zd-badge">PILOTO · SIN COBROS REALES</span>
+      <h2>${owner?'ZoCo Digital · Productos digitales':'¿No sabes qué vender? Empieza aquí'}</h2>
+      <p>${owner?'El área especial para vender cursos, software, canciones, archivos y servicios digitales. Empieza probando los kits de nuestras marcas.':'Explora productos digitales para promocionar sin inventario físico. Por ahora están disponibles nuestros tres productos de muestra.'}</p>
+    </section>
+    <nav class="zd-tabs" aria-label="Secciones de ZoCo Digital" role="tablist">
+      <button type="button" class="zd-tab" data-tab="kits" role="tab" aria-selected="true">Kits digitales</button>
+      <button type="button" class="zd-tab" data-tab="how" role="tab" aria-selected="false">Cómo funcionará</button>
+      ${owner?'<button type="button" class="zd-tab" data-tab="manage" role="tab" aria-selected="false">Mis productos</button>':''}
+    </nav>
+    <section class="zd-body" role="tabpanel"></section>
+    <p class="zd-warning">Esta versión es demostrativa. No genera enlaces personalizados, no registra ventas y no paga comisiones. Las imágenes de las cajas son ilustraciones de muestra; se sustituirán por los artes oficiales aprobados. El programa actual de afiliados de ZoCo POS sigue separado.</p>`;
+  const body=root.querySelector('.zd-body');
+  const kits=()=>`<div class="zd-grid">${PRODUCTS.map(p=>`
+    <article class="zd-card">
+      <div class="zd-cover ${p.theme}"><div class="zd-kit" aria-hidden="true">${p.icon}</div><small>Kit digital</small></div>
+      <div class="zd-info">
+        <div class="zd-type">${esc(p.type)}</div><h3>${esc(p.name)}</h3><p>${esc(p.summary)}</p>
+        <p><strong>Comisión:</strong> ${esc(p.commission)}</p>
+        <div class="zd-actions"><a class="zd-btn" target="_blank" rel="noopener noreferrer" href="${esc(p.url)}">Ver producto</a><button type="button" class="zd-btn alt" data-simulate="${p.id}">Probar afiliación</button></div>
+        <p class="zd-muted" data-result="${p.id}" aria-live="polite">Afiliaciones aún sin activar.</p>
+      </div>
+    </article>`).join('')}</div>`;
+  const how=()=>`<div class="zd-panel"><h3>Así funcionará la venta por afiliados</h3><div class="zd-steps">
+     <div class="zd-step"><strong>1. El dueño publica</strong>Registra producto, precio, landing y comisión.</div>
+     <div class="zd-step"><strong>2. El afiliado se registra</strong>Solicita acceso al producto del dueño.</div>
+     <div class="zd-step"><strong>3. Comparte su enlace</strong>Promociona la misma landing con su identificador.</div>
+     <div class="zd-step"><strong>4. Se valida la venta</strong>ZoCo atribuye y calcula comisión, con controles para reembolsos.</div>
+  </div><p class="zd-muted">El seguimiento de enlaces y las transferencias automáticas son fases posteriores, sujetas a validación técnica y del proveedor de pagos.</p></div>`;
+  const manage=()=>`<div class="zd-panel"><h3>Mis productos digitales</h3>
+  <p>El giro ya tiene sus categorías en el catálogo de Productos: archivos y descargas, cursos y formación, productos personalizados y servicios digitales.</p>
+  <p>Aquí añadiremos la configuración específica para archivos seguros, entregas, páginas de venta y comisiones por producto. Por ahora puedes administrar los productos desde el catálogo general de ZoCo.</p>
+  <button class="zd-btn" type="button" data-products>Ir a Productos</button></div>`;
+  const paint=(tab)=>{
+    root.querySelectorAll('.zd-tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+    body.innerHTML=tab==='how'?how():tab==='manage'&&owner?manage():kits();
+    body.querySelectorAll('[data-simulate]').forEach(btn=>btn.onclick=()=>{
+      const result=body.querySelector('[data-result="'+btn.dataset.simulate+'"]');
+      if(result) result.textContent='Simulación: todavía no se creó un enlace ni se registró una venta. La comisión será efectiva únicamente cuando se active el sistema de afiliados.';
+    });
+    const products=body.querySelector('[data-products]');
+    if(products) products.onclick=()=>ctx?.go?.('productos');
+  };
+  root.querySelectorAll('.zd-tab').forEach(btn=>btn.onclick=()=>paint(btn.dataset.tab));
+  paint('kits');
   return {root,refresh(){}};
 }
