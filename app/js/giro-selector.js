@@ -12,7 +12,7 @@ const PHOTOS = {
  floreria:'photo-1490750967868-88aa4486c946', barberia:'photo-1503951914875-452162b0f3f1',
  restaurante:'photo-1552566626-52f8b828add9', lavanderia:'photo-1545173168-9f1947eebb7f',
  merceria:'photo-1494438639946-1ebd1d20bf85', refaccionaria:'photo-1486262715619-67b85e0b08d3',
- perfumeria:'photo-1541643600914-78b084683601', general:'photo-1472851294608-062f824d29cc'
+ perfumeria:'photo-1541643600914-78b084683601', digitales:'photo-1516321318423-f06f85e504b3', general:'photo-1472851294608-062f824d29cc'
 };
 const SUBGIROS = {
  restaurante:'Taquería tacos al pastor trompo fonda cocina económica cafetería restaurante comida rápida dark kitchen',
@@ -22,6 +22,7 @@ const SUBGIROS = {
  cosmeticos:'Maquillaje belleza cosméticos cuidado facial',
  barberia:'Barbería estética salón spa uñas peluquería',
  abarrotes:'Minisúper tienda de conveniencia abarrotes miscelánea',
+ digitales:'Productos digitales cursos ebooks canciones plantillas software páginas web diseños licencias servicios',
  general:'Otro negocio servicios productos generales'
 };
 const clean = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
