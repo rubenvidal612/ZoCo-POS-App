@@ -6,8 +6,9 @@
   <meta name="description" content="Conoce el programa de afiliados de ZoCo POS y calcula tus comisiones mensuales por cada negocio referido.">
   <title>ZoCo POS · Programa de afiliados</title>
   <link rel="icon" href="/zoco-icon.svg">
-  <link rel="stylesheet" href="/assets/landing-3/afiliados.css">
+  <link rel="stylesheet" href="/assets/landing-3/afiliados.css?v=2">
   <script defer src="/assets/landing-2/referrals.js?v=3"></script>
+  <script defer src="/assets/landing-2/demo.js?v=6"></script>
   <script defer src="/js/landing-referral.js"></script>
 </head>
 <body>
@@ -74,7 +75,21 @@
       <h2>Muestra la IA en acción</h2>
       <p>En la demo, muéstrale al dueño cómo consultar ventas e inventario. Empieza con una pregunta como <strong>«¿Qué productos tienen poco stock?»</strong></p>
       <a class="btn secondary" href="/demo">Probar demo sin registro</a>
-      <picture><source media="(max-width: 650px)" srcset="/assets/landing-2/asistente-movil.webp"><img src="/assets/landing-2/asistente-escritorio.webp" alt="Asistente de inteligencia artificial de ZoCo" loading="lazy"></picture>
+      <div class="affiliate-chat" aria-label="Demostración del asistente de ZoCo">
+        <div class="chat-identity"><span class="pearl" aria-hidden="true"><img src="/assets/landing-2/mascota-perla.webp" alt="" width="38" height="27"></span><strong>Asistente ZoCo</strong><small>Demo</small></div>
+        <div id="messages" class="chat-thread" tabindex="0" aria-label="Conversación de ejemplo">
+          <p class="bubble user">Aplica un 10% de descuento al modelo 375 negro, talla #5.</p>
+          <p class="bubble">✓ Descuento aplicado al modelo 375 negro, talla #5. Precio anterior: $600 MXN. Nuevo precio: $540 MXN.</p>
+        </div>
+        <div class="chat-compose">
+          <span id="demo-draft" aria-hidden="true">Escribe un mensaje…</span>
+          <button id="demo-send" type="button" disabled>Enviar</button>
+        </div>
+        <div class="chat-toolbar">
+          <span id="demo-status" aria-hidden="true">Conversación de ejemplo</span>
+          <button id="demo-toggle" type="button">Reproducir demo</button>
+        </div>
+      </div>
     </article>
     <article><h2>Material para salir a vender</h2><p>Usa la demo, tu enlace de afiliado y las landings de ZoCo para presentar el sistema desde tu celular.</p>
       <ul><li><strong>Abre la conversación.</strong> Usa un folleto o un mensaje preparado para el giro del negocio.</li><li><strong>Muestra cómo funciona.</strong> Comparte la demo o presenta ZoCo en el mostrador.</li><li><strong>Da seguimiento.</strong> Envía tu enlace y consulta tu cartera en el panel de Afiliados.</li></ul>
