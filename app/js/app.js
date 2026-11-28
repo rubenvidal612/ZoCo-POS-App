@@ -12,6 +12,7 @@ import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
 import { purchasesView } from './views-purchases.js';
 import { landingView } from './views-landing.js';
+import { mercadoDigitalView } from './views-mercado-digital.js';
 
 /* ============================================================
    Giros con apartado propio (módulos verticales)
@@ -71,6 +72,7 @@ const NAV_GROUPS = [
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
+      { id: 'mercado-digital', label: '¿No sabes qué vender?', icon: '💡' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
       { id: 'guia', label: 'Ayuda de ZoCo', icon: '🤖' },
@@ -114,7 +116,7 @@ const titles = {
   partners: 'ZoCo Partners',
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
   reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', laundry: 'ZoCo Lavandería', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
-  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
+  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', 'mercado-digital': 'Mercado Digital', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
 function applyTheme() {
@@ -616,6 +618,7 @@ function mount() {
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
     afiliados: () => affiliatesView(ctx),
+    'mercado-digital': () => mercadoDigitalView(ctx),
     landing: () => affiliatesView(ctx),
   plan: guard('settings.edit', () => plansView(ctx)),
   };
