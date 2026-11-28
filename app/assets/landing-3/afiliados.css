@@ -62,9 +62,7 @@ td, th { text-align: left; padding: .7rem .85rem; border-bottom: 1px solid var(-
 thead { background: var(--ink); color: white; }
 .schedule table { font-variant-numeric: tabular-nums; }
 .schedule td, .schedule th { padding: .5rem .65rem; }
-.current-month, .comparison tbody tr:first-child { background: var(--tint); font-weight: 700; }
-.comparison { min-width: 680px; }
-.comparison th:first-child { white-space: nowrap; }
+.current-month { background: var(--tint); font-weight: 700; }
 .note { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
 .opportunity aside { display: grid; justify-items: start; padding: 1.4rem; border-radius: 1rem; background: var(--tint); }
 .opportunity aside strong { color: var(--accent); font-size: clamp(1.55rem, 3.1vw, 2.6rem); }
@@ -94,4 +92,30 @@ thead { background: var(--ink); color: white; }
   .nav .brand { font-size: 1rem; }
   .nav .btn { padding-inline: .55rem; font-size: .9rem; }
   .plans, .metrics { gap: .35rem; }
+}
+
+.price-list { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: white; }
+.price-row { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr); gap: .55rem 1rem; align-items: center; padding: .9rem 1.1rem; }
+.price-row + .price-row { border-top: 1px solid var(--line); }
+.price-row.featured { background: var(--tint); }
+.price-row dt { display: flex; align-items: center; gap: .65rem; font-weight: 800; }
+.price-row img { object-fit: contain; }
+.price-row dd, .payout-plans dd { margin: 0; }
+.price-row dd span, .payout-plans span { display: block; color: var(--muted); font-size: .9rem; }
+.affiliate-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+.affiliate-payout, .affiliate-benefits { min-width: 0; padding: clamp(1rem, 3vw, 1.6rem); border-radius: 1rem; border: 1px solid var(--line); background: white; }
+.affiliate-payout { background: var(--tint); border-color: #fed7aa; }
+.payout-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; margin-block: 1rem 0; }
+.payout-plans > div { padding: .5rem; background: white; border-radius: .5rem; overflow-wrap: anywhere; }
+.payout-plans strong { display: block; font-size: 1.4rem; color: var(--accent); }
+.affiliate-payout .btn { margin-top: .8rem; }
+.affiliate-benefits ul { padding: 0; margin: 1rem 0 0; list-style: none; }
+.affiliate-benefits li { display: flex; gap: .6rem; }
+.affiliate-benefits li > span { color: var(--accent); }
+.affiliate-benefits li:last-child p { margin-bottom: 0; }
+@media (max-width: 700px) {
+  .affiliate-highlights { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .price-row { grid-template-columns: minmax(0, 1fr); }
 }
