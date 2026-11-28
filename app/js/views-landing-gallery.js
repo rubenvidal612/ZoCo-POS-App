@@ -3,6 +3,7 @@ import { el, toast } from './ui.js';
 const landingOptions = [
   { name: 'Landing 1', badge: '✓ Original', title: 'Landing clásica', description: 'La presentación original de ZoCo POS.', url: '/landing', color: '#1266f4', border: '#bcd6ff', tint: '#f5f9ff', badgeColor: '#0e762d', badgeBackground: '#e5f7e9' },
   { name: 'Landing 2', badge: '✦ Nueva opción', title: 'ZoCo con Inteligencia Artificial', description: 'Agentes IA, giros de negocio, integraciones y programa de afiliados.', url: '/landing-2', color: '#e95000', border: '#ff9b61', tint: '#fff7f3', badgeColor: '#803b07', badgeBackground: '#fff0d5' },
+  { name: 'Landing #3', badge: 'Afiliados', title: 'Construye tu cartera con ZoCo', description: 'Presenta el programa, compara el mercado y simula comisiones recurrentes.', url: '/landing-3', color: '#c2410c', border: '#fdba74', tint: '#fff7ed', badgeColor: '#9a3412', badgeBackground: '#ffedd5' },
 ];
 
 export function landingGalleryView({ referralCode } = {}) {

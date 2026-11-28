@@ -21,6 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.resolve(__dirname, '..', 'app');
 const DATA_DIR = path.resolve(__dirname, '..', 'data');
 const PORT = Number(process.env.PORT || 4321);
+const cleanPages = new Set(['/landing', '/landing-2', '/landing-3', '/demo']);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -524,7 +525,8 @@ if (-not $r) { throw 'WritePrinter failed' }
   }
 
   /* ---------- Estático ---------- */
-  let file = path.join(APP, url === '/' ? 'index.html' : url);
+  const staticPath = cleanPages.has(url) ? url + '.html' : url;
+  let file = path.join(APP, staticPath === '/' ? 'index.html' : staticPath);
   if (!file.startsWith(APP)) { res.writeHead(403).end('forbidden'); return; }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) file = path.join(APP, 'index.html');

@@ -1,8 +1,7 @@
 {
-  "version": "2.80.10",
+  "version": "2.80.11",
   "date": "2026-11-27",
   "notes": [
-    "Registro de nuevos clientes por giro comercial",
-    "Se retira el selector de empresas existentes del panel de revendedor"
+    "Landing #3 para afiliados, con simulador de comisiones y comparativa de puntos de venta"
   ]
 }
