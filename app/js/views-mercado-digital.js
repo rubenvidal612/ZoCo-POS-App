@@ -2,6 +2,7 @@
 // Sin enlaces de atribución, ventas ni pagos de comisiones reales.
 import { esc } from './ui.js';
 import { currentUser } from './store.js';
+import { renderDigitalPages } from './views-digital-pages.js';
 
 const PRODUCTS = [
   {id:'zoco',icon:'▣',name:'ZoCo POS',type:'Software para negocios',summary:'Sistema de ventas y gestión para comercios.',url:'/digital.html?producto=zoco',commission:'$50 MXN por contratación del plan Esencial',theme:'zoco'},
@@ -58,7 +59,7 @@ export function mercadoDigitalView(ctx, mode='market') {
       <button type="button" class="zd-tab" data-tab="kits" role="tab" aria-selected="true">Kits digitales</button>
       <button type="button" class="zd-tab" data-tab="how" role="tab" aria-selected="false">Cómo funcionará</button>
       <button type="button" class="zd-tab" data-tab="links" role="tab" aria-selected="false">Mis enlaces</button>
-      ${owner?'<button type="button" class="zd-tab" data-tab="manage" role="tab" aria-selected="false">Mis productos</button>':''}
+      ${owner?'<button type="button" class="zd-tab" data-tab="manage" role="tab" aria-selected="false">Mis productos</button><button type="button" class="zd-tab" data-tab="pages" role="tab" aria-selected="false">Mis páginas de venta</button>':''}
     </nav>
     <section class="zd-body" role="tabpanel"></section>
     <p class="zd-warning">Las landings y los enlaces de difusión se pueden compartir, pero todavía no atribuyen ventas, generan saldos ni pagan comisiones. Las imágenes de las cajas son ilustraciones de muestra; se sustituirán por los artes oficiales aprobados. El programa actual de afiliados de ZoCo POS sigue separado.</p>`;
@@ -89,6 +90,7 @@ export function mercadoDigitalView(ctx, mode='market') {
   const links=()=>`<div class="zd-panel"><h3>Mis enlaces para compartir</h3><p>Estas páginas de venta ya se pueden abrir y difundir. El código de difusión, cuando existe, es informativo: todavía no contabiliza clics ni genera comisiones.</p><div class="zd-grid">${PRODUCTS.map(p=>`<article class="zd-card"><div class="zd-info"><h3>${esc(p.name)}</h3><p class="zd-muted" style="overflow-wrap:anywhere">${esc(shareUrl(p))}</p><div class="zd-actions"><button type="button" class="zd-btn share" data-share="${p.id}">Copiar enlace</button><a class="zd-btn alt" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">Abrir landing</a></div><p class="zd-muted" data-result="${p.id}" aria-live="polite"></p></div></article>`).join('')}</div></div>`;
   const paint=(tab)=>{
     root.querySelectorAll('.zd-tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+    if(tab==='pages'&&owner){renderDigitalPages(body,ctx);return;}
     body.innerHTML=tab==='how'?how():tab==='links'?links():tab==='manage'&&owner?manage():kits();
     body.querySelectorAll('[data-share]').forEach(btn=>btn.onclick=async()=>{
       const p=PRODUCTS.find(x=>x.id===btn.dataset.share);
