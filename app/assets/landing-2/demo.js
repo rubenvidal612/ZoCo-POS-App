@@ -25,6 +25,13 @@ const messages = document.getElementById('messages');
 const bubbles = [...messages.querySelectorAll('.bubble')];
 const demoStatus = document.getElementById('demo-status');
 const demoToggle = document.getElementById('demo-toggle');
+const demoDraft = document.getElementById('demo-draft');
+const demoSend = document.getElementById('demo-send');
+
+function setDraft(text = 'Escribe un mensaje…', sending = false) {
+  if (demoDraft) demoDraft.textContent = text;
+  if (demoSend) demoSend.classList.toggle('sending', sending);
+}
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const pearls = document.querySelectorAll('.chat-identity .pearl');
 function setPearlState(state) {
@@ -36,6 +43,7 @@ let playing = false;
 function showConversation() {
   playbackId++;
   setPearlState("idle");
+  setDraft();
   playing = false;
   bubbles.forEach(bubble => { bubble.hidden = false; });
   demoStatus.textContent = 'Conversación de ejemplo';
@@ -61,9 +69,21 @@ async function playConversation() {
     let written = owner ? '' : 'ZoCo está respondiendo';
     for (const character of draft) {
       written += character;
-      demoStatus.textContent = written;
+      if (owner && demoDraft) {
+        setDraft(written);
+        demoStatus.textContent = 'Escribiendo mensaje…';
+      } else {
+        demoStatus.textContent = written;
+      }
       await new Promise(resolve => setTimeout(resolve, owner ? 27 : 360));
       if (currentPlayback !== playbackId) return;
+    }
+    if (owner && demoDraft) {
+      setDraft(written, true);
+      demoStatus.textContent = 'Enviando mensaje…';
+      await new Promise(resolve => setTimeout(resolve, 450));
+      if (currentPlayback !== playbackId) return;
+      setDraft();
     }
     demoStatus.textContent = 'Conversación de ejemplo';
     if (!owner && index === bubbles.length - 1) {
