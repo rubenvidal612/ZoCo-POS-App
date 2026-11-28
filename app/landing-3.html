@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Conoce el programa de afiliados de ZoCo POS y calcula tus comisiones mensuales por cada negocio referido.">
+  <title>ZoCo POS · Programa de afiliados</title>
+  <link rel="icon" href="/zoco-icon.svg">
+  <link rel="stylesheet" href="/assets/landing-3/afiliados.css">
+  <script defer src="/assets/landing-2/referrals.js?v=3"></script>
+  <script defer src="/js/landing-referral.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="#inicio"><img src="/zoco-icon.svg" alt="" width="36" height="36"> ZoCo POS</a>
+    <nav aria-label="Secciones"><a href="#comisiones">Comisiones</a><a href="#giros">Giros</a><a href="#comparativa">Comparativa</a></nav>
+    <a class="btn" href="/?registro=1#/afiliados">Quiero ser afiliado</a>
+  </div>
+</header>
+<main id="inicio">
+  <section class="wrap hero">
+    <div>
+      <p class="eyebrow">Programa de afiliados · Hecho en México</p>
+      <h1>Construye tu cartera con <em>ZoCo</em></h1>
+      <p class="lead">Lleva tu negocio de afiliado en el celular. Comparte una demo, presenta ZoCo a comercios y da seguimiento desde donde estés.</p>
+      <p>Recibe una comisión cada vez que un negocio que referiste paga su suscripción.</p>
+      <div class="actions"><a class="btn" href="/?registro=1#/afiliados">Quiero ser afiliado</a><a class="btn secondary" href="/demo">Probar demo sin registro</a></div>
+    </div>
+    <img class="hero-photo" src="/assets/landing-3/equipo.webp" alt="Dos personas con polos azul marino de ZoCo en un comercio" width="674" height="386" fetchpriority="high">
+  </section>
+  <section class="band" id="comisiones">
+    <div class="wrap">
+      <div class="section-heading"><p class="eyebrow">Comisiones recurrentes</p><h2>¿Cuánto puede generar tu cartera?</h2><p>Elige un plan y desliza el control para revisar tus comisiones mes a mes.</p></div>
+      <div class="sim">
+        <div class="controls">
+          <div class="plans" role="group" aria-label="Planes de ZoCo">
+            <button data-referral-plan="esencial" aria-pressed="false" type="button">Esencial <strong>$149</strong><small>Comisión $50</small></button>
+            <button data-referral-plan="pro" aria-pressed="true" type="button">Pro <strong>$295</strong><small>Comisión $150</small></button>
+            <button data-referral-plan="empresarial" aria-pressed="false" type="button">Empresarial <strong>$499</strong><small>Comisión $250</small></button>
+          </div>
+          <label class="field" for="clients">Negocios nuevos por mes <input id="clients" type="number" inputmode="numeric" min="1" max="40" step="1" value="5" required></label>
+          <label class="field" for="referral-month">Mes <output id="selected-month">12</output> de 12</label>
+          <input id="referral-month" type="range" min="1" max="12" value="12">
+          <p id="referral-rate">ZoCo Pro cuesta $295 MXN al mes y paga $150 MXN al mes por cliente activo.</p>
+          <div class="metrics" aria-live="polite">
+            <div><span id="month-caption">Comisión del mes 12</span><strong id="month-income">$9,000</strong></div>
+            <div><span id="total-caption">Acumulado al mes 12</span><strong id="referral-total">$58,500</strong></div>
+          </div>
+          <p><strong id="referral-active">60</strong> negocios activos en el mes seleccionado.</p>
+        </div>
+        <div class="table-scroll schedule" tabindex="0" role="region" aria-label="Detalle mensual de comisiones">
+          <table><thead><tr><th scope="col">Mes</th><th scope="col">Comisión del mes</th><th scope="col">Acumulado</th></tr></thead><tbody id="referral-table"></tbody></table>
+        </div>
+      </div>
+      <p class="note">Cifras en MXN. La simulación supone que todos pagan desde el mes en que se incorporan y siguen pagando. Para las suscripciones anuales, la comisión se genera al cobrarse la anualidad. Durante la prueba gratuita, la comisión comienza con el primer pago.</p>
+    </div>
+  </section>
+  <section class="wrap section" id="giros">
+    <div class="opportunity">
+      <div><h2>Tu ciudad está llena de <em>oportunidades</em></h2><p>Empieza con los comercios que ya conoces. Con la demo en línea también puedes presentar ZoCo a negocios de otros países.</p></div>
+      <aside><strong>Más de 7 millones</strong><span>de establecimientos en México</span><a href="https://inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE2024_def.pdf">INEGI · Censos Económicos 2024</a></aside>
+    </div>
+    <div class="cards">
+      <article><img src="/assets/landing-3/tienda.webp" alt="Dueña de una tienda de abarrotes" width="315" height="154" loading="lazy"><div><h3>Abarrotes y ferreterías</h3><p>Registra ventas y detecta qué productos se están agotando.</p></div></article>
+      <article><img src="/assets/landing-3/restaurante.webp" alt="Interior de un restaurante" width="315" height="154" loading="lazy"><div><h3>Restaurantes y taquerías</h3><p>Organiza pedidos y controla el inventario de ingredientes.</p></div></article>
+      <article><img src="/assets/landing-3/boutique.webp" alt="Dueño de una boutique" width="315" height="154" loading="lazy"><div><h3>Boutiques y zapaterías</h3><p>Consulta existencias por modelo, talla y color.</p></div></article>
+    </div>
+    <p>También puedes presentar ZoCo a barberías, salones, spas, cafeterías, panaderías y dark kitchens.</p>
+    <a class="btn secondary" href="/demo">Explorar la demo por giro</a>
+  </section>
+  <section class="band" id="herramientas"><div class="wrap tools">
+    <article>
+      <h2>Muestra la IA en acción</h2>
+      <p>En la demo, muéstrale al dueño cómo consultar ventas e inventario. Empieza con una pregunta como <strong>«¿Qué productos tienen poco stock?»</strong></p>
+      <a class="btn secondary" href="/demo">Probar demo sin registro</a>
+      <picture><source media="(max-width: 650px)" srcset="/assets/landing-2/asistente-movil.webp"><img src="/assets/landing-2/asistente-escritorio.webp" alt="Asistente de inteligencia artificial de ZoCo" loading="lazy"></picture>
+    </article>
+    <article><h2>Material para salir a vender</h2><p>Usa la demo, tu enlace de afiliado y las landings de ZoCo para presentar el sistema desde tu celular.</p>
+      <ul><li><strong>Abre la conversación.</strong> Usa un folleto o un mensaje preparado para el giro del negocio.</li><li><strong>Muestra cómo funciona.</strong> Comparte la demo o presenta ZoCo en el mostrador.</li><li><strong>Da seguimiento.</strong> Envía tu enlace y consulta tu cartera en el panel de Afiliados.</li></ul>
+      <a href="#guia" class="btn secondary">Ver guía de venta</a>
+    </article>
+  </div></section>
+  <section class="wrap section" id="guia"><h2>Tu primera conversación de venta</h2>
+    <div class="cards steps">
+      <article><div><h3>Pregunta por el mostrador</h3><p>«Hola, ¿cómo llevan sus ventas y su inventario? Te puedo mostrar en el celular cómo lo harías en ZoCo.»</p></div></article>
+      <article><div><h3>Enseña una sola tarea</h3><p>Abre la demo del giro y haz una venta, consulta existencias o muestra cómo registrar un pedido.</p></div></article>
+      <article><div><h3>Comparte tu enlace</h3><p>«Te dejo la demo para probarla. Si te sirve, desde mi enlace puedes crear tu cuenta.»</p></div></article>
+    </div>
+  </section>
+  <section class="band" id="comparativa"><div class="wrap">
+    <div class="section-heading"><h2>Compara precios y comisiones</h2><p>Cuánto paga el comercio y qué condiciones tiene cada programa.</p></div>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Comparativa de puntos de venta">
+      <table class="comparison"><thead><tr><th scope="col">Punto de venta</th><th scope="col">Mensualidad del comercio</th><th scope="col">Comisión y condiciones</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">ZoCo</th><td>$149 / $295 / $499 MXN</td><td>$50 / $150 / $250 MXN por negocio, según su plan. La comisión se genera con cada pago elegible.</td></tr>
+        <tr><th scope="row">Pulpos</th><td>$149.64 / $288.84 / $694.84 / $996.44 MXN con IVA</td><td>35% sobre la suscripción antes de IVA. Equivale a $45.15 / $87.15 / $209.65 / $300.65 MXN al mes. Exige una venta nueva de pago en los últimos tres meses. <a href="https://ayuda.pulpos.com/cual-es-el-precio">Precios</a> · <a href="https://pulpos.com/terminos-y-condiciones/distribuidores/">Condiciones</a></td></tr>
+        <tr><th scope="row">NextPOS</th><td>$349 / $590 MXN con IVA</td><td>25% sobre el cobro sin IVA mientras el comercio pague. Equivale a $75.22 o $127.16 MXN al mes. Sube a 30% con 25 negocios activos. <a href="https://nextpos.mx/precios">Precios</a> · <a href="https://nextpos.mx/distribuidores">Condiciones</a></td></tr>
+        <tr><th scope="row">Kyte</th><td>Gratis o $189 / $269 / $379 MXN</td><td>Comisión por la primera suscripción elegible según sus términos estándar. <a href="https://www.appkyte.com/lista-de-precios">Precios</a> · <a href="https://www.kyteapp.com/es/terminos-de-uso">Condiciones</a></td></tr>
+        <tr><th scope="row">Shopify POS</th><td>Suscripción base más $1,590 MXN por sucursal si se agrega POS Pro</td><td>20% de la utilidad sobre pagos presenciales elegibles durante cuatro años. En México, Shopify Payments se ofrece para ventas en línea. El cobro presencial con tarjeta usa una terminal externa y aplica la tarifa de su procesador. <a href="https://www.shopify.com/mx/precios">Precios</a> · <a href="https://help.shopify.com/es/partners/partner-program/how-to-earn">Condiciones</a> · <a href="https://help.shopify.com/en/manual/payments/shopify-payments/supported-countries/mexico">Pagos en México</a></td></tr>
+        <tr><th scope="row">Compitienda</th><td>Consulta con el proveedor</td><td>Bono de activación y participación en la utilidad de los pagos procesados, hasta por 12 meses. <a href="https://www.compitienda.com/es/collaborators">Condiciones</a></td></tr>
+      </tbody></table>
+    </div>
+    <p class="note">Referencias consultadas el 27 de noviembre de 2026. Los planes tienen alcances distintos. Las fuentes consultadas no reportan un conteo comparable de afiliados activos por programa.</p>
+  </div></section>
+  <section class="wrap section faq"><h2>Preguntas frecuentes</h2>
+    <details><summary>¿Cuándo genero una comisión?</summary><p>Cuando un negocio vinculado a tu código paga una suscripción elegible. La simulación muestra pagos mensuales. Para un plan anual, el cobro ocurre al pagar la anualidad.</p></details>
+    <details><summary>¿Cómo se vincula un negocio a mi cuenta?</summary><p>En Afiliados puedes copiar tu enlace con tu código. Compártelo para que el registro del comercio quede asociado a ti.</p></details>
+    <details><summary>¿Puedo empezar desde el celular?</summary><p>Sí. Desde el navegador puedes abrir la demo, compartir tus enlaces y consultar el panel de Afiliados.</p></details>
+  </section>
+  <section class="closing"><div class="wrap"><h2>Empieza con un negocio que ya conoces</h2><p>Muéstrale cómo cobrar y llevar su inventario con ZoCo. Cada renovación pagada puede seguir sumando a tu cartera.</p><div class="actions"><a class="btn" href="/?registro=1#/afiliados">Quiero ser afiliado</a><a class="btn secondary" href="/demo">Probar demo sin registro</a></div></div></section>
+</main>
+<footer class="wrap footer"><a class="brand" href="#inicio"><img src="/zoco-icon.svg" alt="" width="28" height="28"> ZoCo POS</a><a href="/#/afiliados">Entrar a Afiliados</a></footer>
+</body>
+</html>
