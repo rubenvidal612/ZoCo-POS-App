@@ -12,6 +12,7 @@ import { homeView } from './views-home.js';
 import { productsView, salesView, reportsView, settingsView, customersView, usersView, layawaysView, couponsView, financeView, timeClockView, affiliatesView, payrollView, plansView } from './views-catalog.js';
 import { purchasesView } from './views-purchases.js';
 import { landingView } from './views-landing.js';
+import { mercadoDigitalView } from './views-mercado-digital.js';
 
 /* ============================================================
    Giros con apartado propio (módulos verticales)
@@ -28,6 +29,7 @@ export const VERTICALES = {
   food: { mode: 'restaurante', label: 'ZoCo Food' },
   beauty: { mode: 'barberia', label: 'ZoCo Belleza' },
   laundry: { mode: 'lavanderia', label: 'ZoCo Lavandería' },
+  digital: { mode: 'digitales', label: 'ZoCo Digital' },
 };
 const esVertical = (id) => Object.prototype.hasOwnProperty.call(VERTICALES, id);
 const verticalPermitido = (id) => !!VERTICALES[id] && state.company?.mode === VERTICALES[id].mode;
@@ -67,10 +69,12 @@ const NAV_GROUPS = [
       { id: 'food', label: 'ZoCo Food', icon: '🍽' },
       { id: 'beauty', label: 'ZoCo Belleza', icon: '✂', perm: 'products.edit' },
   { id: 'laundry', label: 'ZoCo Lavandería', icon: '🧺', perm: 'products.edit' },
+      { id: 'digital', label: 'ZoCo Digital', icon: '💻', perm: 'products.edit' },
       { id: 'cupones', label: 'Cupones', icon: '🎟', perm: 'products.edit' },
       { id: 'clientes', label: 'Clientes', icon: '👤', perm: 'customers.manage' },
       { id: 'catalogo', label: 'Catálogo Online', icon: '🛍', perm: 'settings.edit' },
       { id: 'afiliados', label: 'Afiliados', icon: '🔗' },
+      { id: 'mercado-digital', label: '¿No sabes qué vender?', icon: '💡' },
       { id: 'plan', label: 'Mi plan', icon: '💳', perm: 'settings.edit' },
       { id: 'instalar', label: 'Instalar App', icon: '⬇' },
       { id: 'guia', label: 'Ayuda de ZoCo', icon: '🤖' },
@@ -113,8 +117,8 @@ let current = null;
 const titles = {
   partners: 'ZoCo Partners',
   inicio: 'Resumen', vender: 'Vender', productos: 'Productos', compras: 'Compras', ventas: 'Transacciones',
-  reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', laundry: 'ZoCo Lavandería', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
-  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
+  reportes: 'Reportes', food: 'ZoCo Food', beauty: 'ZoCo Belleza', laundry: 'ZoCo Lavandería', digital: 'ZoCo Digital', integraciones: 'Integraciones', config: 'Configuración', ia: 'Asistente IA', clientes: 'Clientes',
+  usuarios: 'Usuarios', checador: 'Reloj Checador', nomina: 'Nómina', finanzas: 'Finanzas', afiliados: 'Afiliados', 'mercado-digital': 'Mercado Digital', landing: 'Afiliados', plan: 'Mi plan', apartados: 'Apartados', cupones: 'Cupones',
 };
 
 function applyTheme() {
@@ -616,6 +620,8 @@ function mount() {
     apartados: () => layawaysView(ctx),
     cupones: guard('products.edit', () => couponsView(ctx)),
     afiliados: () => affiliatesView(ctx),
+    digital: guard('products.edit', () => state.company?.mode === 'digitales' ? mercadoDigitalView(ctx, 'owner') : soonView('No disponible para este giro')),
+    'mercado-digital': () => mercadoDigitalView(ctx, 'market'),
     landing: () => affiliatesView(ctx),
   plan: guard('settings.edit', () => plansView(ctx)),
   };

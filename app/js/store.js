@@ -131,6 +131,12 @@ export const SECTIONS = {
   perf_kits:        { label: 'Kits y regalos', scale: 'none', mode: 'perfumeria' },
   perf_accesorios:  { label: 'Accesorios', scale: 'none', mode: 'perfumeria' },
 
+  // Productos digitales: no requieren tallas ni stock físico.
+  digitales: { label: 'Archivos y descargas', scale: 'none', mode: 'digitales' },
+  cursos_digitales: { label: 'Cursos y formación', scale: 'none', mode: 'digitales' },
+  encargos_digitales: { label: 'Productos personalizados', scale: 'none', mode: 'digitales' },
+  servicios_digitales: { label: 'Servicios digitales', scale: 'none', mode: 'digitales' },
+
   // General
   general:    { label: 'General',     scale: 'none', mode: 'general' },
   electronica:{ label: 'Electrónica', scale: 'none', mode: 'general' },
@@ -161,6 +167,7 @@ export const MODES = {
   merceria:    { label: 'Mercería',                   sections: ['botones', 'listones', 'telas'] },
   refaccionaria: { label: 'Refaccionaria',            sections: ['refacciones', 'aceites', 'llantas'] },
   perfumeria:  { label: 'Perfumería / fragancias',      sections: ['perf_concentrado', 'perf_alcohol', 'perf_frascos', 'perf_kits', 'perf_accesorios'] },
+  digitales:   { label: 'Productos digitales y servicios', sections: ['digitales', 'cursos_digitales', 'encargos_digitales', 'servicios_digitales'] },
   general:     { label: 'Productos generales',        sections: ['general', 'electronica'] },
 };
 
@@ -1393,6 +1400,7 @@ export const BUSINESS_FAMILIES = {
   salud: { label: 'Salud y mascotas', modes: ['farmacia','mascotas'] },
   alimentos: { label: 'Restaurante y alimentos preparados', modes: ['restaurante'] },
   lavanderias: { label: 'Lavanderías y tintorerías', modes: ['lavanderia'] },
+  digital: { label: 'Productos y servicios digitales', modes: ['digitales'] },
   otros: { label: 'Otros negocios', modes: ['general'] },
 };
 export const familyForMode = (mode) => Object.keys(BUSINESS_FAMILIES).find(k => BUSINESS_FAMILIES[k].modes.includes(mode)) || 'otros';
