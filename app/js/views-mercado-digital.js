@@ -1,11 +1,12 @@
 // ZoCo Digital: catálogo piloto con vista especial para el giro digital.
 // Sin enlaces de atribución, ventas ni pagos de comisiones reales.
 import { esc } from './ui.js';
+import { currentUser } from './store.js';
 
 const PRODUCTS = [
-  {id:'zoco',icon:'▣',name:'ZoCo POS',type:'Software para negocios',summary:'Sistema de ventas y gestión para comercios.',url:'https://zoco-pos.vercel.app',commission:'$50 MXN por contratación del plan Esencial',theme:'zoco'},
-  {id:'luciana',icon:'♫',name:'Luciana Music',type:'Plataforma musical',summary:'Creación de canciones y herramientas musicales con IA.',url:'https://lucianamusic.app',commission:'Por configurar',theme:'music'},
-  {id:'song',icon:'♪',name:'Canciones personalizadas',type:'Producto digital por encargo',summary:'Canciones especiales y paquetes musicales personalizados.',url:'https://lucianamusic.app',commission:'Por configurar',theme:'song'}
+  {id:'zoco',icon:'▣',name:'ZoCo POS',type:'Software para negocios',summary:'Sistema de ventas y gestión para comercios.',url:'/digital.html?producto=zoco',commission:'$50 MXN por contratación del plan Esencial',theme:'zoco'},
+  {id:'luciana',icon:'♫',name:'Luciana Music',type:'Plataforma musical',summary:'Creación de canciones y herramientas musicales con IA.',url:'/digital.html?producto=luciana',commission:'Por configurar',theme:'music'},
+  {id:'song',icon:'♪',name:'Canciones personalizadas',type:'Producto digital por encargo',summary:'Canciones especiales y paquetes musicales personalizados.',url:'/digital.html?producto=song',commission:'Por configurar',theme:'song'}
 ];
 const CSS = `
 .zd{padding:16px;max-width:1240px;margin:0 auto;color:var(--text,#172033)}
@@ -33,7 +34,7 @@ const CSS = `
 .zd .zd-info p{line-height:1.45}
 .zd .zd-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
 .zd .zd-btn{padding:10px 13px;border:0;border-radius:10px;background:#f97316;color:white;font-weight:750;text-decoration:none;cursor:pointer;font-size:13px}
-.zd .zd-btn.alt{background:#0f766e}
+.zd .zd-btn.alt{background:#0f766e}.zd .zd-btn.share{background:#32465c}.zd .zd-btn[disabled]{opacity:.7;cursor:not-allowed}
 .zd .zd-panel{padding:19px;border:1px solid var(--border,#dce3ec);border-radius:18px;background:var(--card,#fff);margin:14px 0}
 .zd .zd-panel h3{margin-top:0}
 .zd .zd-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px}
@@ -56,10 +57,11 @@ export function mercadoDigitalView(ctx, mode='market') {
     <nav class="zd-tabs" aria-label="Secciones de ZoCo Digital" role="tablist">
       <button type="button" class="zd-tab" data-tab="kits" role="tab" aria-selected="true">Kits digitales</button>
       <button type="button" class="zd-tab" data-tab="how" role="tab" aria-selected="false">Cómo funcionará</button>
+      <button type="button" class="zd-tab" data-tab="links" role="tab" aria-selected="false">Mis enlaces</button>
       ${owner?'<button type="button" class="zd-tab" data-tab="manage" role="tab" aria-selected="false">Mis productos</button>':''}
     </nav>
     <section class="zd-body" role="tabpanel"></section>
-    <p class="zd-warning">Esta versión es demostrativa. No genera enlaces personalizados, no registra ventas y no paga comisiones. Las imágenes de las cajas son ilustraciones de muestra; se sustituirán por los artes oficiales aprobados. El programa actual de afiliados de ZoCo POS sigue separado.</p>`;
+    <p class="zd-warning">Las landings y los enlaces de difusión se pueden compartir, pero todavía no atribuyen ventas, generan saldos ni pagan comisiones. Las imágenes de las cajas son ilustraciones de muestra; se sustituirán por los artes oficiales aprobados. El programa actual de afiliados de ZoCo POS sigue separado.</p>`;
   const body=root.querySelector('.zd-body');
   const kits=()=>`<div class="zd-grid">${PRODUCTS.map(p=>`
     <article class="zd-card">
@@ -67,8 +69,8 @@ export function mercadoDigitalView(ctx, mode='market') {
       <div class="zd-info">
         <div class="zd-type">${esc(p.type)}</div><h3>${esc(p.name)}</h3><p>${esc(p.summary)}</p>
         <p><strong>Comisión:</strong> ${esc(p.commission)}</p>
-        <div class="zd-actions"><a class="zd-btn" target="_blank" rel="noopener noreferrer" href="${esc(p.url)}">Ver producto</a><button type="button" class="zd-btn alt" data-simulate="${p.id}">Probar afiliación</button></div>
-        <p class="zd-muted" data-result="${p.id}" aria-live="polite">Afiliaciones aún sin activar.</p>
+        <div class="zd-actions"><a class="zd-btn" target="_blank" rel="noopener noreferrer" href="${esc(p.url)}">Ver landing</a><button type="button" class="zd-btn share" data-share="${p.id}">Copiar enlace</button></div>
+        <p class="zd-muted" data-result="${p.id}" aria-live="polite">Enlace compartible; comisiones todavía inactivas.</p>
       </div>
     </article>`).join('')}</div>`;
   const how=()=>`<div class="zd-panel"><h3>Así funcionará la venta por afiliados</h3><div class="zd-steps">
@@ -81,12 +83,19 @@ export function mercadoDigitalView(ctx, mode='market') {
   <p>El giro ya tiene sus categorías en el catálogo de Productos: archivos y descargas, cursos y formación, productos personalizados y servicios digitales.</p>
   <p>Aquí añadiremos la configuración específica para archivos seguros, entregas, páginas de venta y comisiones por producto. Por ahora puedes administrar los productos desde el catálogo general de ZoCo.</p>
   <button class="zd-btn" type="button" data-products>Ir a Productos</button></div>`;
+  const promotionCode = String(currentUser()?.affCode || '').trim().toUpperCase();
+  // Un código del programa POS no activa comisiones digitales por sí mismo.
+  const shareUrl=(p)=>{const url=new URL(p.url,location.origin);if(/^[A-Z0-9_-]{4,32}$/.test(promotionCode))url.searchParams.set('promotor',promotionCode);return url.href;};
+  const links=()=>`<div class="zd-panel"><h3>Mis enlaces para compartir</h3><p>Estas páginas de venta ya se pueden abrir y difundir. El código de difusión, cuando existe, es informativo: todavía no contabiliza clics ni genera comisiones.</p><div class="zd-grid">${PRODUCTS.map(p=>`<article class="zd-card"><div class="zd-info"><h3>${esc(p.name)}</h3><p class="zd-muted" style="overflow-wrap:anywhere">${esc(shareUrl(p))}</p><div class="zd-actions"><button type="button" class="zd-btn share" data-share="${p.id}">Copiar enlace</button><a class="zd-btn alt" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">Abrir landing</a></div><p class="zd-muted" data-result="${p.id}" aria-live="polite"></p></div></article>`).join('')}</div></div>`;
   const paint=(tab)=>{
     root.querySelectorAll('.zd-tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
-    body.innerHTML=tab==='how'?how():tab==='manage'&&owner?manage():kits();
-    body.querySelectorAll('[data-simulate]').forEach(btn=>btn.onclick=()=>{
-      const result=body.querySelector('[data-result="'+btn.dataset.simulate+'"]');
-      if(result) result.textContent='Simulación: todavía no se creó un enlace ni se registró una venta. La comisión será efectiva únicamente cuando se active el sistema de afiliados.';
+    body.innerHTML=tab==='how'?how():tab==='links'?links():tab==='manage'&&owner?manage():kits();
+    body.querySelectorAll('[data-share]').forEach(btn=>btn.onclick=async()=>{
+      const p=PRODUCTS.find(x=>x.id===btn.dataset.share);
+      if(!p)return;
+      const result=body.querySelector('[data-result="'+p.id+'"]');
+      try{await navigator.clipboard.writeText(shareUrl(p));if(result)result.textContent='Enlace copiado. Compartir no genera aún comisiones.';}
+      catch{if(result)result.textContent='No se pudo copiar automáticamente. Abre la landing y copia su dirección.';}
     });
     const products=body.querySelector('[data-products]');
     if(products) products.onclick=()=>ctx?.go?.('productos');
